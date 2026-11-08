@@ -23,8 +23,12 @@ source:
   publisher: OECD
   dataset: Monthly unemployment rates (Infra-annual labour statistics)
   url: https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_LFS%40DF_IALFS_UNE_M&df[ag]=OECD.SDD.TPS
-  licence: CC BY 4.0
-  attribution: "OECD, Monthly unemployment rates (DSD_LFS@DF_IALFS_UNE_M)"
+  # OECD's general terms allow reuse and redistribution with credit to the OECD, and say
+  # datasets may carry extra restrictions in their metadata. Dataset metadata not yet
+  # checked for extra restrictions (see PR #7).
+  licence: OECD Terms and Conditions
+  licence_url: https://www.oecd.org/en/about/terms-conditions.html
+  attribution: "Source: OECD (2026), Monthly unemployment rates, OECD Data Explorer"
   adapter: oecd_sdmx
   query:
     dataflow: OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,1.0
@@ -48,10 +52,13 @@ caveats:
     has warned that the survey is less reliable than it used to be, so small changes
     from one month to the next should be treated with caution.
   - >-
-    The UK's monthly figures are based on survey results averaged over three months,
-    which smooths out short-term movements.
+    Each UK figure is an average over three months, which smooths out short-term
+    movements. The OECD labels it by the middle month, so a UK figure the OECD calls
+    "July" covers June to August. Other countries' figures are monthly estimates.
   - >-
     This uses the OECD's internationally comparable measure for people aged 15 and over.
     The ONS headline figure covers people aged 16 and over, so the two can differ
     slightly.
 check_cadence_days: 35
+period_basis:
+  iso:GBR: centred_3m  # OECD dataset notes: UK rolling quarter indexed by its middle month
