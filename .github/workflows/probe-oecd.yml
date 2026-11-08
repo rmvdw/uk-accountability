@@ -1,0 +1,30 @@
+# TEMPORARY: runs only on this branch to fetch OECD responses from a GitHub runner
+# (Claude's sandbox cannot reach OECD). Removed before the PR is merged.
+name: probe-oecd
+on:
+  push:
+    branches: [oecd-unemployment]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch
+        run: |
+          mkdir out
+          UA="uk-accountability (+https://github.com/rmvdw/uk-accountability)"
+          BASE="https://sdmx.oecd.org/public/rest/data/OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,1.0"
+          fetch() { # name url
+            code=$(curl -sS -L -A "$UA" -o "out/$1" -w "%{http_code}" "$2" || echo "curl-failed")
+            echo "$1 $code $(wc -c < out/$1 2>/dev/null) $2" | tee -a out/index.txt
+            sleep 5
+          }
+          fetch g7_labels.csv "$BASE/CAN+DEU+FRA+GBR+ITA+JPN+USA.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M?startPeriod=2024-01&format=csvfilewithlabels"
+          fetch g7_codes.csv  "$BASE/CAN+DEU+FRA+GBR+ITA+JPN+USA.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M?startPeriod=2015-01&format=csvfile"
+          fetch gbr_all.csv   "$BASE/GBR.........?startPeriod=2025-01&format=csvfilewithlabels"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oecd-probe
+          path: out/
