@@ -5,7 +5,7 @@ on:
   push:
     branches: [oecd-unemployment]
 permissions:
-  contents: read
+  contents: write  # temporary: commits the fetched files back to this branch
 jobs:
   probe:
     runs-on: ubuntu-latest
@@ -24,7 +24,15 @@ jobs:
           fetch g7_labels.csv "$BASE/CAN+DEU+FRA+GBR+ITA+JPN+USA.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M?startPeriod=2024-01&format=csvfilewithlabels"
           fetch g7_codes.csv  "$BASE/CAN+DEU+FRA+GBR+ITA+JPN+USA.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M?startPeriod=2015-01&format=csvfile"
           fetch gbr_all.csv   "$BASE/GBR.........?startPeriod=2025-01&format=csvfilewithlabels"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/checkout@v6
         with:
-          name: oecd-probe
-          path: out/
+          path: repo
+      - name: Commit fetched files to this branch
+        run: |
+          mkdir -p repo/probe-out && cp out/* repo/probe-out/
+          cd repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add probe-out
+          git commit -m "Probe output from runner (temporary)"
+          git push
