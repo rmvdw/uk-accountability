@@ -21,6 +21,7 @@ A free, public accountability reference for ordinary people, showing UK progress
 | 9 | Peers | G7 is the starting default, only where definitions and coverage support comparison. Exceptions documented per indicator. Ross wants to broaden peer groups later (e.g. similar-sized advanced economies); new groups need his approval. | **Confirmed by Ross** (start with G7) | 2026-11-08 |
 | 10 | Framing | v1 shows outcomes and comparisons with context. Government-change dates are context, not causation. No scores in v1. | **Confirmed by Ross** for v1 | 2026-11-08 |
 | 12 | Scoring (future) | Ross intends to add scoring once the infrastructure is in place, provided the methodology is transparent and defensible. Not started; needs its own methodology proposal for Ross before any build work. | Direction set by Ross | 2026-11-08 |
+| 14 | Unemployment indicator | Public wording approved; indicator published. | **Approved by Ross** | 2026-11-08 |
 | 13 | Site name | "UK Dashboard" is a placeholder. Decide before public launch. | **Needs Ross** | |
 | 11 | First indicator | OECD harmonised unemployment rate, UK + G7. Fix exact series and common period before implementing. | Proposed | 2026-11-08 |
 
