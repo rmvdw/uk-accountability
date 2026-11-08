@@ -40,14 +40,36 @@ def _env() -> Environment:
     return env
 
 
-def _period_label(period: str, frequency: str) -> str:
+def _period_label(period: str, frequency: str, short: bool = False) -> str:
     if frequency in ("M", "M3"):
         y, m = period.split("-")
-        return f"{PERIOD_WORDS[frequency]}{MONTHS[int(m) - 1]} {y}"
+        month = MONTHS[int(m) - 1]
+        if short:
+            return f"{month[:3]} {y}"
+        return f"{PERIOD_WORDS[frequency]}{month} {y}"
     if frequency == "Q":
         y, q = period.split("-")
         return f"{q} {y}"
     return period
+
+
+def _month_offset(period: str, k: int) -> tuple[int, int]:
+    y, m = (int(x) for x in period.split("-"))
+    n = y * 12 + (m - 1) + k
+    return n // 12, n % 12
+
+
+def _geo_period_label(d, geography_id: str, period: str, short: bool = False) -> str:
+    """Label a period as it applies to one geography (see IndicatorDefinition.period_basis)."""
+    if d.period_basis.get(geography_id) != "centred_3m":
+        return _period_label(period, d.frequency, short)
+    (y0, m0), (y1, m1) = _month_offset(period, -1), _month_offset(period, 1)
+    if short:
+        a, b = MONTHS[m0][:3], MONTHS[m1][:3]
+        return f"{a}–{b} {y1}" if y0 == y1 else f"{a} {y0}–{b} {y1}"
+    if y0 == y1:
+        return f"{MONTHS[m0]} to {MONTHS[m1]} {y1}"
+    return f"{MONTHS[m0]} {y0} to {MONTHS[m1]} {y1}"
 
 
 def indicator_context(project: Project, ind_id: str) -> dict:
@@ -67,8 +89,14 @@ def indicator_context(project: Project, ind_id: str) -> dict:
         "geo": project.geographies,
         "group": group,
         "uk_latest": uk_latest,
-        "uk_latest_label": _period_label(uk_latest.period, d.frequency) if uk_latest else None,
-        "trend_svg": chart.line_chart(uk_series, "United Kingdom", d.unit, d.decimals),
+        "uk_latest_label": _geo_period_label(d, UK, uk_latest.period) if uk_latest else None,
+        "trend_svg": chart.line_chart(
+            uk_series,
+            "United Kingdom",
+            d.unit,
+            d.decimals,
+            period_label=lambda p: _geo_period_label(d, UK, p, short=True),
+        ),
         "uk_table": [o for o in uk_series],
         "comp": comp,
         "comp_label": _period_label(comp.period, d.frequency) if comp.period else None,
@@ -76,10 +104,33 @@ def indicator_context(project: Project, ind_id: str) -> dict:
         "check": check,
         "retrieval": retrieval,
         "period_label": lambda p: _period_label(p, d.frequency),
+        "uk_period_label": lambda p: _geo_period_label(d, UK, p, short=True),
+        "has_data": bool(rows),
+        "comp_basis_note": _comparison_basis_note(project, d, comp),
     }
 
 
-def build(project: Project, out: Path) -> list[str]:
+def _comparison_basis_note(project: Project, d, comp) -> str | None:
+    """Explain when geographies in the comparison measure the period differently."""
+    if not comp.period:
+        return None
+    centred = [g for g in comp.included if d.period_basis.get(g) == "centred_3m"]
+    if not centred:
+        return None
+    parts = [
+        f"The {project.geographies[g].short_label} figure is an average of "
+        f"{_geo_period_label(d, g, comp.period)}, which the source records as "
+        f"{_period_label(comp.period, d.frequency)}"
+        for g in centred
+    ]
+    return (
+        "; ".join(parts)
+        + ". Other countries' figures are monthly estimates, so the windows differ slightly."
+    )
+
+
+def build(project: Project, out: Path, include_drafts: bool = False) -> list[str]:
+    """Build the site. include_drafts is for review previews only, never production."""
     errors = validate(project)
     if errors:
         return errors
@@ -89,16 +140,19 @@ def build(project: Project, out: Path) -> list[str]:
     out.mkdir(parents=True)
     env = _env()
     built_at = datetime.now(UTC).replace(microsecond=0)
-    common = {"built_at": built_at.isoformat()}
+    common = {"built_at": built_at.isoformat(), "preview": include_drafts}
 
-    published = project.published()
+    published = [
+        d for d in project.indicators.values() if d.status == "published" or include_drafts
+    ]
     cards = []
     for d in published:
         ctx = indicator_context(project, d.id)
         page = out / d.id / "index.html"
         page.parent.mkdir(parents=True)
         page.write_text(env.get_template("indicator.html").render(**common, **ctx))
-        shutil.copy(project.observations_path(d.id), out / d.id / f"{d.id}.csv")
+        if ctx["has_data"]:  # a draft may not have been fetched yet
+            shutil.copy(project.observations_path(d.id), out / d.id / f"{d.id}.csv")
         cards.append(ctx)
 
     (out / "index.html").write_text(env.get_template("index.html").render(**common, cards=cards))
@@ -106,7 +160,12 @@ def build(project: Project, out: Path) -> list[str]:
     (out / "about" / "index.html").write_text(env.get_template("about.html").render(**common))
     (out / "build-info.json").write_text(
         json.dumps(
-            {"built_at": common["built_at"], "indicators": [d.id for d in published]}, indent=2
+            {
+                "built_at": common["built_at"],
+                "preview_with_drafts": include_drafts,
+                "indicators": [d.id for d in published],
+            },
+            indent=2,
         )
         + "\n"
     )

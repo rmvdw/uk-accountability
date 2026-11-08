@@ -63,11 +63,12 @@ Required fields are enforced by `IndicatorDefinition` in `src/ukdash/schema.py`.
 - `what_it_measures`, `why_it_matters`: plain English, one or two sentences each
 - `unit`, `decimals`, `frequency`, `direction` (`higher_is_better`, `lower_is_better` or `neutral`)
 - `coverage`: population/age, seasonal adjustment, and `geography_note`
-- `source`: publisher, dataset, URL, licence, attribution text, `adapter` name and adapter `query`
+- `source`: publisher, dataset, URL, licence (and `licence_url`), attribution text, `adapter` name and adapter `query`
 - `peers`: a group ID from `config/peers.yml`, plus documented `exclusions`
 - `comparison`: `common_latest_period` (default) — compare peers only on the latest period that every included geography has
 - `caveats`: list of plain-English limitations
 - `check_cadence_days`: how often a live check is expected; drives the overdue flag
+- `period_basis` (optional, monthly indicators only): per-geography meaning of a period. Default `month`. `centred_3m` means a three-month average labelled by its middle month (OECD's UK Labour Force Survey series). Pages then label that geography's figures with the three months they cover, and comparisons say the windows differ. Data keep the source's period label unchanged.
 
 ## Provenance (`data/manifest.json`)
 

@@ -1,0 +1,12 @@
+[
+  {
+    "indicator_id": "unemployment_rate",
+    "path": "data/raw/unemployment_rate/response.csv",
+    "sha256": "cd151816745c870460459d9fdb5e8c879c1ebca2469d0cce38529d2778b7c390",
+    "request": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,1.0/CAN+DEU+FRA+GBR+ITA+JPN+USA.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M?format=csvfile&startPeriod=2015-01",
+    "retrieval_method": "live",
+    "retrieved_at": "2026-11-08T17:59:59Z",
+    "publisher_release_date": null,
+    "licence": "OECD Terms and Conditions"
+  }
+]

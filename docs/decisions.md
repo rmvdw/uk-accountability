@@ -31,8 +31,8 @@ A free, public accountability reference for ordinary people, showing UK progress
 | Claude (claude.ai cloud session) | Clone, push, branches, issues and PRs via REST API (2026-11-08). Python 3.13, uv, git available. Statistical APIs (OECD, ONS, World Bank) unreachable from this sandbox. | Reading Actions logs. |
 | Claude Code GitHub Action | Documented for Pro via subscription token. | Not installed. Whether an `@claude` mention opens a PR automatically or only pushes a branch. |
 | ChatGPT / Otto | Can list connected GitHub repositories (Otto, 2026-11-08). | Push and PR route. |
-| Codex cloud | Documented. | Environment not yet created for this repo. |
-| GitHub-hosted runner | — | Live access to each statistical source. |
+| Codex | Fresh checkout, setup/check/build/preview on Windows; reviews posted to PRs (2026-11-08). | Pushing branches and opening PRs. |
+| GitHub-hosted runner | Live OECD SDMX fetch and full refresh, 2026-11-08 (run 42507705905). | Other publishers (ONS, World Bank) when first used. |
 
 ## First three tasks
 

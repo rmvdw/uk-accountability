@@ -84,6 +84,7 @@ class Source(Strict):
     dataset: str
     url: str
     licence: str
+    licence_url: str | None = None
     attribution: str
     adapter: str
     query: dict = Field(default_factory=dict)
@@ -122,6 +123,19 @@ class IndicatorDefinition(Strict):
     comparison: Comparison = Comparison()
     caveats: list[str] = Field(default_factory=list)
     check_cadence_days: int = Field(gt=0)
+    period_basis: dict[str, Literal["month", "centred_3m"]] = Field(
+        default_factory=dict,
+        description=(
+            "geography_id -> what one monthly period means for that geography. Default 'month'. "
+            "'centred_3m': a three-month average labelled by its middle month (e.g. OECD UK LFS)."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _period_basis(self) -> IndicatorDefinition:
+        if self.period_basis and self.frequency != "M":
+            raise ValueError("period_basis only applies to monthly (M) indicators")
+        return self
 
     @field_validator("id")
     @classmethod
