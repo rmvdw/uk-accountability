@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}UK Dashboard{% endblock %}</title>
+<meta name="description" content="How the UK is doing, compared with similar countries, using official public data.">
+<style>
+:root {
+  --bg: #fbfaf7; --surface: #ffffff; --text: #1d1d1b; --muted: #5f5e5a; --line: #e4e1d9;
+  --accent: #1f5f8b; --uk: #c2410c; --bar: #9db3c4; --warn-bg: #fff4e5; --warn: #8a4b00;
+  --max: 46rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161615; --surface: #1f1f1d; --text: #ecebe6; --muted: #a8a69e; --line: #34332f;
+    --accent: #7fb4d9; --uk: #fb923c; --bar: #4f6b80; --warn-bg: #3a2a12; --warn: #f5c27a;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); }
+header, main, footer { max-width: var(--max); margin: 0 auto; padding: 0 16px; }
+header { display: flex; justify-content: space-between; align-items: baseline; padding-top: 20px; }
+header .brand { font-weight: 700; text-decoration: none; color: var(--text); }
+header nav a { margin-left: 16px; color: var(--muted); }
+h1 { font-size: 1.9rem; line-height: 1.2; margin: 28px 0 8px; }
+h2 { font-size: 1.2rem; margin: 32px 0 8px; }
+.lede { color: var(--muted); font-size: 1.05rem; margin: 0 0 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 16px 18px; margin: 16px 0; }
+.headline { font-size: 2.4rem; font-weight: 700; line-height: 1.1; }
+.headline small { font-size: 1rem; font-weight: 400; color: var(--muted); }
+.meta { color: var(--muted); font-size: 0.9rem; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 0.8rem;
+  background: var(--warn-bg); color: var(--warn); margin-left: 6px; }
+.chart { width: 100%; height: auto; display: block; }
+.chart .grid { stroke: var(--line); }
+.chart .axis, .chart .label { fill: var(--muted); font-size: 18px; }
+.chart .line { fill: none; stroke: var(--uk); stroke-width: 2.5; }
+.chart .dot { fill: var(--uk); }
+.chart .bar { fill: var(--bar); }
+.chart .bar.uk { fill: var(--uk); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+details summary { cursor: pointer; color: var(--accent); }
+ul.caveats li { margin-bottom: 6px; }
+.grid-cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.grid-cards a.card { text-decoration: none; color: inherit; display: block; margin: 0; }
+footer { color: var(--muted); font-size: 0.85rem; padding: 40px 16px; }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="/">UK Dashboard</a>
+  <nav><a href="/">Indicators</a><a href="/about/">About</a></nav>
+</header>
+<main>
+{% block main %}{% endblock %}
+</main>
+<footer>
+  Built from official public data. Site built <time datetime="{{ built_at }}">{{ built_at[:10] }}</time>.
+  <a href="https://github.com/rmvdw/uk-accountability">Source code and data</a>.
+</footer>
+<script>
+// Flag checks that are overdue, using the reader's clock, so a stopped refresh still shows.
+document.querySelectorAll("[data-checked][data-cadence]").forEach(function (el) {
+  var checked = Date.parse(el.dataset.checked);
+  var cadenceMs = Number(el.dataset.cadence) * 86400000;
+  if (!isNaN(checked) && Date.now() > checked + cadenceMs) {
+    var b = document.createElement("span");
+    b.className = "badge";
+    b.textContent = "Check overdue";
+    b.title = "This source has not been successfully checked as often as planned.";
+    el.appendChild(b);
+  }
+});
+</script>
+</body>
+</html>

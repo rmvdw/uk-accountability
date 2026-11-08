@@ -1,0 +1,16 @@
+name: Bug or correction
+description: Something on the site is wrong, unclear or broken
+labels: [bug]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Page or indicator
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What is wrong, and what you expected
+    validations:
+      required: true

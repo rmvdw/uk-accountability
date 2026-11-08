@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ d.title }} · UK Dashboard{% endblock %}
+{% block main %}
+<h1>{{ d.title }}</h1>
+<p class="lede">{{ d.what_it_measures }}</p>
+
+<div class="card">
+  {% if uk_latest %}
+  <div class="headline">{{ "{:,.{}f}".format(uk_latest.value, d.decimals) }}<small> {{ d.unit }}</small></div>
+  <div class="meta">{{ geo["iso:GBR"].label }}, {{ uk_latest_label }}{% if uk_latest.status %} ({{ uk_latest.status }}){% endif %}</div>
+  {% endif %}
+  <p class="meta" {% if check and check.last_successful_check_at %}data-checked="{{ check.last_successful_check_at.isoformat() }}" data-cadence="{{ d.check_cadence_days }}"{% endif %}>
+    {% if check and check.last_successful_check_at %}
+    Source last checked {{ check.last_successful_check_at|long_date }}.
+    {% elif retrieval %}
+    Data retrieved{{ " manually" if retrieval.retrieval_method == "manual" else "" }} on {{ retrieval.retrieved_at|long_date }}; not yet checked automatically.
+    {% endif %}
+  </p>
+</div>
+
+<h2>Why it matters</h2>
+<p>{{ d.why_it_matters }}</p>
+
+{% if trend_svg %}
+<h2>UK over time</h2>
+{{ trend_svg|safe }}
+{% endif %}
+
+<h2>Compared with the {{ group.label }}</h2>
+{% if comp.period %}
+<p class="meta">{{ comp_label }}: the latest period with data for every country shown.
+{% if comp.uk_rank %}The UK ranks <strong>{{ comp.uk_rank }} of {{ comp.values|length }}</strong> ({{ "lower" if d.direction == "lower_is_better" else "higher" }} is better).{% endif %}</p>
+{{ comp_svg|safe }}
+{% else %}
+<p class="meta">No period has data for every country in the group, so no comparison is shown.</p>
+{% endif %}
+{% if comp.excluded %}
+<p class="meta">Not shown:
+{% for g, reason in comp.excluded.items() %}{{ geo[g].label }} ({{ reason }}){{ "; " if not loop.last else "." }}{% endfor %}</p>
+{% endif %}
+
+{% if d.caveats %}
+<h2>Things to bear in mind</h2>
+<ul class="caveats">
+{% for c in d.caveats %}<li>{{ c }}</li>{% endfor %}
+</ul>
+{% endif %}
+
+<h2>Source and definition</h2>
+<table>
+  <tr><th>Source</th><td><a href="{{ d.source.url }}">{{ d.source.publisher }}: {{ d.source.dataset }}</a></td></tr>
+  <tr><th>Who is counted</th><td>{{ d.coverage.population }}</td></tr>
+  <tr><th>Adjustment</th><td>{{ d.coverage.seasonal_adjustment }}</td></tr>
+  <tr><th>Geography</th><td>{{ d.coverage.geography_note }}</td></tr>
+  <tr><th>Licence</th><td>{{ d.source.attribution }} ({{ d.source.licence }})</td></tr>
+</table>
+
+<h2>Data</h2>
+<details>
+  <summary>UK figures as a table</summary>
+  <table>
+    <thead><tr><th>Period</th><th class="num">{{ d.unit }}</th><th>Note</th></tr></thead>
+    <tbody>
+    {% for o in uk_table|reverse %}
+      <tr><td>{{ period_label(o.period) }}</td><td class="num">{{ "" if o.value is none else "{:,.{}f}".format(o.value, d.decimals) }}</td><td>{{ o.status }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</details>
+<p><a href="{{ d.id }}.csv" download>Download all countries (CSV)</a></p>
+{% endblock %}

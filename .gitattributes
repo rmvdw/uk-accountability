@@ -1,0 +1,7 @@
+# Later lines override earlier ones, so the general rule comes first.
+# Keep text files LF in the repository regardless of the editor's platform.
+* text=auto eol=lf
+
+# Saved source responses are checksummed: Git must never convert their bytes.
+data/raw/** -text
+tests/fixtures/data/raw/** -text

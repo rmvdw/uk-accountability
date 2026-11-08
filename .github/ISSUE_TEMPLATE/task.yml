@@ -1,0 +1,38 @@
+name: Task
+description: A bounded piece of work for one named agent
+labels: [ready]
+body:
+  - type: input
+    id: agent
+    attributes:
+      label: Assigned agent
+      description: e.g. Claude, Codex, Gemini, Ross
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: The outcome, in one or two sentences.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What is in and out of scope. Link related issues and docs.
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: A checklist. Each item must be verifiable.
+      value: |
+        - [ ] `make check` and `make build` pass in CI
+        - [ ]
+    validations:
+      required: true
+  - type: input
+    id: reviewer
+    attributes:
+      label: Reviewer
+      description: A different agent, or Ross for editorial changes.
