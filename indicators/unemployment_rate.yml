@@ -1,0 +1,57 @@
+# Public wording below needs Ross's approval before status becomes "published".
+id: unemployment_rate
+title: Unemployment rate
+status: draft
+what_it_measures: >-
+  The share of people who are available for work and actively looking for a job,
+  but don't have one, as a percentage of everyone working or looking for work.
+why_it_matters: >-
+  Unemployment is one of the clearest signs of how the economy is treating ordinary
+  people. Being out of work hits household income directly, and when unemployment
+  rises it usually means jobs are getting harder to find for everyone.
+unit: "%"
+decimals: 1
+frequency: M
+direction: lower_is_better
+coverage:
+  population: People aged 15 and over, using the international (ILO) definition of unemployment.
+  seasonal_adjustment: Seasonally adjusted, so normal seasonal swings (such as summer jobs) are removed.
+  geography_note: >-
+    United Kingdom as a whole (England, Wales, Scotland and Northern Ireland). Other
+    countries are national totals.
+source:
+  publisher: OECD
+  dataset: Monthly unemployment rates (Infra-annual labour statistics)
+  url: https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_LFS%40DF_IALFS_UNE_M&df[ag]=OECD.SDD.TPS
+  licence: CC BY 4.0
+  attribution: "OECD, Monthly unemployment rates (DSD_LFS@DF_IALFS_UNE_M)"
+  adapter: oecd_sdmx
+  query:
+    dataflow: OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,1.0
+    key: CAN+DEU+FRA+GBR+ITA+JPN+USA.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M
+    start_period: "2015-01"
+    expect:
+      MEASURE: UNE_LF_M
+      UNIT_MEASURE: PT_LF_SUB
+      TRANSFORMATION: _Z
+      ADJUSTMENT: "Y"
+      SEX: _T
+      AGE: Y_GE15
+      ACTIVITY: _Z
+      FREQ: M
+peers:
+  group: g7
+  exclusions: {}
+caveats:
+  - >-
+    UK figures come from the Labour Force Survey. The Office for National Statistics
+    has warned that the survey is less reliable than it used to be, so small changes
+    from one month to the next should be treated with caution.
+  - >-
+    The UK's monthly figures are based on survey results averaged over three months,
+    which smooths out short-term movements.
+  - >-
+    This uses the OECD's internationally comparable measure for people aged 15 and over.
+    The ONS headline figure covers people aged 16 and over, so the two can differ
+    slightly.
+check_cadence_days: 35

@@ -1,3 +1,0 @@
-g7_labels.csv 200 79010 https://sdmx.oecd.org/public/rest/data/OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,1.0/CAN+DEU+FRA+GBR+ITA+JPN+USA.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M?startPeriod=2024-01&format=csvfilewithlabels
-g7_codes.csv 200 102390 https://sdmx.oecd.org/public/rest/data/OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,1.0/CAN+DEU+FRA+GBR+ITA+JPN+USA.UNE_LF_M.PT_LF_SUB._Z.Y._T.Y_GE15._Z.M?startPeriod=2015-01&format=csvfile
-gbr_all.csv 200 167672 https://sdmx.oecd.org/public/rest/data/OECD.SDD.TPS,DSD_LFS@DF_IALFS_UNE_M,1.0/GBR.........?startPeriod=2025-01&format=csvfilewithlabels
