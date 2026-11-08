@@ -4,5 +4,5 @@
 groups:
   g7:
     label: G7
-    rationale: Large advanced economies the UK is most often compared with. Proposed default; awaiting Ross's confirmation (docs/decisions.md, decision 9; issue #1).
+    rationale: Large advanced economies the UK is most often compared with. Starting default, confirmed by Ross 2026-11-08 (docs/decisions.md, decision 9). Broader groups to follow.
     members: [iso:GBR, iso:CAN, iso:FRA, iso:DEU, iso:ITA, iso:JPN, iso:USA]
