@@ -22,9 +22,16 @@ from .validate import validate
 def _report(r, verb: str) -> int:
     for ind, outcome in sorted(r.results.items()):
         print(f"{ind}: {outcome}")
+    for w in r.warnings:
+        print(f"WARNING {w}", file=sys.stderr)
     for e in r.errors:
         print(f"ERROR {e}", file=sys.stderr)
-    print(f"{verb}: promoted" if r.ok else f"{verb}: FAILED, published data unchanged")
+    if r.ok:
+        print(f"{verb}: promoted")
+    elif r.data_intact:
+        print(f"{verb}: FAILED, saved data unchanged")
+    else:
+        print(f"{verb}: FAILED and data/ may be inconsistent: see errors above")
     return 0 if r.ok else 1
 
 

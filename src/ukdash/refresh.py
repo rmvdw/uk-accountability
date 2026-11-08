@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import tempfile
 from dataclasses import dataclass, field
@@ -21,12 +22,100 @@ from .project import REPO_ROOT, Project, write_observations
 from .schema import CheckRecord, IndicatorDefinition, ManifestEntry, Observation
 from .sources import ADAPTERS, Adapter, Fetched
 
+PROMOTED = ("raw", "observations", "manifest.json")  # what a release replaces under data/
+WORKDIR = ".release"  # beside data/, same filesystem, so renames are cheap and atomic
+
 
 @dataclass
 class RefreshResult:
     ok: bool
     results: dict[str, str] = field(default_factory=dict)  # indicator_id -> ok|unchanged|failed
     errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    data_intact: bool = True  # False only if a failed promotion could not be rolled back
+
+
+class PromotionError(Exception):
+    def __init__(self, message: str, rolled_back: bool):
+        super().__init__(message)
+        self.rolled_back = rolled_back
+
+
+# Indirection so tests can inject a failure part-way through the swap.
+_replace = os.replace
+
+
+def _remove(path: Path) -> None:
+    if path.is_dir():
+        shutil.rmtree(path)  # errors propagate: never silently half-delete
+    else:
+        path.unlink()
+
+
+def _promote(stage_data: Path, root: Path, result: RefreshResult) -> None:
+    """Replace data/raw, data/observations and data/manifest.json with the staged ones.
+
+    1. Copy the staged release to .release/new (data/ untouched if this fails).
+    2. For each item: move the current one to .release/old, move the new one in.
+    3. If any step of 2 fails, undo every swap so data/ is exactly as before.
+    """
+    data = root / "data"
+    work = root / WORKDIR
+    if work.exists():
+        raise PromotionError(
+            f"{work} exists: an earlier promotion was interrupted. Inspect it; the "
+            "previous release may be in .release/old. Remove it once data/ is correct.",
+            rolled_back=True,
+        )
+    new, old = work / "new", work / "old"
+    new.mkdir(parents=True)
+    old.mkdir()
+    try:
+        for item in PROMOTED:
+            src = stage_data / item
+            if src.is_dir():
+                shutil.copytree(src, new / item)
+            elif src.exists():
+                shutil.copy2(src, new / item)
+    except Exception as exc:
+        shutil.rmtree(work, ignore_errors=True)  # only scratch copies; data/ untouched
+        raise PromotionError(f"copying staged release failed: {exc}", rolled_back=True) from exc
+
+    swapped: list[tuple[str, bool]] = []  # (item, had a previous version)
+    try:
+        for item in PROMOTED:
+            if not (new / item).exists():
+                continue
+            dst = data / item
+            had_old = dst.exists()
+            if had_old:
+                _replace(dst, old / item)
+            swapped.append((item, had_old))
+            _replace(new / item, dst)
+    except Exception as exc:
+        try:
+            for item, had_old in reversed(swapped):
+                dst = data / item
+                if dst.exists():
+                    _remove(dst)  # the new version, since the old one was moved aside
+                if had_old:
+                    _replace(old / item, dst)
+        except Exception as undo_exc:  # noqa: BLE001
+            result.data_intact = False
+            raise PromotionError(
+                f"promotion failed ({exc}) AND rollback failed ({undo_exc}). The previous "
+                f"release is in {old}; restore it by hand.",
+                rolled_back=False,
+            ) from exc
+        shutil.rmtree(work, ignore_errors=True)
+        raise PromotionError(
+            f"promotion failed and was rolled back: {exc}", rolled_back=True
+        ) from exc
+
+    try:
+        shutil.rmtree(work)
+    except OSError as exc:
+        result.warnings.append(f"release promoted, but could not remove {work}: {exc}")
 
 
 @dataclass(frozen=True)
@@ -68,7 +157,9 @@ def _release(
     """Stage, validate, build and (only if all pass) promote. Never raises."""
     try:
         manifest = {e.path: e for e in project.read_manifest()}
-        with tempfile.TemporaryDirectory(prefix="ukdash-release-") as tmp:
+        with tempfile.TemporaryDirectory(
+            prefix="ukdash-release-", ignore_cleanup_errors=True
+        ) as tmp:
             stage = Path(tmp)
             shutil.copytree(root / "data", stage / "data")
             shutil.copytree(root / "indicators", stage / "indicators")
@@ -109,11 +200,7 @@ def _release(
                 result.errors.extend(f"validation: {e}" for e in errors)
                 return
 
-            # Promote the whole candidate release.
-            for sub in ("raw", "observations"):
-                shutil.rmtree(root / "data" / sub, ignore_errors=True)
-                shutil.copytree(stage / "data" / sub, root / "data" / sub)
-            shutil.copy(stage / "data" / "manifest.json", root / "data" / "manifest.json")
+            _promote(stage / "data", root, result)
     except Exception as exc:  # noqa: BLE001 - any failure blocks promotion and is recorded
         _fail(result, "release", exc)
 

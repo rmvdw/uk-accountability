@@ -23,6 +23,8 @@
 4. Only if every required step passes: promote raw files, observations, manifest and checks into `data/`.
 5. If anything fails (fetch, parse, validation, or an error while building): promote nothing except the failed attempt in `data/checks.json` (`last_attempt_*` only; never `last_successful_check_at`). The previous release stays published.
 
+Promotion is a swap with rollback: the staged release is copied to `.release/new`, each current item is moved to `.release/old` and the new one moved in. If any step fails, every swap is undone and `data/` is exactly as before. If an earlier run was interrupted and `.release/` still exists, the next promotion refuses to run until someone inspects it; it is never deleted automatically, because it may hold the previous release.
+
 Refreshes are serialised (workflow `concurrency`), so two runs never overwrite each other.
 
 ## Failure handling

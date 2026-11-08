@@ -150,3 +150,64 @@ def test_manual_import_records_provenance_not_a_check(fixture_root, tmp_path):
     assert entry.retrieval_method == "manual"
     assert (fixture_root / entry.path).read_bytes() == f.read_bytes()
     assert not (fixture_root / "data/checks.json").exists()
+
+
+def _published_state(root):
+    data = root / "data"
+    return {
+        p.relative_to(data).as_posix(): p.read_bytes()
+        for p in sorted(data.rglob("*"))
+        if p.is_file() and p.name != "checks.json"
+    }
+
+
+def test_copy_failure_during_promotion_leaves_data_untouched(fixture_root, monkeypatch):
+    import ukdash.refresh as mod
+
+    before = _published_state(fixture_root)
+    real_copytree = mod.shutil.copytree
+
+    def failing_copytree(src, dst, *a, **k):
+        if mod.WORKDIR in str(dst):
+            raise OSError("disk full")
+        return real_copytree(src, dst, *a, **k)
+
+    monkeypatch.setattr(mod.shutil, "copytree", failing_copytree)
+    r = refresh(fixture_root, adapters={"fake": FakeAdapter()}, now=T1)
+    assert not r.ok and r.data_intact
+    assert any("disk full" in e for e in r.errors)
+    assert _published_state(fixture_root) == before
+    assert not (fixture_root / mod.WORKDIR).exists()
+
+
+def test_swap_failure_part_way_is_rolled_back(fixture_root, monkeypatch):
+    import ukdash.refresh as mod
+
+    before = _published_state(fixture_root)
+    real_replace = mod._replace
+    calls = {"n": 0}
+
+    def flaky_replace(src, dst):
+        calls["n"] += 1
+        if calls["n"] == 4:  # after raw is swapped in, while swapping observations
+            raise OSError("file locked")
+        return real_replace(src, dst)
+
+    monkeypatch.setattr(mod, "_replace", flaky_replace)
+    r = refresh(fixture_root, adapters={"fake": FakeAdapter()}, now=T1)
+    assert not r.ok and r.data_intact
+    assert any("rolled back" in e and "file locked" in e for e in r.errors)
+    assert _published_state(fixture_root) == before
+    assert checks(fixture_root)["last_successful_check_at"] is None
+
+
+def test_interrupted_promotion_blocks_the_next_one(fixture_root):
+    import ukdash.refresh as mod
+
+    (fixture_root / mod.WORKDIR / "old").mkdir(parents=True)
+    before = _published_state(fixture_root)
+    r = refresh(fixture_root, adapters={"fake": FakeAdapter()}, now=T1)
+    assert not r.ok
+    assert any("interrupted" in e for e in r.errors)
+    assert _published_state(fixture_root) == before
+    assert (fixture_root / mod.WORKDIR / "old").exists()  # never deleted automatically
