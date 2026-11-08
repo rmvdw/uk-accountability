@@ -2,8 +2,25 @@ from ukdash.build import build
 from ukdash.project import Project
 
 
-def test_empty_repository_builds(tmp_path):
-    assert build(Project.load(), tmp_path / "site") == []
+def test_repository_builds_published_indicators_only(tmp_path):
+    project = Project.load()
+    assert build(project, tmp_path / "site") == []
+    home = (tmp_path / "site/index.html").read_text()
+    for d in project.indicators.values():
+        assert (tmp_path / "site" / d.id).exists() == (d.status == "published")
+        if d.status == "published":
+            assert (
+                "Draft: awaiting approval"
+                not in (tmp_path / "site" / d.id / "index.html").read_text()
+            )
+    if not project.published():
+        assert "No indicators published yet" in home
+
+
+def test_empty_state_when_nothing_is_published(fixture_root, tmp_path):
+    p = fixture_root / "indicators/test_unemployment.yml"
+    p.write_text(p.read_text().replace("status: published", "status: draft"))
+    assert build(Project.load(fixture_root), tmp_path / "site") == []
     assert "No indicators published yet" in (tmp_path / "site/index.html").read_text()
 
 
