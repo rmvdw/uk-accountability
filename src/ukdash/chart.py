@@ -31,7 +31,13 @@ def line_path(rows: list[Observation]) -> list[list[tuple[int, float]]]:
     return segments
 
 
-def line_chart(rows: list[Observation], label: str, unit: str, decimals: int) -> str:
+def line_chart(
+    rows: list[Observation],
+    label: str,
+    unit: str,
+    decimals: int,
+    period_label=lambda p: p,
+) -> str:
     pts = [(o.period, o.value) for o in sorted(rows, key=lambda o: o.period) if o.value is not None]
     if len(pts) < 2:
         return ""
@@ -71,16 +77,17 @@ def line_chart(rows: list[Observation], label: str, unit: str, decimals: int) ->
     )
     first, last = pts[0], pts[-1]
     desc = (
-        f"{label}: {_fmt(first[1], decimals)} {unit} in {first[0]}, "
-        f"{_fmt(last[1], decimals)} {unit} in {last[0]}."
+        f"{label}: {_fmt(first[1], decimals)} {unit} in {period_label(first[0])}, "
+        f"{_fmt(last[1], decimals)} {unit} in {period_label(last[0])}."
     )
     return (
         f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="{escape(desc)}" class="chart">'
         f"<title>{escape(desc)}</title>{grid}"
         f'<path d="{path}" class="line"/>{singles}'
         f'<circle cx="{x(k1):.1f}" cy="{y(last[1]):.1f}" r="4" class="dot"/>'
-        f'<text x="{pl}" y="{h - 8}" class="axis">{escape(first[0])}</text>'
-        f'<text x="{w - pr}" y="{h - 8}" class="axis" text-anchor="end">{escape(last[0])}</text>'
+        f'<text x="{pl}" y="{h - 8}" class="axis">{escape(period_label(first[0]))}</text>'
+        f'<text x="{w - pr}" y="{h - 8}" class="axis" text-anchor="end">'
+        f"{escape(period_label(last[0]))}</text>"
         f"</svg>"
     )
 

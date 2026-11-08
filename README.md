@@ -12,7 +12,8 @@ Requires [uv](https://docs.astral.sh/uv/getting-started/installation/) and `make
 make setup     # install pinned dependencies (needs network for packages)
 make check     # lint, tests, validate saved data — offline
 make build     # build the static site into site/ — offline
-make serve     # build, then preview at http://localhost:8000
+make preview   # like build, but includes draft indicators, for review only
+make serve     # serve site/ at http://localhost:8000
 make refresh   # fetch live data; promotes only if everything validates
 make refresh ID=<indicator>   # fetch one indicator, drafts included
 ```

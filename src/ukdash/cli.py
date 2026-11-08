@@ -41,6 +41,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("check")
     b = sub.add_parser("build")
     b.add_argument("--out", type=Path, default=REPO_ROOT / "site")
+    b.add_argument("--drafts", action="store_true", help="include drafts (review previews only)")
     r = sub.add_parser("refresh")
     r.add_argument("--indicator", action="append", help="limit to this indicator (drafts allowed)")
     m = sub.add_parser("import-manual")
@@ -72,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
         if not errors:
             print(f"check: OK ({n} indicator(s), {len(project.published())} published)")
     else:
-        errors = build(project, args.out)
+        errors = build(project, args.out, include_drafts=args.drafts)
         if not errors:
             print(f"build: OK -> {args.out}")
 

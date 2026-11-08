@@ -40,10 +40,13 @@ def _env() -> Environment:
     return env
 
 
-def _period_label(period: str, frequency: str) -> str:
+def _period_label(period: str, frequency: str, short: bool = False) -> str:
     if frequency in ("M", "M3"):
         y, m = period.split("-")
-        return f"{PERIOD_WORDS[frequency]}{MONTHS[int(m) - 1]} {y}"
+        month = MONTHS[int(m) - 1]
+        if short:
+            return f"{month[:3]} {y}"
+        return f"{PERIOD_WORDS[frequency]}{month} {y}"
     if frequency == "Q":
         y, q = period.split("-")
         return f"{q} {y}"
@@ -68,7 +71,13 @@ def indicator_context(project: Project, ind_id: str) -> dict:
         "group": group,
         "uk_latest": uk_latest,
         "uk_latest_label": _period_label(uk_latest.period, d.frequency) if uk_latest else None,
-        "trend_svg": chart.line_chart(uk_series, "United Kingdom", d.unit, d.decimals),
+        "trend_svg": chart.line_chart(
+            uk_series,
+            "United Kingdom",
+            d.unit,
+            d.decimals,
+            period_label=lambda p: _period_label(p, d.frequency, short=True),
+        ),
         "uk_table": [o for o in uk_series],
         "comp": comp,
         "comp_label": _period_label(comp.period, d.frequency) if comp.period else None,
@@ -79,7 +88,8 @@ def indicator_context(project: Project, ind_id: str) -> dict:
     }
 
 
-def build(project: Project, out: Path) -> list[str]:
+def build(project: Project, out: Path, include_drafts: bool = False) -> list[str]:
+    """Build the site. include_drafts is for review previews only, never production."""
     errors = validate(project)
     if errors:
         return errors
@@ -89,9 +99,11 @@ def build(project: Project, out: Path) -> list[str]:
     out.mkdir(parents=True)
     env = _env()
     built_at = datetime.now(UTC).replace(microsecond=0)
-    common = {"built_at": built_at.isoformat()}
+    common = {"built_at": built_at.isoformat(), "preview": include_drafts}
 
-    published = project.published()
+    published = [
+        d for d in project.indicators.values() if d.status == "published" or include_drafts
+    ]
     cards = []
     for d in published:
         ctx = indicator_context(project, d.id)
@@ -106,7 +118,12 @@ def build(project: Project, out: Path) -> list[str]:
     (out / "about" / "index.html").write_text(env.get_template("about.html").render(**common))
     (out / "build-info.json").write_text(
         json.dumps(
-            {"built_at": common["built_at"], "indicators": [d.id for d in published]}, indent=2
+            {
+                "built_at": common["built_at"],
+                "preview_with_drafts": include_drafts,
+                "indicators": [d.id for d in published],
+            },
+            indent=2,
         )
         + "\n"
     )

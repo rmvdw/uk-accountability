@@ -32,6 +32,14 @@ jobs:
           name: site
           path: site/
           retention-days: 14
+      - name: Build review preview (includes drafts)
+        run: uv run python -m ukdash build --drafts --out site-preview
+      - name: Upload review preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-preview-with-drafts
+          path: site-preview/
+          retention-days: 14
 
   # Agents and Ross may work on Windows, where there is no `make` by default.
   # Run the same steps directly, with Git's usual Windows line-ending conversion on.

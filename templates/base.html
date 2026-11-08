@@ -47,6 +47,9 @@ th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 details summary { cursor: pointer; color: var(--accent); }
 ul.caveats li { margin-bottom: 6px; }
+.preview { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
+.draft-tag { display: inline-block; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--warn); }
 .grid-cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 .grid-cards a.card { text-decoration: none; color: inherit; display: block; margin: 0; }
 footer { color: var(--muted); font-size: 0.85rem; padding: 40px 16px; }
@@ -58,6 +61,7 @@ footer { color: var(--muted); font-size: 0.85rem; padding: 40px 16px; }
   <nav><a href="/">Indicators</a><a href="/about/">About</a></nav>
 </header>
 <main>
+{% if preview %}<p class="card preview"><strong>Review preview.</strong> Includes draft indicators that are not yet published.</p>{% endif %}
 {% block main %}{% endblock %}
 </main>
 <footer>

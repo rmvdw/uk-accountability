@@ -34,3 +34,14 @@ def test_long_date_is_portable():
     from ukdash.build import long_date
 
     assert long_date(datetime(2026, 7, 1)) == "1 July 2026"
+
+
+def test_drafts_only_in_preview(fixture_root, tmp_path):
+    p = fixture_root / "indicators/test_unemployment.yml"
+    p.write_text(p.read_text().replace("status: published", "status: draft"))
+    project = Project.load(fixture_root)
+    assert build(project, tmp_path / "prod") == []
+    assert not (tmp_path / "prod/test_unemployment").exists()
+    assert build(project, tmp_path / "prev", include_drafts=True) == []
+    page = (tmp_path / "prev/test_unemployment/index.html").read_text()
+    assert "Draft: awaiting approval" in page and "Review preview" in page
