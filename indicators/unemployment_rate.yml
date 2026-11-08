@@ -23,9 +23,10 @@ source:
   publisher: OECD
   dataset: Monthly unemployment rates (Infra-annual labour statistics)
   url: https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_LFS%40DF_IALFS_UNE_M&df[ag]=OECD.SDD.TPS
-  # OECD's general terms allow reuse and redistribution with credit to the OECD, and say
-  # datasets may carry extra restrictions in their metadata. Dataset metadata not yet
-  # checked for extra restrictions (see PR #7).
+  # OECD's general terms allow reuse and redistribution with credit to the OECD; datasets
+  # may carry extra restrictions in their metadata. Codex checked this dataset's Data
+  # Explorer overview on 2026-11-08: its terms section links to the OECD Terms and
+  # Conditions and shows no dataset-specific restriction (PR #7 review).
   licence: OECD Terms and Conditions
   licence_url: https://www.oecd.org/en/about/terms-conditions.html
   attribution: "Source: OECD (2026), Monthly unemployment rates, OECD Data Explorer"
