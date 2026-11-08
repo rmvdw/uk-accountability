@@ -26,7 +26,7 @@ A free, public accountability reference for ordinary people, showing UK progress
 
 | Environment | Verified | Not yet verified |
 | --- | --- | --- |
-| Claude (claude.ai cloud session) | Repo attached and cloned 2026-11-08. Python 3.13, uv, git available. Statistical APIs (OECD, ONS, World Bank) unreachable from this sandbox. | Push and PR (Claude GitHub App install pending). Reading Actions logs. |
+| Claude (claude.ai cloud session) | Clone, push, branches, issues and PRs via REST API (2026-11-08). Python 3.13, uv, git available. Statistical APIs (OECD, ONS, World Bank) unreachable from this sandbox. | Reading Actions logs. |
 | Claude Code GitHub Action | Documented for Pro via subscription token. | Not installed. Whether an `@claude` mention opens a PR automatically or only pushes a branch. |
 | ChatGPT / Otto | Can list connected GitHub repositories (Otto, 2026-11-08). | Push and PR route. |
 | Codex cloud | Documented. | Environment not yet created for this repo. |
@@ -34,7 +34,7 @@ A free, public accountability reference for ordinary people, showing UK progress
 
 ## First three tasks
 
-Tracked as GitHub issues once access is working. Summary:
+Tracked as GitHub issues #2, #3 and #4. Ross's open editorial decisions are in issue #1. Summary:
 
 1. **Scaffold and prove access** (Claude; reviewer Codex). Commands, schemas, geography lookup, templates, CI. Clean runner passes setup/check/build. One real branch → PR → CI cycle. Preview via hosting, or recorded as blocked.
 2. **First real indicator in preview** (OECD unemployment, UK + G7). Trend, compatible peer comparison, source link, geography, period, check or manual-retrieval date, caveat, table. Ross reviews public wording.
