@@ -1,0 +1,28 @@
+# TEST FIXTURE. Synthetic numbers for automated tests only. Never published.
+id: test_unemployment
+title: "TEST FIXTURE: unemployment rate (synthetic)"
+status: published
+what_it_measures: "Synthetic test data shaped like a monthly unemployment rate. Not real figures."
+why_it_matters: "Exercises the pipeline end to end in tests."
+unit: "%"
+decimals: 1
+frequency: M
+direction: lower_is_better
+coverage:
+  population: "Synthetic"
+  seasonal_adjustment: "Synthetic"
+  geography_note: "Synthetic"
+source:
+  publisher: "Test fixture"
+  dataset: "Synthetic"
+  url: "https://example.invalid/test-fixture"
+  licence: "n/a (synthetic)"
+  attribution: "Synthetic test data"
+  adapter: fake
+  query: {}
+peers:
+  group: g7
+  exclusions: {}
+caveats:
+  - "Synthetic test data."
+check_cadence_days: 35

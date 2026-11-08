@@ -1,0 +1,7 @@
+# Editorial ownership: changes here need Ross's review (enforced once branch rules are on).
+/indicators/            @rmvdw
+/config/peers.yml       @rmvdw
+/docs/decisions.md      @rmvdw
+/templates/about.html   @rmvdw
+/LICENSE                @rmvdw
+/.github/CODEOWNERS     @rmvdw

@@ -1,0 +1,87 @@
+"""Refresh behaviour from docs/refresh-policy.md, using a fake adapter (no network)."""
+
+import json
+from datetime import UTC, datetime
+
+from ukdash.project import Project
+from ukdash.refresh import refresh
+from ukdash.schema import Observation
+from ukdash.sources import Adapter, Fetched
+from ukdash.sources.base import geo_lookup
+
+T1 = datetime(2026, 1, 1, 9, 0, tzinfo=UTC)
+T2 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
+
+
+class FakeAdapter(Adapter):
+    name = "fake"
+
+    def __init__(self, payload: str = "GBR,2025-07,4.0\nJPN,2025-07,2.6\n", fail: bool = False):
+        self.payload, self.fail = payload, fail
+
+    def fetch(self, d):
+        if self.fail:
+            raise ConnectionError("source unreachable")
+        return Fetched(raw=self.payload.encode(), filename="response.csv", request="fake://test")
+
+    def parse(self, d, raw, geographies):
+        to_id = geo_lookup(geographies, "iso3")
+        out = []
+        for line in raw.decode().strip().splitlines():
+            code, period, value = line.split(",")
+            out.append(
+                Observation(
+                    indicator_id=d.id,
+                    geography_id=to_id[code],
+                    period=period,
+                    frequency="M",
+                    value=float(value),
+                )
+            )
+        return out
+
+
+def checks(root):
+    return json.loads((root / "data/checks.json").read_text())["test_unemployment"]
+
+
+def test_successful_refresh_promotes_and_records_check(fixture_root):
+    r = refresh(fixture_root, adapters={"fake": FakeAdapter()}, now=T1)
+    assert r.ok and r.results == {"test_unemployment": "ok"}
+    rows = Project.load(fixture_root).read_observations("test_unemployment")
+    assert {o.period for o in rows} == {"2025-07"}
+    c = checks(fixture_root)
+    assert c["last_successful_check_at"].startswith("2026-01-01")
+    assert c["last_attempt_result"] == "ok"
+
+
+def test_unchanged_refresh_still_records_check(fixture_root):
+    refresh(fixture_root, adapters={"fake": FakeAdapter()}, now=T1)
+    r = refresh(fixture_root, adapters={"fake": FakeAdapter()}, now=T2)
+    assert r.ok and r.results == {"test_unemployment": "unchanged"}
+    c = checks(fixture_root)
+    assert c["last_successful_check_at"].startswith("2026-02-01")
+    assert c["last_attempt_result"] == "unchanged"
+
+
+def test_failed_fetch_preserves_published_data(fixture_root):
+    refresh(fixture_root, adapters={"fake": FakeAdapter()}, now=T1)
+    before = (fixture_root / "data/observations/test_unemployment.csv").read_bytes()
+
+    r = refresh(fixture_root, adapters={"fake": FakeAdapter(fail=True)}, now=T2)
+    assert not r.ok
+    assert (fixture_root / "data/observations/test_unemployment.csv").read_bytes() == before
+    c = checks(fixture_root)
+    assert c["last_attempt_result"] == "failed"
+    assert c["last_attempt_at"].startswith("2026-02-01")
+    assert c["last_successful_check_at"].startswith("2026-01-01")  # not advanced
+    assert "source unreachable" in c["last_error"]
+
+
+def test_invalid_candidate_is_not_promoted(fixture_root):
+    before = (fixture_root / "data/observations/test_unemployment.csv").read_bytes()
+    dup = "GBR,2025-07,4.0\nGBR,2025-07,4.1\n"  # duplicate key
+    r = refresh(fixture_root, adapters={"fake": FakeAdapter(payload=dup)}, now=T1)
+    assert not r.ok
+    assert (fixture_root / "data/observations/test_unemployment.csv").read_bytes() == before
+    assert checks(fixture_root)["last_successful_check_at"] is None

@@ -1,0 +1,67 @@
+# Canonical geographies. See docs/data-contract.md.
+# `codes` maps provider-specific identifiers to the canonical ID.
+# GSS codes are from the ONS Register of Geographic Codes; re-check against
+# the register the first time an indicator uses them.
+
+geographies:
+  - id: iso:GBR
+    label: United Kingdom
+    short_label: UK
+    note: England, Wales, Scotland and Northern Ireland. ISO GB/GBR always means the UK.
+    codes: {iso2: GB, iso3: GBR, gss: K02000001}
+
+  - id: gss:K03000001
+    label: Great Britain
+    short_label: GB
+    note: England, Wales and Scotland. Excludes Northern Ireland. Has no ISO code of its own.
+    codes: {gss: K03000001}
+
+  - id: gss:E92000001
+    label: England
+    short_label: England
+    codes: {gss: E92000001}
+
+  - id: gss:W92000004
+    label: Wales
+    short_label: Wales
+    codes: {gss: W92000004}
+
+  - id: gss:S92000003
+    label: Scotland
+    short_label: Scotland
+    codes: {gss: S92000003}
+
+  - id: gss:N92000002
+    label: Northern Ireland
+    short_label: NI
+    codes: {gss: N92000002}
+
+  - id: iso:CAN
+    label: Canada
+    short_label: Canada
+    codes: {iso2: CA, iso3: CAN}
+
+  - id: iso:FRA
+    label: France
+    short_label: France
+    codes: {iso2: FR, iso3: FRA}
+
+  - id: iso:DEU
+    label: Germany
+    short_label: Germany
+    codes: {iso2: DE, iso3: DEU}
+
+  - id: iso:ITA
+    label: Italy
+    short_label: Italy
+    codes: {iso2: IT, iso3: ITA}
+
+  - id: iso:JPN
+    label: Japan
+    short_label: Japan
+    codes: {iso2: JP, iso3: JPN}
+
+  - id: iso:USA
+    label: United States
+    short_label: US
+    codes: {iso2: US, iso3: USA}

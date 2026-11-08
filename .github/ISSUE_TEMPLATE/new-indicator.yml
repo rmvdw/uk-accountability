@@ -1,0 +1,41 @@
+name: New indicator
+description: Propose an indicator. Ross approves meaning, peers and wording.
+labels: [indicator, ready]
+body:
+  - type: input
+    id: title
+    attributes:
+      label: Indicator
+      description: Plain-English name, e.g. "Unemployment rate"
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters to ordinary people
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Official source
+      description: Publisher, dataset, link, licence. Prefer harmonised international sources for peer comparisons.
+    validations:
+      required: true
+  - type: dropdown
+    id: geography
+    attributes:
+      label: Geography the source actually covers
+      multiple: true
+      options: [United Kingdom, Great Britain, England, Wales, Scotland, Northern Ireland, Not yet checked]
+    validations:
+      required: true
+  - type: textarea
+    id: peers
+    attributes:
+      label: Peer comparison
+      description: Which peer group, any countries to exclude and why, and whether definitions are comparable.
+  - type: textarea
+    id: caveats
+    attributes:
+      label: Known caveats

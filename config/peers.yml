@@ -1,0 +1,8 @@
+# Peer groups. Changes here need Ross's review (CODEOWNERS).
+# An indicator may exclude members only with a documented reason in its YAML.
+
+groups:
+  g7:
+    label: G7
+    rationale: Large advanced economies the UK is most often compared with. Proposed default; awaiting Ross's confirmation (docs/decisions.md #9).
+    members: [iso:GBR, iso:CAN, iso:FRA, iso:DEU, iso:ITA, iso:JPN, iso:USA]

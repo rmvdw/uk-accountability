@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block main %}
+<h1>How is the UK doing?</h1>
+<p class="lede">Official public data on UK outcomes over time, compared with similar countries. Every figure links to its source.</p>
+
+{% if cards %}
+<div class="grid-cards">
+{% for c in cards %}
+  <a class="card" href="/{{ c.d.id }}/">
+    <strong>{{ c.d.title }}</strong>
+    {% if c.uk_latest %}
+    <div class="headline">{{ "{:,.{}f}".format(c.uk_latest.value, c.d.decimals) }}<small> {{ c.d.unit }}</small></div>
+    <div class="meta">UK, {{ c.uk_latest_label }}</div>
+    {% endif %}
+    {% if c.comp.uk_rank %}
+    <div class="meta">{{ c.comp.uk_rank }} of {{ c.comp.values|length }} in the {{ c.group.label }}, {{ c.comp_label }}</div>
+    {% endif %}
+  </a>
+{% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <strong>No indicators published yet.</strong>
+  <p class="meta">The first indicator is being prepared. Follow progress on
+  <a href="https://github.com/rmvdw/uk-accountability/issues">GitHub</a>.</p>
+</div>
+{% endif %}
+{% endblock %}

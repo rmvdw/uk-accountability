@@ -1,0 +1,12 @@
+[
+  {
+    "indicator_id": "test_unemployment",
+    "path": "data/raw/test_unemployment/response.csv",
+    "sha256": "c7ca3c8b09f33375e1fd6b4901e1318b50c4cc1053e093cf7eccc1cd5ec616e8",
+    "request": "synthetic test fixture",
+    "retrieval_method": "manual",
+    "retrieved_at": "2025-07-01T09:00:00Z",
+    "publisher_release_date": null,
+    "licence": "n/a (synthetic)"
+  }
+]
