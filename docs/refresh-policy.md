@@ -21,7 +21,7 @@
 2. Parse and validate the whole candidate release.
 3. Build the site from the candidate.
 4. Only if every required step passes: promote raw files, observations, manifest and checks into `data/`.
-5. If anything fails: promote nothing except the failed attempt in `data/checks.json` (`last_attempt_*` only; never `last_successful_check_at`). The previous release stays published.
+5. If anything fails (fetch, parse, validation, or an error while building): promote nothing except the failed attempt in `data/checks.json` (`last_attempt_*` only; never `last_successful_check_at`). The previous release stays published.
 
 Refreshes are serialised (workflow `concurrency`), so two runs never overwrite each other.
 

@@ -19,6 +19,9 @@ def test_valid_observation():
         {"geography_id": "GB"},  # non-canonical id
         {"geography_id": "iso:GB"},
         {"value": None},  # missing value without a status
+        {"value": float("nan")},
+        {"value": float("inf")},
+        {"value": float("-inf")},
     ],
 )
 def test_invalid_observation(change):

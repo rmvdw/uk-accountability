@@ -85,3 +85,68 @@ def test_invalid_candidate_is_not_promoted(fixture_root):
     assert not r.ok
     assert (fixture_root / "data/observations/test_unemployment.csv").read_bytes() == before
     assert checks(fixture_root)["last_successful_check_at"] is None
+
+
+def set_status(root, status):
+    p = root / "indicators/test_unemployment.yml"
+    p.write_text(p.read_text().replace("status: published", f"status: {status}"))
+
+
+def test_scheduled_refresh_skips_drafts(fixture_root):
+    set_status(fixture_root, "draft")
+    r = refresh(fixture_root, adapters={"fake": FakeAdapter()}, now=T1)
+    assert r.ok and r.results == {}
+
+
+def test_named_refresh_seeds_a_draft(fixture_root):
+    set_status(fixture_root, "draft")
+    r = refresh(fixture_root, adapters={"fake": FakeAdapter()}, now=T1, only=["test_unemployment"])
+    assert r.ok and r.results == {"test_unemployment": "ok"}
+    rows = Project.load(fixture_root).read_observations("test_unemployment")
+    assert {o.period for o in rows} == {"2025-07"}
+
+
+def test_build_exception_records_failure_and_keeps_release(fixture_root, monkeypatch):
+    import ukdash.refresh as mod
+
+    refresh(fixture_root, adapters={"fake": FakeAdapter()}, now=T1)
+    before = (fixture_root / "data/observations/test_unemployment.csv").read_bytes()
+
+    def boom(*a, **k):
+        raise ValueError("template exploded")
+
+    monkeypatch.setattr(mod, "build", boom)
+    r = refresh(fixture_root, adapters={"fake": FakeAdapter(payload="GBR,2025-08,3.9\n")}, now=T2)
+    assert not r.ok
+    assert any("template exploded" in e for e in r.errors)
+    assert (fixture_root / "data/observations/test_unemployment.csv").read_bytes() == before
+    c = checks(fixture_root)
+    assert c["last_attempt_result"] == "failed"
+    assert c["last_attempt_at"].startswith("2026-02-01")
+    assert c["last_successful_check_at"].startswith("2026-01-01")
+    assert "template exploded" in c["last_error"]
+
+
+def test_manual_import_records_provenance_not_a_check(fixture_root, tmp_path):
+    from ukdash.refresh import import_manual
+
+    set_status(fixture_root, "draft")
+    f = tmp_path / "official-download.csv"
+    f.write_bytes(b"GBR,2025-07,4.0\r\nJPN,2025-07,2.6\r\n")  # CRLF bytes kept exactly
+    r = import_manual(
+        "test_unemployment",
+        f,
+        "https://example.invalid/official",
+        root=fixture_root,
+        adapters={"fake": FakeAdapter()},
+        now=T1,
+    )
+    assert r.ok
+    entry = next(
+        e
+        for e in Project.load(fixture_root).read_manifest()
+        if e.path.endswith("official-download.csv")
+    )
+    assert entry.retrieval_method == "manual"
+    assert (fixture_root / entry.path).read_bytes() == f.read_bytes()
+    assert not (fixture_root / "data/checks.json").exists()

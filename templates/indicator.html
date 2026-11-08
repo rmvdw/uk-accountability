@@ -11,9 +11,9 @@
   {% endif %}
   <p class="meta" {% if check and check.last_successful_check_at %}data-checked="{{ check.last_successful_check_at.isoformat() }}" data-cadence="{{ d.check_cadence_days }}"{% endif %}>
     {% if check and check.last_successful_check_at %}
-    Source last checked {{ check.last_successful_check_at.strftime("%-d %B %Y") }}.
+    Source last checked {{ check.last_successful_check_at|long_date }}.
     {% elif retrieval %}
-    Data retrieved{{ " manually" if retrieval.retrieval_method == "manual" else "" }} on {{ retrieval.retrieved_at.strftime("%-d %B %Y") }}; not yet checked automatically.
+    Data retrieved{{ " manually" if retrieval.retrieval_method == "manual" else "" }} on {{ retrieval.retrieved_at|long_date }}; not yet checked automatically.
     {% endif %}
   </p>
 </div>

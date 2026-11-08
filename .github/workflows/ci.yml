@@ -32,3 +32,17 @@ jobs:
           name: site
           path: site/
           retention-days: 14
+
+  # Agents and Ross may work on Windows, where there is no `make` by default.
+  # Run the same steps directly, with Git's usual Windows line-ending conversion on.
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - run: git config --global core.autocrlf true
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv run pytest -q
+      - run: uv run python -m ukdash check
+      - run: uv run python -m ukdash build

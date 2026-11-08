@@ -1,0 +1,5 @@
+# Saved source responses are checksummed: never let Git convert their line endings.
+data/raw/** -text
+tests/fixtures/data/raw/** -text
+# Keep everything else LF in the repository regardless of the editor's platform.
+* text=auto eol=lf

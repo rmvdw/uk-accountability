@@ -26,3 +26,11 @@ def test_build_refuses_invalid_data(fixture_root, tmp_path):
     errors = build(Project.load(fixture_root), tmp_path / "site")
     assert errors
     assert not (tmp_path / "site").exists()
+
+
+def test_long_date_is_portable():
+    from datetime import datetime
+
+    from ukdash.build import long_date
+
+    assert long_date(datetime(2026, 7, 1)) == "1 July 2026"

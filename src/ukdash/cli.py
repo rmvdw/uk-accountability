@@ -1,8 +1,11 @@
 """Command line entry points used by the Makefile.
 
-python -m ukdash check     validate config, registry and saved data (offline)
-python -m ukdash build     build the static site into site/ (offline)
-python -m ukdash refresh   fetch live data, validate, build, promote if all pass
+python -m ukdash check                       validate config, registry and saved data (offline)
+python -m ukdash build                       build the static site into site/ (offline)
+python -m ukdash refresh                     fetch all published indicators, promote if all pass
+python -m ukdash refresh --indicator ID      fetch named indicators, drafts included
+python -m ukdash import-manual --indicator ID --file PATH --request "URL"
+                                             seed an indicator from a hand-downloaded official file
 """
 
 from __future__ import annotations
@@ -16,25 +19,44 @@ from .project import REPO_ROOT, Project
 from .validate import validate
 
 
+def _report(r, verb: str) -> int:
+    for ind, outcome in sorted(r.results.items()):
+        print(f"{ind}: {outcome}")
+    for e in r.errors:
+        print(f"ERROR {e}", file=sys.stderr)
+    print(f"{verb}: promoted" if r.ok else f"{verb}: FAILED, published data unchanged")
+    return 0 if r.ok else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="ukdash")
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("check")
     b = sub.add_parser("build")
     b.add_argument("--out", type=Path, default=REPO_ROOT / "site")
-    sub.add_parser("refresh")
+    r = sub.add_parser("refresh")
+    r.add_argument("--indicator", action="append", help="limit to this indicator (drafts allowed)")
+    m = sub.add_parser("import-manual")
+    m.add_argument("--indicator", required=True)
+    m.add_argument("--file", type=Path, required=True)
+    m.add_argument(
+        "--request", required=True, help="URL or description of where the file came from"
+    )
+    m.add_argument("--release-date", help="publisher release date, if known (YYYY-MM-DD)")
     args = parser.parse_args(argv)
 
     if args.cmd == "refresh":
         from .refresh import refresh
 
-        r = refresh()
-        for ind, outcome in sorted(r.results.items()):
-            print(f"{ind}: {outcome}")
-        for e in r.errors:
-            print(f"ERROR {e}", file=sys.stderr)
-        print("refresh: promoted" if r.ok else "refresh: FAILED, published data unchanged")
-        return 0 if r.ok else 1
+        return _report(refresh(only=args.indicator), "refresh")
+
+    if args.cmd == "import-manual":
+        from .refresh import import_manual
+
+        result = import_manual(
+            args.indicator, args.file, args.request, publisher_release_date=args.release_date
+        )
+        return _report(result, "import-manual")
 
     project = Project.load()
     if args.cmd == "check":

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import re
 from datetime import datetime
 from typing import Literal
@@ -16,6 +17,18 @@ PERIOD_PATTERNS: dict[str, re.Pattern[str]] = {
     "M": re.compile(r"^\d{4}-(0[1-9]|1[0-2])$"),
     "M3": re.compile(r"^\d{4}-(0[1-9]|1[0-2])$"),
 }
+
+
+def period_ordinal(period: str, frequency: str) -> int:
+    """Consecutive integers for consecutive periods of one frequency (for spacing and gaps)."""
+    if frequency == "A":
+        return int(period)
+    if frequency == "Q":
+        y, q = period.split("-Q")
+        return int(y) * 4 + int(q) - 1
+    y, m = period.split("-")
+    return int(y) * 12 + int(m) - 1
+
 
 GEO_ID = re.compile(r"^(iso:[A-Z]{3}|gss:[A-Z]\d{8})$")
 INDICATOR_ID = re.compile(r"^[a-z0-9][a-z0-9_]*$")
@@ -41,6 +54,13 @@ class Observation(Strict):
     def _geo(cls, v: str) -> str:
         if not GEO_ID.match(v):
             raise ValueError(f"geography_id {v!r} is not a canonical ID (iso:XXX or gss:X99999999)")
+        return v
+
+    @field_validator("value")
+    @classmethod
+    def _finite(cls, v: float | None) -> float | None:
+        if v is not None and not math.isfinite(v):
+            raise ValueError("value must be a finite number (NaN and infinity are not allowed)")
         return v
 
     @model_validator(mode="after")

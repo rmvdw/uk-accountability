@@ -4,15 +4,35 @@ from __future__ import annotations
 
 from html import escape
 
-from .schema import Observation
+from .schema import Observation, period_ordinal
 
 
 def _fmt(v: float, decimals: int) -> str:
     return f"{v:,.{decimals}f}"
 
 
+def line_path(rows: list[Observation]) -> list[list[tuple[int, float]]]:
+    """Split a series into continuous segments of (period ordinal, value).
+
+    A missing value, or a period absent from the data, ends the segment, so
+    gaps are never bridged.
+    """
+    segments: list[list[tuple[int, float]]] = []
+    prev: int | None = None
+    for o in sorted(rows, key=lambda o: period_ordinal(o.period, o.frequency)):
+        k = period_ordinal(o.period, o.frequency)
+        if o.value is None:
+            prev = None
+            continue
+        if prev is None or k != prev + 1:
+            segments.append([])
+        segments[-1].append((k, o.value))
+        prev = k
+    return segments
+
+
 def line_chart(rows: list[Observation], label: str, unit: str, decimals: int) -> str:
-    pts = [(o.period, o.value) for o in rows if o.value is not None]
+    pts = [(o.period, o.value) for o in sorted(rows, key=lambda o: o.period) if o.value is not None]
     if len(pts) < 2:
         return ""
     w, h, pl, pr, pt, pb = 640, 280, 64, 24, 16, 36
@@ -20,16 +40,27 @@ def line_chart(rows: list[Observation], label: str, unit: str, decimals: int) ->
     lo, hi = min(vals), max(vals)
     pad = (hi - lo) * 0.1 or abs(hi) * 0.1 or 1
     lo, hi = lo - pad, hi + pad
-    n = len(pts)
+    segments = line_path(rows)
+    k0 = segments[0][0][0]
+    k1 = segments[-1][-1][0]
+    span = max(k1 - k0, 1)
 
-    def x(i: int) -> float:
-        return pl + (w - pl - pr) * i / (n - 1)
+    def x(k: int) -> float:
+        return pl + (w - pl - pr) * (k - k0) / span
 
     def y(v: float) -> float:
         return pt + (h - pt - pb) * (1 - (v - lo) / (hi - lo))
 
     path = " ".join(
-        f"{'M' if i == 0 else 'L'}{x(i):.1f},{y(v):.1f}" for i, (_, v) in enumerate(pts)
+        f"{'M' if i == 0 else 'L'}{x(k):.1f},{y(v):.1f}"
+        for seg in segments
+        for i, (k, v) in enumerate(seg)
+    )
+    # Isolated points (segments of one) would be invisible as a path: mark them.
+    singles = "".join(
+        f'<circle cx="{x(seg[0][0]):.1f}" cy="{y(seg[0][1]):.1f}" r="2.5" class="dot"/>'
+        for seg in segments
+        if len(seg) == 1
     )
     ticks = [lo + (hi - lo) * k / 4 for k in range(5)]
     grid = "".join(
@@ -46,8 +77,8 @@ def line_chart(rows: list[Observation], label: str, unit: str, decimals: int) ->
     return (
         f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="{escape(desc)}" class="chart">'
         f"<title>{escape(desc)}</title>{grid}"
-        f'<path d="{path}" class="line"/>'
-        f'<circle cx="{x(n - 1):.1f}" cy="{y(last[1]):.1f}" r="4" class="dot"/>'
+        f'<path d="{path}" class="line"/>{singles}'
+        f'<circle cx="{x(k1):.1f}" cy="{y(last[1]):.1f}" r="4" class="dot"/>'
         f'<text x="{pl}" y="{h - 8}" class="axis">{escape(first[0])}</text>'
         f'<text x="{w - pr}" y="{h - 8}" class="axis" text-anchor="end">{escape(last[0])}</text>'
         f"</svg>"

@@ -16,23 +16,34 @@ from .validate import validate
 
 TEMPLATES = REPO_ROOT / "templates"
 PERIOD_WORDS = {"A": "", "Q": "", "M": "", "M3": "3 months to "}
+# Fixed English names: strftime's %B depends on the machine's locale, and %-d fails on Windows.
+MONTHS = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+]  # fmt: skip
+
+
+def long_date(dt: datetime) -> str:
+    """'1 July 2026' on every platform."""
+    return f"{dt.day} {MONTHS[dt.month - 1]} {dt.year}"
 
 
 def _env() -> Environment:
-    return Environment(
+    env = Environment(
         loader=FileSystemLoader(TEMPLATES),
         autoescape=select_autoescape(["html"]),
         undefined=StrictUndefined,
         trim_blocks=True,
         lstrip_blocks=True,
     )
+    env.filters["long_date"] = long_date
+    return env
 
 
 def _period_label(period: str, frequency: str) -> str:
     if frequency in ("M", "M3"):
         y, m = period.split("-")
-        month = datetime(int(y), int(m), 1).strftime("%B %Y")
-        return PERIOD_WORDS[frequency] + month
+        return f"{PERIOD_WORDS[frequency]}{MONTHS[int(m) - 1]} {y}"
     if frequency == "Q":
         y, q = period.split("-")
         return f"{q} {y}"

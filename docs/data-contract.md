@@ -27,7 +27,7 @@ Long format, one CSV per indicator, UTF-8, header row:
 | `geography_id` | string | A canonical ID from `config/geographies.yml`. |
 | `period` | string | See periods below. |
 | `frequency` | `A`, `Q`, `M`, `M3` | Must match the period format. |
-| `value` | number or empty | Empty means missing; requires a `status`. |
+| `value` | finite number or empty | Empty means missing; requires a `status`. NaN and infinity are rejected. |
 | `status` | string or empty | Source flags, e.g. `provisional`, `estimated`, `break`, `missing`. |
 
 Unique key: `(indicator_id, geography_id, period)`. Duplicates fail validation. Missing values stay missing; never fill or interpolate.
