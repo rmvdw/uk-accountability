@@ -39,4 +39,10 @@ jobs:
             script=head/.github/scripts/editorial_gate.py
           fi
           [ -f base/.github/CODEOWNERS ] || { echo "No CODEOWNERS on base branch"; exit 1; }
-          python3 "$script" --codeowners base/.github/CODEOWNERS changed.txt labels.txt
+          if grep -q -- "--base-dir" "$script"; then
+            python3 "$script" --codeowners base/.github/CODEOWNERS \
+              --base-dir base --head-dir head changed.txt labels.txt
+          else
+            # Base branch gate predates decision 18: apply it as it stands.
+            python3 "$script" --codeowners base/.github/CODEOWNERS changed.txt labels.txt
+          fi
