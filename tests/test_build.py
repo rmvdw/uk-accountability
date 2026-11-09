@@ -93,3 +93,38 @@ def test_real_indicator_preview_explains_uk_window(tmp_path):
     page = (tmp_path / "prev/unemployment_rate/index.html").read_text()
     assert "United Kingdom, June to August 2026" in page
     assert "average of June to August 2026, which the source records as July 2026" in page
+
+
+def test_cloudflare_branch_aware_drafts(monkeypatch):
+    from ukdash.build import cloudflare_preview_branch
+
+    for var in ("CF_PAGES", "CF_PAGES_BRANCH"):
+        monkeypatch.delenv(var, raising=False)
+    assert cloudflare_preview_branch() is None  # local / CI / agents: production rules
+
+    monkeypatch.setenv("CF_PAGES", "1")
+    monkeypatch.setenv("CF_PAGES_BRANCH", "main")
+    assert cloudflare_preview_branch() is None  # production deploy never shows drafts
+
+    monkeypatch.setenv("CF_PAGES_BRANCH", "life-expectancy")
+    assert cloudflare_preview_branch() == "life-expectancy"
+
+    monkeypatch.delenv("CF_PAGES")
+    assert cloudflare_preview_branch() is None  # branch var alone is not enough
+
+
+def test_cli_build_includes_drafts_only_on_cloudflare_preview(monkeypatch, tmp_path):
+    import json
+
+    from ukdash.cli import main
+
+    monkeypatch.setenv("CF_PAGES", "1")
+    monkeypatch.setenv("CF_PAGES_COMMIT_SHA", "abc123")
+    for branch, expected in (("main", False), ("feature-x", True)):
+        monkeypatch.setenv("CF_PAGES_BRANCH", branch)
+        out = tmp_path / branch
+        assert main(["build", "--out", str(out)]) == 0
+        info = json.loads((out / "build-info.json").read_text())
+        assert info["preview_with_drafts"] is expected
+        assert info["source_commit"] == "abc123" and info["branch"] == branch
+        assert ("Review preview" in (out / "index.html").read_text()) is expected

@@ -1,0 +1,44 @@
+# Confirms what Cloudflare Pages actually serves after each deploy:
+# production (main) excludes drafts; pull-request previews include them.
+name: Verify deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - name: Work out URL and expected mode
+        id: target
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" = "push" ]; then
+            echo "url=https://uk-accountability.pages.dev" >> "$GITHUB_OUTPUT"
+            echo "drafts=false" >> "$GITHUB_OUTPUT"
+            echo "sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+          else
+            # Cloudflare branch alias: lower-case, non-alphanumerics to '-', at most 28 chars.
+            alias=$(echo "$HEAD_REF" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | cut -c1-28 | sed 's/-*$//')
+            echo "url=https://${alias}.uk-accountability.pages.dev" >> "$GITHUB_OUTPUT"
+            echo "drafts=true" >> "$GITHUB_OUTPUT"
+            echo "sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Wait for Cloudflare and check the served site
+        run: >
+          python3 .github/scripts/verify_deploy.py
+          "${{ steps.target.outputs.url }}" "${{ steps.target.outputs.sha }}"
+          "${{ steps.target.outputs.drafts }}"
