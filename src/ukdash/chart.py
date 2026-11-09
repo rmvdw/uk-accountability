@@ -138,8 +138,8 @@ def bar_chart(
     # Size the label and value margins to the text (labels render at ~18px in a 640 box,
     # roughly 10px per character), so nothing is clipped on a phone.
     w, row = 640, 34
-    # Room for labels at the larger phone text size (about 14 units per character).
-    pl = min(max(80, 14 * max(len(labels[g]) for g, _ in values) + 16), 340)
+    # Room for labels at the larger phone text size (about 16 units per character).
+    pl = min(max(80, 16 * max(len(labels[g]) for g, _ in values) + 16), 360)
     pr = 14 * max(len(_fmt(v, decimals)) for _, v in values) + 16
     h = row * len(values) + 8
     top = max(abs(v) for _, v in values) or 1

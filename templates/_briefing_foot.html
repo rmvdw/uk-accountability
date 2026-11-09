@@ -1,1 +1,20 @@
-{# Shared bottom of every briefing layout: sources, attribution, citation, corrections. #}
+{# Shared bottom of every briefing: sources, attribution, citation, corrections. #}
+<h2>Sources</h2>
+<table>
+  <thead><tr><th>Source</th><th>Edition</th><th>Retrieved</th></tr></thead>
+  <tbody>
+  {% for s in b.sources %}
+    <tr>
+      <td><a href="{{ s.url }}">{{ s.publisher }}: {{ s.dataset }}</a>{% if s.file %} (<a href="{{ s.file }}">file</a>){% endif %}</td>
+      <td>{{ s.vintage or "" }}{% if s.released %}, published {{ s.released }}{% endif %}</td>
+      <td>{{ (s.retrieved or "")[:10] }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="meta">{{ b.attribution_lines|join("; ") }}.</p>
+
+<h2>Cite this</h2>
+<p class="cite">UK Dashboard, "{{ b.title }}", {% if b.candidate %}candidate edition (not published){% else %}edition {{ b.edition }}{% endif %}. Data: {{ b.source_lines|join("; ") }}.</p>
+
+<p class="meta">Spotted a mistake? <a href="https://github.com/rmvdw/uk-accountability/issues/new?template=bug.yml">Tell us</a>. Corrections are logged publicly.</p>

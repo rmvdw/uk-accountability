@@ -267,3 +267,37 @@ def test_chart_first_layout_keeps_every_block(tmp_path):
     for s in blocks["sections"]:
         assert f'id="{s["id"]}"' in page
     assert not (tmp_path / "prev/briefings/immigration/visual").exists()
+
+
+READER_ELEMENTS = [
+    "<h2>Sources</h2>",
+    "Open Government Licence v3.0",
+    "<h2>Cite this</h2>",
+    'class="cite"',
+    "Corrections are logged publicly",
+]
+
+
+def test_sources_citation_and_corrections_on_candidate_and_published(fixture_root, tmp_path):
+    p = write_brief(fixture_root)
+    assert build(p, tmp_path / "prev", include_drafts=True) == []
+    cand = (tmp_path / "prev/briefings/test_brief/index.html").read_text(encoding="utf-8")
+    b = briefing.load_all(fixture_root)["test_brief"]
+    edition = briefing.freeze(fixture_root, p, b, period_label).stem
+    p = write_brief(fixture_root, status="published", extra=f"published_edition: {edition}\n")
+    assert build(p, tmp_path / "prod") == []
+    pub = (tmp_path / "prod/briefings/test_brief/index.html").read_text(encoding="utf-8")
+    src = p.indicators["test_unemployment"].source
+    for page in (cand, pub):
+        for el in [*READER_ELEMENTS[0:1], *READER_ELEMENTS[2:]]:
+            assert el in page
+        assert src.url.replace("&", "&amp;") in page or src.url in page  # source link
+        assert src.attribution in page
+    assert f"edition {edition}" in pub
+
+
+def test_real_briefing_page_has_reader_elements(tmp_path):
+    assert build(Project.load(), tmp_path / "prev", include_drafts=True) == []
+    page = (tmp_path / "prev/briefings/immigration/index.html").read_text(encoding="utf-8")
+    for el in READER_ELEMENTS:
+        assert el in page
