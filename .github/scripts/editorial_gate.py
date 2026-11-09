@@ -6,7 +6,7 @@ Decision 17 in docs/decisions.md. Agents never add the label themselves.
 All agents currently act through Ross's GitHub account, so this is a guard
 against mistakes, not a security boundary.
 
-    python .github/scripts/editorial_gate.py <changed_files.txt> <labels.txt>
+    python .github/scripts/editorial_gate.py [--codeowners PATH] <changed_files.txt> <labels.txt>
 """
 
 from __future__ import annotations
@@ -40,8 +40,8 @@ def is_owned(path: str, patterns: list[str]) -> bool:
     return False
 
 
-def main(changed_file: str, labels_file: str) -> int:
-    patterns = owned_patterns(Path(".github/CODEOWNERS").read_text())
+def main(changed_file: str, labels_file: str, codeowners: str = ".github/CODEOWNERS") -> int:
+    patterns = owned_patterns(Path(codeowners).read_text())
     changed = [x for x in Path(changed_file).read_text().splitlines() if x.strip()]
     labels = {x.strip() for x in Path(labels_file).read_text().splitlines() if x.strip()}
     owned = [f for f in changed if is_owned(f, patterns)]
@@ -57,4 +57,8 @@ def main(changed_file: str, labels_file: str) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(*sys.argv[1:3]))
+    args = sys.argv[1:]
+    codeowners = ".github/CODEOWNERS"
+    if args[:1] == ["--codeowners"]:
+        codeowners, args = args[1], args[2:]
+    sys.exit(main(args[0], args[1], codeowners))
