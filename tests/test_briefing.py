@@ -319,10 +319,22 @@ def test_peers_use_one_common_year_and_record_every_country():
 
 
 def test_peer_facts_keep_source_status_and_skip_incomplete_years():
+    # Relative to whatever data/ holds, so a routine refresh can't break it.
     p = Project.load()
-    f = briefing.Facts(p, ["permanent_immigration_per_1000", "asylum_applications_per_1000"],
-                       period_label)  # fmt: skip
+    ind = "asylum_applications_per_1000"
+    f = briefing.Facts(p, [ind, "permanent_immigration_per_1000"], period_label)
+    rows = p.read_observations(ind)
+    g7 = p.peer_groups["g7"].members
+    complete = [
+        y for y in {o.period for o in rows}
+        if all(any(o.geography_id == g and o.period == y and o.value is not None for o in rows)
+               for g in g7)
+    ]  # fmt: skip
+    assert f.peers(ind)["when"] == max(complete)
     f.peers("permanent_immigration_per_1000")
-    assert f.used["permanent_immigration_per_1000.iso:GBR.2024"]["status"] == "estimated"
-    pa = f.peers("asylum_applications_per_1000")
-    assert pa["when"] == "2024"  # 2025 lacks a comparable US total
+    for key, fact in f.used.items():
+        obs = next(
+            o for o in p.read_observations(fact["indicator"])
+            if o.geography_id == fact["geography"] and o.period == fact["period"]
+        )  # fmt: skip
+        assert fact["status"] == obs.status, key
