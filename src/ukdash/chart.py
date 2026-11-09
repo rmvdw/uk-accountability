@@ -197,8 +197,14 @@ def multi_line_chart(
             for i, (k, v) in enumerate(seg)
         )
         last = max(valid, key=lambda o: period_ordinal(o.period, o.frequency))
+        # A value isolated by gaps on both sides has no line to draw, so mark it.
+        lone = "".join(
+            f'<circle cx="{x(seg[0][0]):.1f}" cy="{y(seg[0][1]):.1f}" r="2.5" class="dot {cls}"/>'
+            for seg in segs
+            if len(seg) == 1
+        )
         paths.append(
-            f'<path d="{d}" class="line {cls}"/>'
+            f'<path d="{d}" class="line {cls}"/>{lone}'
             f'<circle cx="{x(period_ordinal(last.period, last.frequency)):.1f}" '
             f'cy="{y(last.value):.1f}" r="4" class="dot {cls}"/>'
         )

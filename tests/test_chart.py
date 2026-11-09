@@ -63,3 +63,5 @@ def test_multi_line_chart_breaks_at_explicitly_missing_y12_value():
     svg = multi_line_chart([("Net", rows, "net")], "people", 0)
     path = svg.split('class="line net"')[0].rsplit('d="', 1)[1]
     assert path.count("M") == 2
+    # The June 2024 value is cut off by the gap; it still gets a marker, plus the final one.
+    assert svg.count('class="dot net"') == 2
