@@ -1,0 +1,127 @@
+indicator_id,geography_id,breakdown,period,frequency,value,status
+visas_granted,iso:GBR,bno,2014-12,Y12,,not applicable
+visas_granted,iso:GBR,bno,2015-12,Y12,,not applicable
+visas_granted,iso:GBR,bno,2016-12,Y12,,not applicable
+visas_granted,iso:GBR,bno,2017-12,Y12,,not applicable
+visas_granted,iso:GBR,bno,2018-12,Y12,,not applicable
+visas_granted,iso:GBR,bno,2019-12,Y12,,not applicable
+visas_granted,iso:GBR,bno,2020-12,Y12,,not applicable
+visas_granted,iso:GBR,bno,2021-12,Y12,75579.0,
+visas_granted,iso:GBR,bno,2022-12,Y12,53694.0,
+visas_granted,iso:GBR,bno,2023-12,Y12,28168.0,
+visas_granted,iso:GBR,bno,2024-12,Y12,19139.0,
+visas_granted,iso:GBR,bno,2025-06,Y12,11803.0,
+visas_granted,iso:GBR,bno,2025-12,Y12,8925.0,
+visas_granted,iso:GBR,bno,2026-06,Y12,5944.0,
+visas_granted,iso:GBR,eea_family_permit,2014-12,Y12,24985.0,
+visas_granted,iso:GBR,eea_family_permit,2015-12,Y12,30302.0,
+visas_granted,iso:GBR,eea_family_permit,2016-12,Y12,33092.0,
+visas_granted,iso:GBR,eea_family_permit,2017-12,Y12,27106.0,
+visas_granted,iso:GBR,eea_family_permit,2018-12,Y12,36296.0,
+visas_granted,iso:GBR,eea_family_permit,2019-12,Y12,45613.0,
+visas_granted,iso:GBR,eea_family_permit,2020-12,Y12,16027.0,
+visas_granted,iso:GBR,eea_family_permit,2021-12,Y12,6528.0,
+visas_granted,iso:GBR,eea_family_permit,2022-12,Y12,26.0,
+visas_granted,iso:GBR,eea_family_permit,2023-12,Y12,90.0,
+visas_granted,iso:GBR,eea_family_permit,2024-12,Y12,2.0,
+visas_granted,iso:GBR,eea_family_permit,2025-06,Y12,1.0,
+visas_granted,iso:GBR,eea_family_permit,2025-12,Y12,1.0,
+visas_granted,iso:GBR,eea_family_permit,2026-06,Y12,0.0,
+visas_granted,iso:GBR,euss,2014-12,Y12,,not applicable
+visas_granted,iso:GBR,euss,2015-12,Y12,,not applicable
+visas_granted,iso:GBR,euss,2016-12,Y12,,not applicable
+visas_granted,iso:GBR,euss,2017-12,Y12,,not applicable
+visas_granted,iso:GBR,euss,2018-12,Y12,,not applicable
+visas_granted,iso:GBR,euss,2019-12,Y12,6600.0,
+visas_granted,iso:GBR,euss,2020-12,Y12,19015.0,
+visas_granted,iso:GBR,euss,2021-12,Y12,55275.0,
+visas_granted,iso:GBR,euss,2022-12,Y12,32209.0,
+visas_granted,iso:GBR,euss,2023-12,Y12,17283.0,
+visas_granted,iso:GBR,euss,2024-12,Y12,13501.0,
+visas_granted,iso:GBR,euss,2025-06,Y12,9278.0,
+visas_granted,iso:GBR,euss,2025-12,Y12,7710.0,
+visas_granted,iso:GBR,euss,2026-06,Y12,7054.0,
+visas_granted,iso:GBR,family,2014-12,Y12,34852.0,
+visas_granted,iso:GBR,family,2015-12,Y12,37711.0,
+visas_granted,iso:GBR,family,2016-12,Y12,37781.0,
+visas_granted,iso:GBR,family,2017-12,Y12,40123.0,
+visas_granted,iso:GBR,family,2018-12,Y12,43620.0,
+visas_granted,iso:GBR,family,2019-12,Y12,55643.0,
+visas_granted,iso:GBR,family,2020-12,Y12,37087.0,
+visas_granted,iso:GBR,family,2021-12,Y12,42182.0,
+visas_granted,iso:GBR,family,2022-12,Y12,47119.0,
+visas_granted,iso:GBR,family,2023-12,Y12,80083.0,
+visas_granted,iso:GBR,family,2024-12,Y12,85161.0,
+visas_granted,iso:GBR,family,2025-06,Y12,70697.0,
+visas_granted,iso:GBR,family,2025-12,Y12,65971.0,
+visas_granted,iso:GBR,family,2026-06,Y12,57590.0,
+visas_granted,iso:GBR,other,2014-12,Y12,25721.0,
+visas_granted,iso:GBR,other,2015-12,Y12,27219.0,
+visas_granted,iso:GBR,other,2016-12,Y12,28628.0,
+visas_granted,iso:GBR,other,2017-12,Y12,31234.0,
+visas_granted,iso:GBR,other,2018-12,Y12,30319.0,
+visas_granted,iso:GBR,other,2019-12,Y12,31286.0,
+visas_granted,iso:GBR,other,2020-12,Y12,16970.0,
+visas_granted,iso:GBR,other,2021-12,Y12,32962.0,
+visas_granted,iso:GBR,other,2022-12,Y12,28941.0,
+visas_granted,iso:GBR,other,2023-12,Y12,30530.0,
+visas_granted,iso:GBR,other,2024-12,Y12,28350.0,
+visas_granted,iso:GBR,other,2025-06,Y12,23953.0,
+visas_granted,iso:GBR,other,2025-12,Y12,20628.0,
+visas_granted,iso:GBR,other,2026-06,Y12,20489.0,
+visas_granted,iso:GBR,study,2014-12,Y12,293648.0,
+visas_granted,iso:GBR,study,2015-12,Y12,272919.0,
+visas_granted,iso:GBR,study,2016-12,Y12,294454.0,
+visas_granted,iso:GBR,study,2017-12,Y12,330101.0,
+visas_granted,iso:GBR,study,2018-12,Y12,354878.0,
+visas_granted,iso:GBR,study,2019-12,Y12,404410.0,
+visas_granted,iso:GBR,study,2020-12,Y12,250121.0,
+visas_granted,iso:GBR,study,2021-12,Y12,435110.0,
+visas_granted,iso:GBR,study,2022-12,Y12,623698.0,
+visas_granted,iso:GBR,study,2023-12,Y12,604253.0,
+visas_granted,iso:GBR,study,2024-12,Y12,418932.0,
+visas_granted,iso:GBR,study,2025-06,Y12,435468.0,
+visas_granted,iso:GBR,study,2025-12,Y12,427340.0,
+visas_granted,iso:GBR,study,2026-06,Y12,385974.0,
+visas_granted,iso:GBR,total,2014-12,Y12,546352.0,calculated
+visas_granted,iso:GBR,total,2015-12,Y12,534051.0,calculated
+visas_granted,iso:GBR,total,2016-12,Y12,557877.0,calculated
+visas_granted,iso:GBR,total,2017-12,Y12,593507.0,calculated
+visas_granted,iso:GBR,total,2018-12,Y12,640925.0,calculated
+visas_granted,iso:GBR,total,2019-12,Y12,736111.0,calculated
+visas_granted,iso:GBR,total,2020-12,Y12,453748.0,calculated
+visas_granted,iso:GBR,total,2021-12,Y12,886829.0,calculated
+visas_granted,iso:GBR,total,2022-12,Y12,1416958.0,calculated
+visas_granted,iso:GBR,total,2023-12,Y12,1414321.0,calculated
+visas_granted,iso:GBR,total,2024-12,Y12,951050.0,calculated
+visas_granted,iso:GBR,total,2025-06,Y12,851211.0,calculated
+visas_granted,iso:GBR,total,2025-12,Y12,805900.0,calculated
+visas_granted,iso:GBR,total,2026-06,Y12,727487.0,calculated
+visas_granted,iso:GBR,ukraine,2014-12,Y12,,not applicable
+visas_granted,iso:GBR,ukraine,2015-12,Y12,,not applicable
+visas_granted,iso:GBR,ukraine,2016-12,Y12,,not applicable
+visas_granted,iso:GBR,ukraine,2017-12,Y12,,not applicable
+visas_granted,iso:GBR,ukraine,2018-12,Y12,,not applicable
+visas_granted,iso:GBR,ukraine,2019-12,Y12,,not applicable
+visas_granted,iso:GBR,ukraine,2020-12,Y12,,not applicable
+visas_granted,iso:GBR,ukraine,2021-12,Y12,,not applicable
+visas_granted,iso:GBR,ukraine,2022-12,Y12,209706.0,
+visas_granted,iso:GBR,ukraine,2023-12,Y12,40287.0,
+visas_granted,iso:GBR,ukraine,2024-12,Y12,17826.0,
+visas_granted,iso:GBR,ukraine,2025-06,Y12,14248.0,
+visas_granted,iso:GBR,ukraine,2025-12,Y12,14895.0,
+visas_granted,iso:GBR,ukraine,2026-06,Y12,15595.0,
+visas_granted,iso:GBR,work,2014-12,Y12,167146.0,
+visas_granted,iso:GBR,work,2015-12,Y12,165900.0,
+visas_granted,iso:GBR,work,2016-12,Y12,163922.0,
+visas_granted,iso:GBR,work,2017-12,Y12,164943.0,
+visas_granted,iso:GBR,work,2018-12,Y12,175812.0,
+visas_granted,iso:GBR,work,2019-12,Y12,192559.0,
+visas_granted,iso:GBR,work,2020-12,Y12,114528.0,
+visas_granted,iso:GBR,work,2021-12,Y12,239193.0,
+visas_granted,iso:GBR,work,2022-12,Y12,421565.0,
+visas_granted,iso:GBR,work,2023-12,Y12,613627.0,
+visas_granted,iso:GBR,work,2024-12,Y12,368139.0,
+visas_granted,iso:GBR,work,2025-06,Y12,285763.0,
+visas_granted,iso:GBR,work,2025-12,Y12,260430.0,
+visas_granted,iso:GBR,work,2026-06,Y12,234841.0,
