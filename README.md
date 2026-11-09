@@ -2,7 +2,7 @@
 
 A free, public reference for how the UK is doing compared with similar countries, built only from official public data. Maintained by one owner (Ross) and AI agents.
 
-**Status:** scaffold. No real indicators published yet. See [issues](https://github.com/rmvdw/uk-accountability/issues) for what's next.
+**Status:** early. One indicator published (unemployment rate, UK + G7). Live at https://uk-accountability.pages.dev. See [issues](https://github.com/rmvdw/uk-accountability/issues) for what's next.
 
 ## Quick start
 
