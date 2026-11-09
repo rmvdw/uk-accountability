@@ -340,24 +340,24 @@ def freeze(root: Path, project: Project, b: Briefing, period_label, extra=None) 
     edition = now.strftime("%Y-%m-%d-%H%M")
     path = edition_path(root, b.id, edition)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(
-            {
-                "briefing": b.id,
-                "edition": edition,
-                "frozen_at": now.isoformat(),
-                "title": b.title,
-                "standfirst": b.standfirst,
-                "body_html": html,
-                "facts": facts,
-                "sources": sources,
-            },
-            indent=2,
-        )
-        + "\n",
-        newline="\n",
-        encoding="utf-8",
-    )
+    record = {
+        "briefing": b.id,
+        "edition": edition,
+        "frozen_at": now.isoformat(),
+        "title": b.title,
+        "standfirst": b.standfirst,
+        "body_html": html,
+        "facts": facts,
+        "sources": sources,
+    }
+    try:  # "x": never replace an existing edition, even one frozen a moment ago
+        with path.open("x", encoding="utf-8", newline="\n") as fh:
+            fh.write(json.dumps(record, indent=2) + "\n")
+    except FileExistsError:
+        raise ValueError(
+            f"{b.id}: edition {edition} already exists; editions are never replaced. "
+            "Wait a minute and run it again."
+        ) from None
     return path
 
 
@@ -383,10 +383,13 @@ def _show(v) -> str:
 def diff_facts(published: dict, candidate: dict) -> list[str]:
     """Plain-English list of what a new candidate would change versus the published edition."""
     changes = []
+    charted = []
     for k, new in sorted(candidate.items()):
-        if new.get("chart"):
-            continue
         old = published.get(k)
+        if new.get("chart"):
+            if old is None or old["value"] != new["value"] or old["status"] != new["status"]:
+                charted.append(k)
+            continue
         if old is None:
             changes.append(f"new figure used: {k} = {_show(new['value'])}")
         elif old["value"] != new["value"] or old["status"] != new["status"]:
@@ -395,6 +398,12 @@ def diff_facts(published: dict, candidate: dict) -> list[str]:
                 f"{_show(new['value'])} ({new['status'] or 'final'})"
             )
     for k in sorted(set(published) - set(candidate)):
-        if not published[k].get("chart"):
+        if published[k].get("chart"):
+            charted.append(k)
+        else:
             changes.append(f"figure no longer used: {k}")
+    if charted:
+        sample = ", ".join(sorted(charted)[:3]) + (", ..." if len(charted) > 3 else "")
+        n = len(charted)
+        changes.append(f"charts: {n} plotted point(s) new, revised or dropped ({sample})")
     return changes

@@ -138,3 +138,47 @@ def test_diff_facts_reports_changes():
     changes = briefing.diff_facts(old, new)
     assert any("1 (provisional) → 2 (revised)" in c for c in changes)
     assert any("new figure used: b.total.2025" in c for c in changes)
+
+
+def test_diff_facts_reports_chart_revisions_in_summary():
+    old = {"a.total.2020": {"value": 1.0, "status": "", "chart": True}}
+    new = {"a.total.2020": {"value": 1.5, "status": "", "chart": True}}
+    assert briefing.diff_facts(old, new) == [
+        "charts: 1 plotted point(s) new, revised or dropped (a.total.2020)"
+    ]
+    assert briefing.diff_facts(old, old) == []
+
+
+def test_edition_is_never_replaced(fixture_root, monkeypatch):
+    from datetime import UTC, datetime
+
+    class Frozen(datetime):  # both runs fall in the same minute
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 11, 26, 9, 31, tzinfo=UTC)
+
+    monkeypatch.setattr(briefing, "datetime", Frozen)
+    p = write_brief(fixture_root)
+    b = briefing.load_all(fixture_root)["test_brief"]
+    path = briefing.freeze(fixture_root, p, b, period_label)
+    before = path.read_text(encoding="utf-8")
+    set_latest_value(fixture_root, "4.0")  # same minute, different data
+    with pytest.raises(ValueError, match="never replaced"):
+        briefing.freeze(fixture_root, Project.load(fixture_root), b, period_label)
+    assert path.read_text(encoding="utf-8") == before
+
+
+def test_production_build_does_not_render_candidates(fixture_root, tmp_path, monkeypatch):
+    p = write_brief(fixture_root)
+    b = briefing.load_all(fixture_root)["test_brief"]
+    edition = briefing.freeze(fixture_root, p, b, period_label).stem
+    p = write_brief(fixture_root, status="published", extra=f"published_edition: {edition}\n")
+
+    def broken(*args, **kwargs):  # e.g. a source table the candidate needs changed shape
+        raise ValueError("candidate cannot render")
+
+    monkeypatch.setattr(briefing, "render_candidate", broken)
+    assert any("cannot render" in e for e in validate(p))  # make check still reports it
+    assert build(p, tmp_path / "prod") == []  # but production serves the frozen edition
+    prod = (tmp_path / "prod/briefings/test_brief/index.html").read_text(encoding="utf-8")
+    assert f"Edition {edition}" in prod

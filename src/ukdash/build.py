@@ -196,7 +196,7 @@ def cloudflare_preview_branch() -> str | None:
 
 def build(project: Project, out: Path, include_drafts: bool = False) -> list[str]:
     """Build the site. include_drafts is for review previews only, never production."""
-    errors = validate(project)
+    errors = validate(project, render_candidates=include_drafts)
     if errors:
         return errors
 
