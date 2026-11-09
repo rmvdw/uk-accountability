@@ -1,7 +1,11 @@
-# Editorial ownership: changes here need Ross's review (enforced once branch rules are on).
+# Ross-owned paths. The Editorial gate check (decision 17) blocks PRs that change them
+# until Ross adds the `ross-approved` label.
 /indicators/            @rmvdw
 /config/peers.yml       @rmvdw
 /docs/decisions.md      @rmvdw
-/templates/about.html   @rmvdw
+/templates/              @rmvdw
+/briefings/              @rmvdw
 /LICENSE                @rmvdw
 /.github/CODEOWNERS     @rmvdw
+/.github/workflows/editorial-gate.yml @rmvdw
+/.github/scripts/editorial_gate.py   @rmvdw

@@ -1,0 +1,42 @@
+# Decision 17: PRs touching Ross-owned paths (.github/CODEOWNERS) need the `ross-approved` label.
+name: Editorial gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Rules and script come from the base branch, so a PR cannot loosen its own gate.
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+      - uses: actions/checkout@v6
+        with:
+          path: head
+      - name: List changed files and labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # Include previous_filename so renaming a protected file away still counts.
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" \
+            --jq '.[] | .filename, (.previous_filename // empty)' | sort -u > changed.txt
+          gh api "repos/$GITHUB_REPOSITORY/issues/$PR/labels" --jq '.[].name' > labels.txt
+      - name: Check
+        run: |
+          script=base/.github/scripts/editorial_gate.py
+          if [ ! -f "$script" ]; then
+            echo "Gate not on base branch yet (first introduction): using this PR's script."
+            script=head/.github/scripts/editorial_gate.py
+          fi
+          [ -f base/.github/CODEOWNERS ] || { echo "No CODEOWNERS on base branch"; exit 1; }
+          python3 "$script" --codeowners base/.github/CODEOWNERS changed.txt labels.txt
