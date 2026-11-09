@@ -172,7 +172,9 @@ def build_briefings(project: Project, out: Path, env, common: dict, include_draf
         page["source_lines"] = briefing.source_summary(page["sources"])
         target = out / "briefings" / b.id / "index.html"
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(env.get_template("briefing.html").render(**common, b=page))
+        target.write_text(
+            env.get_template("briefing.html").render(**common, b=page), encoding="utf-8"
+        )
         cards.append(page)
     return cards
 
@@ -213,17 +215,22 @@ def build(project: Project, out: Path, include_drafts: bool = False) -> list[str
         ctx = indicator_context(project, d.id)
         page = out / d.id / "index.html"
         page.parent.mkdir(parents=True)
-        page.write_text(env.get_template("indicator.html").render(**common, **ctx))
+        page.write_text(
+            env.get_template("indicator.html").render(**common, **ctx), encoding="utf-8"
+        )
         if ctx["has_data"]:  # a draft may not have been fetched yet
             shutil.copy(project.observations_path(d.id), out / d.id / f"{d.id}.csv")
         cards.append(ctx)
 
     briefing_cards = build_briefings(project, out, env, common, include_drafts)
     (out / "index.html").write_text(
-        env.get_template("index.html").render(**common, cards=cards, briefings=briefing_cards)
+        env.get_template("index.html").render(**common, cards=cards, briefings=briefing_cards),
+        encoding="utf-8",
     )
     (out / "about").mkdir()
-    (out / "about" / "index.html").write_text(env.get_template("about.html").render(**common))
+    (out / "about" / "index.html").write_text(
+        env.get_template("about.html").render(**common), encoding="utf-8"
+    )
     (out / "build-info.json").write_text(
         json.dumps(
             {
@@ -238,6 +245,7 @@ def build(project: Project, out: Path, include_drafts: bool = False) -> list[str
             },
             indent=2,
         )
-        + "\n"
+        + "\n",
+        encoding="utf-8",
     )
     return []

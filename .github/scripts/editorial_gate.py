@@ -35,7 +35,7 @@ def status_of(root: Path | None, path: str) -> str | None:
     f = root / path
     if not f.exists():
         return "absent"
-    text = f.read_text(errors="replace")
+    text = f.read_text(errors="replace", encoding="utf-8")
     if path.endswith(".md"):  # briefings: only the front matter counts
         parts = text.split("\n---", 1)
         if not text.startswith("---") or len(parts) < 2:
@@ -84,9 +84,11 @@ def main(
     base_dir: str | None = None,
     head_dir: str | None = None,
 ) -> int:
-    patterns = owned_patterns(Path(codeowners).read_text())
-    changed = [x for x in Path(changed_file).read_text().splitlines() if x.strip()]
-    labels = {x.strip() for x in Path(labels_file).read_text().splitlines() if x.strip()}
+    patterns = owned_patterns(Path(codeowners).read_text(encoding="utf-8"))
+    changed = [x for x in Path(changed_file).read_text(encoding="utf-8").splitlines() if x.strip()]
+    labels = {
+        x.strip() for x in Path(labels_file).read_text(encoding="utf-8").splitlines() if x.strip()
+    }
     base = Path(base_dir) if base_dir else None
     head = Path(head_dir) if head_dir else None
     owned = [f for f in changed if is_owned(f, patterns)]

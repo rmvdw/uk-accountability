@@ -46,12 +46,12 @@ class Project:
     def load(cls, root: Path = REPO_ROOT, config_root: Path | None = None) -> Project:
         p = cls(root=Path(root), config_root=Path(config_root) if config_root else None)
         cfg = p.config_root or p.root
-        geo = yaml.safe_load((cfg / "config/geographies.yml").read_text())
+        geo = yaml.safe_load((cfg / "config/geographies.yml").read_text(encoding="utf-8"))
         p.geographies = {g["id"]: Geography(**g) for g in geo["geographies"]}
-        peers = yaml.safe_load((cfg / "config/peers.yml").read_text())
+        peers = yaml.safe_load((cfg / "config/peers.yml").read_text(encoding="utf-8"))
         p.peer_groups = {k: PeerGroup(**v) for k, v in peers["groups"].items()}
         for f in sorted((p.root / "indicators").glob("*.yml")):
-            d = IndicatorDefinition(**yaml.safe_load(f.read_text()))
+            d = IndicatorDefinition(**yaml.safe_load(f.read_text(encoding="utf-8")))
             if d.id != f.stem:
                 raise ValueError(f"{f.name}: id {d.id!r} does not match file name")
             p.indicators[d.id] = d
@@ -72,7 +72,7 @@ class Project:
         path = self.observations_path(indicator_id)
         if not path.exists():
             return []
-        with path.open(newline="") as fh:
+        with path.open(newline="", encoding="utf-8") as fh:
             reader = csv.DictReader(fh)
             if reader.fieldnames != OBS_COLUMNS:
                 raise ValueError(f"{path.name}: columns must be {OBS_COLUMNS}")
@@ -85,13 +85,15 @@ class Project:
         path = self.data_dir / "manifest.json"
         if not path.exists():
             return []
-        return [ManifestEntry(**e) for e in json.loads(path.read_text())]
+        return [ManifestEntry(**e) for e in json.loads(path.read_text(encoding="utf-8"))]
 
     def read_checks(self) -> dict[str, CheckRecord]:
         path = self.data_dir / "checks.json"
         if not path.exists():
             return {}
-        return {k: CheckRecord(**v) for k, v in json.loads(path.read_text()).items()}
+        return {
+            k: CheckRecord(**v) for k, v in json.loads(path.read_text(encoding="utf-8")).items()
+        }
 
     def published(self) -> list[IndicatorDefinition]:
         return [d for d in self.indicators.values() if d.status == "published"]
@@ -100,7 +102,7 @@ class Project:
 def write_observations(path: Path, rows: list[Observation]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     rows = sorted(rows, key=lambda o: (o.geography_id, o.breakdown, o.period))
-    with path.open("w", newline="") as fh:
+    with path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh, lineterminator="\n")
         w.writerow(OBS_COLUMNS)
         for o in rows:

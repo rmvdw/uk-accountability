@@ -51,7 +51,7 @@ class Briefing:
 
 
 def parse(path: Path) -> Briefing:
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     m = FRONT.match(text)
     if not m:
         raise ValueError(f"{path.name}: must start with '---' front matter")
@@ -356,6 +356,7 @@ def freeze(root: Path, project: Project, b: Briefing, period_label, extra=None) 
         )
         + "\n",
         newline="\n",
+        encoding="utf-8",
     )
     return path
 
@@ -364,7 +365,7 @@ def load_edition(root: Path, b: Briefing) -> dict:
     path = edition_path(root, b.id, b.published_edition or "")
     if not path.exists():
         raise ValueError(f"{b.id}: published edition {b.published_edition!r} not found")
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     if data.get("briefing") != b.id:
         raise ValueError(f"{path.name}: edition belongs to {data.get('briefing')!r}")
     if TO_VERIFY in data.get("body_html", ""):

@@ -5,29 +5,33 @@ from ukdash.project import Project
 def test_repository_builds_published_indicators_only(tmp_path):
     project = Project.load()
     assert build(project, tmp_path / "site") == []
-    home = (tmp_path / "site/index.html").read_text()
+    home = (tmp_path / "site/index.html").read_text(encoding="utf-8")
     for d in project.indicators.values():
         assert (tmp_path / "site" / d.id).exists() == (d.status == "published")
         if d.status == "published":
-            assert (
-                "Draft: awaiting approval"
-                not in (tmp_path / "site" / d.id / "index.html").read_text()
-            )
+            assert "Draft: awaiting approval" not in (
+                tmp_path / "site" / d.id / "index.html"
+            ).read_text(encoding="utf-8")
     if not project.published():
         assert "No indicators published yet" in home
 
 
 def test_empty_state_when_nothing_is_published(fixture_root, tmp_path):
     p = fixture_root / "indicators/test_unemployment.yml"
-    p.write_text(p.read_text().replace("status: published", "status: draft"))
+    p.write_text(
+        p.read_text(encoding="utf-8").replace("status: published", "status: draft"),
+        encoding="utf-8",
+    )
     assert build(Project.load(fixture_root), tmp_path / "site") == []
-    assert "No indicators published yet" in (tmp_path / "site/index.html").read_text()
+    assert "No indicators published yet" in (tmp_path / "site/index.html").read_text(
+        encoding="utf-8"
+    )
 
 
 def test_fixture_builds_indicator_page(fixture_project, tmp_path):
     out = tmp_path / "site"
     assert build(fixture_project, out) == []
-    page = (out / "test_unemployment/index.html").read_text()
+    page = (out / "test_unemployment/index.html").read_text(encoding="utf-8")
     assert "TEST FIXTURE" in page
     assert "United Kingdom, June 2025" in page
     assert "May 2025: the latest period with data for every country shown" in page
@@ -39,7 +43,9 @@ def test_fixture_builds_indicator_page(fixture_project, tmp_path):
 
 def test_build_refuses_invalid_data(fixture_root, tmp_path):
     csv = fixture_root / "data/observations/test_unemployment.csv"
-    csv.write_text(csv.read_text().replace("2025-05", "2025-Q2", 1))
+    csv.write_text(
+        csv.read_text(encoding="utf-8").replace("2025-05", "2025-Q2", 1), encoding="utf-8"
+    )
     errors = build(Project.load(fixture_root), tmp_path / "site")
     assert errors
     assert not (tmp_path / "site").exists()
@@ -55,24 +61,27 @@ def test_long_date_is_portable():
 
 def test_drafts_only_in_preview(fixture_root, tmp_path):
     p = fixture_root / "indicators/test_unemployment.yml"
-    p.write_text(p.read_text().replace("status: published", "status: draft"))
+    p.write_text(
+        p.read_text(encoding="utf-8").replace("status: published", "status: draft"),
+        encoding="utf-8",
+    )
     project = Project.load(fixture_root)
     assert build(project, tmp_path / "prod") == []
     assert not (tmp_path / "prod/test_unemployment").exists()
     assert build(project, tmp_path / "prev", include_drafts=True) == []
-    page = (tmp_path / "prev/test_unemployment/index.html").read_text()
+    page = (tmp_path / "prev/test_unemployment/index.html").read_text(encoding="utf-8")
     assert "Draft: awaiting approval" in page and "Review preview" in page
 
 
 def test_draft_without_data_renders_in_preview(fixture_root, tmp_path):
-    src = (fixture_root / "indicators/test_unemployment.yml").read_text()
+    src = (fixture_root / "indicators/test_unemployment.yml").read_text(encoding="utf-8")
     new = src.replace("id: test_unemployment", "id: not_fetched_yet").replace(
         "status: published", "status: draft"
     )
-    (fixture_root / "indicators/not_fetched_yet.yml").write_text(new)
+    (fixture_root / "indicators/not_fetched_yet.yml").write_text(new, encoding="utf-8")
     project = Project.load(fixture_root)
     assert build(project, tmp_path / "prev", include_drafts=True) == []
-    page = (tmp_path / "prev/not_fetched_yet/index.html").read_text()
+    page = (tmp_path / "prev/not_fetched_yet/index.html").read_text(encoding="utf-8")
     assert "No data fetched yet" in page
     assert "Download the data" not in page
     assert not (tmp_path / "prev/not_fetched_yet/not_fetched_yet.csv").exists()
@@ -90,7 +99,7 @@ def test_centred_three_month_labels():
 
 def test_real_indicator_preview_explains_uk_window(tmp_path):
     assert build(Project.load(), tmp_path / "prev", include_drafts=True) == []
-    page = (tmp_path / "prev/unemployment_rate/index.html").read_text()
+    page = (tmp_path / "prev/unemployment_rate/index.html").read_text(encoding="utf-8")
     assert "United Kingdom, June to August 2026" in page
     assert "average of June to August 2026, which the source records as July 2026" in page
 
@@ -124,22 +133,22 @@ def test_cli_build_includes_drafts_only_on_cloudflare_preview(monkeypatch, tmp_p
         monkeypatch.setenv("CF_PAGES_BRANCH", branch)
         out = tmp_path / branch
         assert main(["build", "--out", str(out)]) == 0
-        info = json.loads((out / "build-info.json").read_text())
+        info = json.loads((out / "build-info.json").read_text(encoding="utf-8"))
         assert info["preview_with_drafts"] is expected
         assert info["source_commit"] == "abc123" and info["branch"] == branch
-        assert ("Review preview" in (out / "index.html").read_text()) is expected
+        assert ("Review preview" in (out / "index.html").read_text(encoding="utf-8")) is expected
 
 
 def test_uk_only_indicator_has_no_comparison(fixture_root, tmp_path):
     p = fixture_root / "indicators/test_unemployment.yml"
-    text = p.read_text()
+    text = p.read_text(encoding="utf-8")
     start = text.index("peers:")
     end = text.index("caveats:")
-    p.write_text(text[:start] + text[end:])
+    p.write_text(text[:start] + text[end:], encoding="utf-8")
     project = Project.load(fixture_root)
     assert project.indicators["test_unemployment"].peers is None
     assert build(project, tmp_path / "site") == []
-    page = (tmp_path / "site/test_unemployment/index.html").read_text()
+    page = (tmp_path / "site/test_unemployment/index.html").read_text(encoding="utf-8")
     assert "no reliable international comparison" in page
     assert "Compared with the" not in page
 
@@ -156,7 +165,7 @@ def test_undeclared_breakdown_is_rejected(fixture_root):
     from ukdash.validate import validate
 
     csv = fixture_root / "data/observations/test_unemployment.csv"
-    lines = csv.read_text().splitlines()
+    lines = csv.read_text(encoding="utf-8").splitlines()
     lines.append(lines[1].replace(",total,", ",british,"))
-    csv.write_text("\n".join(lines) + "\n")
+    csv.write_text("\n".join(lines) + "\n", encoding="utf-8")
     assert any("undeclared breakdown" in e for e in validate(Project.load(fixture_root)))

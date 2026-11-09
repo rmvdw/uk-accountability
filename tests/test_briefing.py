@@ -26,17 +26,19 @@ It {{{{ c.verb }}}}.
 def write_brief(root, status="draft", extra="", body=""):
     d = root / "briefings"
     d.mkdir(exist_ok=True)
-    (d / "test_brief.md").write_text(BRIEF.format(status=status, extra=extra, body=body))
+    (d / "test_brief.md").write_text(
+        BRIEF.format(status=status, extra=extra, body=body), encoding="utf-8"
+    )
     return Project.load(root)
 
 
 def set_latest_value(root, value):
     p = root / "data/observations/test_unemployment.csv"
-    rows = list(csv.reader(p.open()))
+    rows = list(csv.reader(p.open(encoding="utf-8")))
     for r in rows[1:]:
         if r[1] == "iso:GBR" and r[3] == "2025-06":
             r[5] = value
-    with p.open("w", newline="") as fh:
+    with p.open("w", newline="", encoding="utf-8") as fh:
         csv.writer(fh, lineterminator="\n").writerows(rows)
 
 
@@ -53,14 +55,16 @@ def test_real_immigration_briefing_renders_with_live_data():
 def test_front_matter_rules(fixture_root):
     write_brief(fixture_root)
     path = fixture_root / "briefings/test_brief.md"
-    text = path.read_text()
-    path.write_text(text.replace("status: draft", "status: draft\nstatus: published"))
+    text = path.read_text(encoding="utf-8")
+    path.write_text(
+        text.replace("status: draft", "status: draft\nstatus: published"), encoding="utf-8"
+    )
     with pytest.raises(ValueError, match="exactly one status"):
         briefing.parse(path)
-    path.write_text(text.replace("id: test_brief", "id: other"))
+    path.write_text(text.replace("id: test_brief", "id: other"), encoding="utf-8")
     with pytest.raises(ValueError, match="id must match"):
         briefing.parse(path)
-    path.write_text("No front matter\n")
+    path.write_text("No front matter\n", encoding="utf-8")
     with pytest.raises(ValueError, match="front matter"):
         briefing.parse(path)
 
@@ -97,17 +101,17 @@ def test_published_edition_is_frozen_against_data_changes(fixture_root, tmp_path
     assert validate(p) == []
 
     assert build(p, tmp_path / "prod") == []
-    prod = (tmp_path / "prod/briefings/test_brief/index.html").read_text()
+    prod = (tmp_path / "prod/briefings/test_brief/index.html").read_text(encoding="utf-8")
     assert "<strong>4.8%</strong>" in prod and f"Edition {edition}" in prod
 
     set_latest_value(fixture_root, "4.0")  # a refresh changes the data
     p = Project.load(fixture_root)
     assert build(p, tmp_path / "prod2") == []
-    prod2 = (tmp_path / "prod2/briefings/test_brief/index.html").read_text()
+    prod2 = (tmp_path / "prod2/briefings/test_brief/index.html").read_text(encoding="utf-8")
     assert "<strong>4.8%</strong>" in prod2  # published wording unchanged
 
     assert build(p, tmp_path / "prev", include_drafts=True) == []
-    prev = (tmp_path / "prev/briefings/test_brief/index.html").read_text()
+    prev = (tmp_path / "prev/briefings/test_brief/index.html").read_text(encoding="utf-8")
     assert "<strong>4.0%</strong>" in prev and "What a new edition would change" in prev
     assert "4.8" in prev and "4.0" in prev  # the change list shows old and new
 

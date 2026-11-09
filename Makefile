@@ -8,7 +8,7 @@ setup:  ## Install the pinned Python toolchain and dependencies (needs network f
 check:  ## Lint, test and validate saved data. Never contacts statistical sources.
 	uv run ruff check .
 	uv run ruff format --check .
-	uv run pytest -q
+	PYTHONWARNDEFAULTENCODING=1 uv run pytest -q
 	uv run python -m ukdash check
 
 build:  ## Build the static site into site/ from saved data. Never contacts statistical sources.

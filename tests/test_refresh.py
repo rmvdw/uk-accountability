@@ -42,7 +42,7 @@ class FakeAdapter(Adapter):
 
 
 def checks(root):
-    return json.loads((root / "data/checks.json").read_text())["test_unemployment"]
+    return json.loads((root / "data/checks.json").read_text(encoding="utf-8"))["test_unemployment"]
 
 
 def test_successful_refresh_promotes_and_records_check(fixture_root):
@@ -89,7 +89,10 @@ def test_invalid_candidate_is_not_promoted(fixture_root):
 
 def set_status(root, status):
     p = root / "indicators/test_unemployment.yml"
-    p.write_text(p.read_text().replace("status: published", f"status: {status}"))
+    p.write_text(
+        p.read_text(encoding="utf-8").replace("status: published", f"status: {status}"),
+        encoding="utf-8",
+    )
 
 
 def test_scheduled_refresh_skips_drafts(fixture_root):

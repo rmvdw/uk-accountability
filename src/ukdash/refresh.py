@@ -127,7 +127,7 @@ class _Candidate:
 
 def _write_json(path: Path, data) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, default=str) + "\n", newline="\n")
+    path.write_text(json.dumps(data, indent=2, default=str) + "\n", newline="\n", encoding="utf-8")
 
 
 def _fail(result: RefreshResult, where: str, exc: BaseException) -> None:
