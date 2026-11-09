@@ -1,7 +1,8 @@
 """Fail a pull request that changes Ross-owned paths unless it has the `ross-approved` label.
 
 Ross-owned paths are read from .github/CODEOWNERS (lines owned by @rmvdw).
-Decision 17 in docs/decisions.md: Ross adds the label, or an agent adds it quoting his explicit approval verbatim.
+Decision 17 in docs/decisions.md: Ross adds the label, or an agent adds it
+quoting his explicit approval verbatim.
 
 All agents currently act through Ross's GitHub account, so this is a guard
 against mistakes, not a security boundary.
