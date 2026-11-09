@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .schema import IndicatorDefinition, Observation, PeerGroup
+from .schema import TOTAL, IndicatorDefinition, Observation, PeerGroup
 
 UK = "iso:GBR"
 
@@ -18,12 +18,17 @@ class PeerComparison:
     uk_rank: int | None  # 1 = best, when direction is not neutral
 
 
-def series(rows: list[Observation], geography_id: str) -> list[Observation]:
-    return sorted((o for o in rows if o.geography_id == geography_id), key=lambda o: o.period)
+def series(rows: list[Observation], geography_id: str, breakdown: str = TOTAL) -> list[Observation]:
+    return sorted(
+        (o for o in rows if o.geography_id == geography_id and o.breakdown == breakdown),
+        key=lambda o: o.period,
+    )
 
 
-def latest(rows: list[Observation], geography_id: str) -> Observation | None:
-    s = [o for o in series(rows, geography_id) if o.value is not None]
+def latest(
+    rows: list[Observation], geography_id: str, breakdown: str = TOTAL
+) -> Observation | None:
+    s = [o for o in series(rows, geography_id, breakdown) if o.value is not None]
     return s[-1] if s else None
 
 
@@ -36,7 +41,7 @@ def peer_comparison(
 
     by_geo: dict[str, dict[str, float]] = {g: {} for g in candidates}
     for o in rows:
-        if o.geography_id in by_geo and o.value is not None:
+        if o.geography_id in by_geo and o.value is not None and o.breakdown == TOTAL:
             by_geo[o.geography_id][o.period] = o.value
 
     for g in candidates:

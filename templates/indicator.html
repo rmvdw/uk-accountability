@@ -35,6 +35,10 @@
 {{ trend_svg|safe }}
 {% endif %}
 
+{% if not group %}
+<h2>International comparison</h2>
+<p class="meta">There is no reliable international comparison for this measure, so only the UK trend is shown.</p>
+{% else %}
 <h2>Compared with the {{ group.label }}</h2>
 {% if comp.period %}
 <p class="meta">{{ comp_label }}: the latest period with data for every country shown.
@@ -47,6 +51,7 @@
 {% if comp.excluded %}
 <p class="meta">Not shown:
 {% for g, reason in comp.excluded.items() %}{{ geo[g].label }} ({{ reason }}){{ "; " if not loop.last else "." }}{% endfor %}</p>
+{% endif %}
 {% endif %}
 {% endif %}
 

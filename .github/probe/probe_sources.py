@@ -1,6 +1,5 @@
 """TEMPORARY (issue #13): fetch the target workbooks and dump their structure."""
 
-import re
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -11,8 +10,10 @@ import openpyxl
 UA = {"User-Agent": "uk-accountability (+https://github.com/rmvdw/uk-accountability)"}
 OUT = Path("probe-out")
 OUT.mkdir(exist_ok=True)
-ONS = ("https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/populationandmigration/"
-       "internationalmigration/datasets/longterminternationalimmigrationemigrationandnetmigrationflowsprovisional/")
+ONS = (
+    "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/populationandmigration/"
+    "internationalmigration/datasets/longterminternationalimmigrationemigrationandnetmigrationflowsprovisional/"
+)
 TARGETS = {
     "ons_ye_dec2025.xlsx": ONS + "yearendingdecember2025/may2026publicationspreadsheet.xlsx",
     "ons_ye_jun2025.xlsx": ONS + "yearendingjune2025/ltimnov25.xlsx",

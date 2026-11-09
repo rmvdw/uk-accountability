@@ -23,7 +23,15 @@ from .schema import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-OBS_COLUMNS = ["indicator_id", "geography_id", "period", "frequency", "value", "status"]
+OBS_COLUMNS = [
+    "indicator_id",
+    "geography_id",
+    "breakdown",
+    "period",
+    "frequency",
+    "value",
+    "status",
+]
 
 
 @dataclass
@@ -91,10 +99,20 @@ class Project:
 
 def write_observations(path: Path, rows: list[Observation]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    rows = sorted(rows, key=lambda o: (o.geography_id, o.period))
+    rows = sorted(rows, key=lambda o: (o.geography_id, o.breakdown, o.period))
     with path.open("w", newline="") as fh:
         w = csv.writer(fh, lineterminator="\n")
         w.writerow(OBS_COLUMNS)
         for o in rows:
             value = "" if o.value is None else repr(o.value)
-            w.writerow([o.indicator_id, o.geography_id, o.period, o.frequency, value, o.status])
+            w.writerow(
+                [
+                    o.indicator_id,
+                    o.geography_id,
+                    o.breakdown,
+                    o.period,
+                    o.frequency,
+                    value,
+                    o.status,
+                ]
+            )

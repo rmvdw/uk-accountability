@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from html import escape
 
-from .schema import Observation, period_ordinal
+from .schema import IRREGULAR_STEP, Observation, period_ordinal
 
 
 def _fmt(v: float, decimals: int) -> str:
@@ -24,7 +24,7 @@ def line_path(rows: list[Observation]) -> list[list[tuple[int, float]]]:
         if o.value is None:
             prev = None
             continue
-        if prev is None or k != prev + 1:
+        if prev is None or (k != prev + 1 and o.frequency not in IRREGULAR_STEP):
             segments.append([])
         segments[-1].append((k, o.value))
         prev = k
@@ -38,6 +38,7 @@ def line_chart(
     decimals: int,
     period_label=lambda p: p,
 ) -> str:
+    rows = [o for o in rows if o.breakdown == "total"]
     pts = [(o.period, o.value) for o in sorted(rows, key=lambda o: o.period) if o.value is not None]
     if len(pts) < 2:
         return ""

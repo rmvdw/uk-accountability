@@ -26,16 +26,17 @@ def validate(project: Project) -> list[str]:
 
     for d in project.indicators.values():
         where = f"indicator {d.id}"
-        group = project.peer_groups.get(d.peers.group)
-        if group is None:
-            errors.append(f"{where}: unknown peer group {d.peers.group!r}")
-        else:
-            for g in d.peers.exclusions:
-                if g not in group.members:
-                    errors.append(f"{where}: excludes {g}, which is not in {d.peers.group}")
-        for g, reason in d.peers.exclusions.items():
-            if not reason.strip():
-                errors.append(f"{where}: exclusion of {g} has no reason")
+        if d.peers is not None:
+            group = project.peer_groups.get(d.peers.group)
+            if group is None:
+                errors.append(f"{where}: unknown peer group {d.peers.group!r}")
+            else:
+                for g in d.peers.exclusions:
+                    if g not in group.members:
+                        errors.append(f"{where}: excludes {g}, which is not in {d.peers.group}")
+            for g, reason in d.peers.exclusions.items():
+                if not reason.strip():
+                    errors.append(f"{where}: exclusion of {g} has no reason")
 
         try:
             rows = project.read_observations(d.id)
@@ -57,6 +58,8 @@ def validate(project: Project) -> list[str]:
                 errors.append(
                     f"{where}: {o.period} has frequency {o.frequency}, expected {d.frequency}"
                 )
+            if o.breakdown != "total" and o.breakdown not in d.breakdowns:
+                errors.append(f"{where}: undeclared breakdown {o.breakdown!r}")
             if o.geography_id not in geos:
                 errors.append(f"{where}: unknown geography {o.geography_id}")
             if o.key in seen:

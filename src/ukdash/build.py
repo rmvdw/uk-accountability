@@ -51,6 +51,14 @@ def _period_label(period: str, frequency: str, short: bool = False) -> str:
     if frequency == "Q":
         y, q = period.split("-")
         return f"{q} {y}"
+    if frequency in ("Y12", "AT"):
+        y, m = period.split("-")
+        month = MONTHS[int(m) - 1]
+        if short:
+            return f"YE {month[:3]} {y}" if frequency == "Y12" else f"{month[:3]} {y}"
+        if frequency == "Y12":
+            return f"year ending {month} {y}"
+        return f"end of {month} {y}"
     return period
 
 
@@ -77,10 +85,10 @@ def indicator_context(project: Project, ind_id: str) -> dict:
     d = project.indicators[ind_id]
     rows = project.read_observations(ind_id)
     labels = {g: geo.short_label for g, geo in project.geographies.items()}
-    group = project.peer_groups[d.peers.group]
+    group = project.peer_groups[d.peers.group] if d.peers else None
     uk_series = series(rows, UK)
     uk_latest = latest(rows, UK)
-    comp = peer_comparison(d, group, rows)
+    comp = peer_comparison(d, group, rows) if group else None
     check = project.read_checks().get(ind_id)
     manifest = [e for e in project.read_manifest() if e.indicator_id == ind_id]
     retrieval = max(manifest, key=lambda e: e.retrieved_at) if manifest else None
@@ -100,8 +108,10 @@ def indicator_context(project: Project, ind_id: str) -> dict:
         ),
         "uk_table": [o for o in uk_series],
         "comp": comp,
-        "comp_label": _period_label(comp.period, d.frequency) if comp.period else None,
-        "comp_svg": chart.bar_chart(comp.values, labels, UK, d.unit, d.decimals, comp.period or ""),
+        "comp_label": _period_label(comp.period, d.frequency) if comp and comp.period else None,
+        "comp_svg": chart.bar_chart(comp.values, labels, UK, d.unit, d.decimals, comp.period or "")
+        if comp
+        else "",
         "check": check,
         "retrieval": retrieval,
         "period_label": lambda p: _period_label(p, d.frequency),
@@ -113,7 +123,7 @@ def indicator_context(project: Project, ind_id: str) -> dict:
 
 def _comparison_basis_note(project: Project, d, comp) -> str | None:
     """Explain when geographies in the comparison measure the period differently."""
-    if not comp.period:
+    if not comp or not comp.period:
         return None
     centred = [g for g in comp.included if d.period_basis.get(g) == "centred_3m"]
     if not centred:

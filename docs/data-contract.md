@@ -25,12 +25,13 @@ Long format, one CSV per indicator, UTF-8, header row:
 | --- | --- | --- |
 | `indicator_id` | string | Matches the YAML file name. |
 | `geography_id` | string | A canonical ID from `config/geographies.yml`. |
+| `breakdown` | slug | `total` for the headline series; otherwise a slug declared in the indicator's `breakdowns` (e.g. `british`, `work`). |
 | `period` | string | See periods below. |
 | `frequency` | `A`, `Q`, `M`, `M3` | Must match the period format. |
 | `value` | finite number or empty | Empty means missing; requires a `status`. NaN and infinity are rejected. |
 | `status` | string or empty | Source flags, e.g. `provisional`, `estimated`, `break`, `missing`. |
 
-Unique key: `(indicator_id, geography_id, period)`. Duplicates fail validation. Missing values stay missing; never fill or interpolate.
+Unique key: `(indicator_id, geography_id, breakdown, period)`. Duplicates fail validation. Missing values stay missing; never fill or interpolate.
 
 ## Periods
 
@@ -40,6 +41,8 @@ Unique key: `(indicator_id, geography_id, period)`. Duplicates fail validation. 
 | `Q` | `YYYY-Qn` | `2024-Q3` | Calendar quarter |
 | `M` | `YYYY-MM` | `2024-09` | Calendar month |
 | `M3` | `YYYY-MM` | `2024-09` | Rolling three months *ending* that month (e.g. ONS LFS). Never relabel as a quarter. |
+| `Y12` | `YYYY-MM` | `2026-06` | Rolling 12 months *ending* that month ("year ending June 2026"). A calendar year is stored as the year ending December (`2025-12`). Series may mix steps (calendar years plus the latest year-ending-June), so charts don't treat the gaps as missing data. |
+| `AT` | `YYYY-MM` | `2026-06` | A **stock** as at the end of that month (e.g. people awaiting an asylum decision). Only for `measure_type: stock`. |
 
 Financial years, academic years and other conventions get their own frequency code when first needed; add them here first.
 
@@ -62,9 +65,11 @@ Required fields are enforced by `IndicatorDefinition` in `src/ukdash/schema.py`.
 - `id`, `title`, `status` (`draft` or `published`; only `published` indicators appear on the site)
 - `what_it_measures`, `why_it_matters`: plain English, one or two sentences each
 - `unit`, `decimals`, `frequency`, `direction` (`higher_is_better`, `lower_is_better` or `neutral`)
+- `measure_type`: `flow` (an amount over a period), `stock` (a level at a date; frequency `AT`), `rate` or `index`. Stocks and flows are never summed or charted together.
+- `breakdowns` (optional): slug → label for non-total series
 - `coverage`: population/age, seasonal adjustment, and `geography_note`
 - `source`: publisher, dataset, URL, licence (and `licence_url`), attribution text, `adapter` name and adapter `query`
-- `peers`: a group ID from `config/peers.yml`, plus documented `exclusions`
+- `peers`: a group ID from `config/peers.yml`, plus documented `exclusions`. Omit it for UK-only indicators with no reliable international comparison (decision 16).
 - `comparison`: `common_latest_period` (default) — compare peers only on the latest period that every included geography has
 - `caveats`: list of plain-English limitations
 - `check_cadence_days`: how often a live check is expected; drives the overdue flag
@@ -72,7 +77,7 @@ Required fields are enforced by `IndicatorDefinition` in `src/ukdash/schema.py`.
 
 ## Provenance (`data/manifest.json`)
 
-One entry per raw file: `indicator_id`, `path`, `sha256`, `request` (URL or description), `retrieval_method` (`live` or `manual`), `retrieved_at` (UTC ISO 8601), `publisher_release_date` (if known), `licence`. Manual downloads are allowed to seed an indicator if the origin is documented and `retrieval_method` is `manual`.
+One entry per raw file: `indicator_id`, `path`, `sha256`, `request` (URL or description), `retrieval_method` (`live` or `manual`), `retrieved_at` (UTC ISO 8601), `publisher_release_date` (if known), `vintage` (the publisher's edition, e.g. "YE December 2025 (May 2026)"), `licence`. Manual downloads are allowed to seed an indicator if the origin is documented and `retrieval_method` is `manual`.
 
 ## Checks (`data/checks.json`)
 

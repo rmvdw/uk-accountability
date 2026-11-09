@@ -7,6 +7,7 @@ why_it_matters: "Exercises the pipeline end to end in tests."
 unit: "%"
 decimals: 1
 frequency: M
+measure_type: rate
 direction: lower_is_better
 coverage:
   population: "Synthetic"
