@@ -75,6 +75,92 @@ Read [AGENTS.md](AGENTS.md) first. Work is tracked in GitHub Issues; changes com
 | Cloudflare Pages: production deploy from `main` (no drafts) and a preview per PR (drafts included) | Proven 2026-11-09; checked after every deploy by the **Verify deploy** workflow |
 | Live fetch from statistical APIs on GitHub runners | Proven 2026-11-08 for OECD ([run 42507705905](https://github.com/rmvdw/uk-accountability/actions/runs/42507705905)) |
 
+## Routine refresh and monitoring
+
+The **Routine refresh** workflow is deliberately inactive for production until
+the setup below is complete and repository variable `REFRESH_ENABLED` is `true`.
+Its proposed schedule is daily at **07:23 UTC**. `make refresh` fetches only
+published indicators; drafts remain for explicit review/rehearsal fetches.
+
+### Rehearse before enabling
+
+On a PR changing the refresh workflow, helper or adapters, a read-only runner job
+executes `.github/scripts/rehearse_refresh.py`. It fetches every registered
+indicator into a disposable copy, including the approved immigration drafts,
+copies the briefings and renders their candidates against the refreshed data,
+then exercises saved-source recapture, unchanged checks, an injected fetch
+failure and recovery. Recapture stores genuine publisher bytes under new paths
+to test a changed release; it does not pretend the numerical observations changed.
+Numerical changed/unchanged/failure cases also run in `tests/test_refresh.py`.
+
+To run locally: `uv run python .github/scripts/rehearse_refresh.py` (needs publisher
+network access). On GitHub: Actions → Routine refresh → Run workflow → mode
+`rehearsal`. It never pushes data, deploys or pings the monitor. The first rehearsal
+must be green; inspect actual source and safety evidence in its logs.
+
+### Configure the two secrets
+
+1. In Cloudflare Pages project **uk-accountability**, Settings → Builds → Add
+   deploy hook. Name it `routine-refresh`; choose branch **main**. Save the complete
+   hook URL as GitHub repository Actions secret `CLOUDFLARE_DEPLOY_HOOK`. The URL
+   authorises a build, so keep it out of issues, screenshots and logs. This uses
+   the existing Git-connected Pages project, with no broad Cloudflare API token.
+2. In Healthchecks.io, use the free Hobbyist plan and create one check for this
+   workflow. Set a 1-day period with a 3-hour grace period, and configure/test an
+   email notification destination. Save its UUID ping URL
+   (`https://hc-ping.com/<uuid>`) as Actions secret `HEALTHCHECKS_PING_URL`.
+   Do not use auto-provisioning or a paid notification channel. The workflow
+   sends an empty success ping only after data refresh AND served-site
+   verification pass. A missed, cancelled or failed run sends no success ping.
+3. Confirm the repository has label `data-failure` and Actions may write contents
+   and issues. A main-branch protection rule may require an approved bot route;
+   the workflow never force-pushes or bypasses a rule. If a push is rejected,
+   resolve that configuration before unattended operation.
+4. After the independent review and merge, set repository Actions variable
+   `REFRESH_ENABLED=true`, and manually run mode `publish` on **main**. Verify the
+   committed timestamp, the exact served commit, no drafts in production, and
+   receipt of the monitor ping. Exercise the failure/recovery issue lifecycle
+   before calling unattended operation proven. Rehearsal tests alone do not
+   establish production deployment, notification delivery or branch permissions.
+
+Disable routine operation by setting `REFRESH_ENABLED=false`. This does not pause
+Healthchecks; pause that check deliberately for planned downtime to avoid an alert.
+Never disable the monitor as an automatic response to a failing refresh.
+
+### What the production workflow does
+
+- Requires both secret URLs before fetching; serialises refresh runs.
+- Runs `make refresh`, then `uv run python -m ukdash check` and `make build`
+  for a valid candidate. Full code tests stay in CI; refreshed observations must
+  pass data and briefing-candidate validation, not assertions tied to an old release.
+- Commits only allowlisted data paths. An unchanged source still commits its
+  new successful-check timestamp. A failed refresh may commit only failed-attempt
+  metadata; prior observations/raw data and successful-check times are preserved.
+- Pushes normally to main. A racing main update rejects the push; retry from the
+  latest main rather than rebasing a candidate validated against different code.
+- Explicitly POSTs the main deploy hook and polls the served commit/draft mode in
+  the same workflow. It does not depend on a `GITHUB_TOKEN` push starting CI.
+  Cloudflare's Git integration may also build the push, so two builds of the same
+  commit can appear; the explicit hook is retained and the exact served SHA is checked.
+- Signals the independent monitor only after full success, then closes the single
+  persistent `data-failure` issue. Repeated identical failures do not create more
+  issues; recurrence reopens the same issue.
+
+If validation or deployment fails after the source refresh, inspect the stage and
+run linked in the issue. A deployment failure can leave new data committed while
+the previous site is still live. The issue must not be closed until served-site
+verification succeeds. Cancellation/timeout may prevent issue reporting; the
+independent missed-run monitor is the backstop. Overdue labels are already computed
+in each reader's browser, so they also work when no rebuild occurs.
+
+This workflow refreshes indicator data. Published Briefings remain on their frozen,
+reviewed editions; candidate validation does not approve a new Briefing edition.
+
+References: [Cloudflare deploy hooks](https://developers.cloudflare.com/pages/configuration/deploy-hooks/),
+[GitHub token-trigger rules](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow),
+[Healthchecks ping API](https://healthchecks.io/docs/http_api/),
+[Healthchecks free plan](https://healthchecks.io/pricing/).
+
 ## Licence
 
 Code: MIT (see [LICENSE](LICENSE)). Data shown on the site remain under their publishers' licences; each indicator records its source and attribution.

@@ -1,0 +1,121 @@
+name: Routine refresh
+
+on:
+  schedule:
+    - cron: '23 7 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Rehearse in a disposable copy, or publish (main and enabled only)
+        type: choice
+        options: [rehearsal, publish]
+        default: rehearsal
+  pull_request:
+    paths:
+      - '.github/workflows/refresh.yml'
+      - '.github/scripts/refresh_automation.py'
+      - '.github/scripts/rehearse_refresh.py'
+      - 'src/ukdash/refresh.py'
+      - 'src/ukdash/sources/**'
+
+permissions:
+  contents: read
+
+jobs:
+  rehearsal:
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'rehearsal')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - run: make setup
+      - name: Live sources, saved-source replay, failure and recovery (no publication)
+        run: uv run python .github/scripts/rehearse_refresh.py
+
+  publish:
+    if: github.ref == 'refs/heads/main' && vars.REFRESH_ENABLED == 'true' && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    concurrency:
+      group: routine-refresh-main
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      issues: write
+    env:
+      CLOUDFLARE_DEPLOY_HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+      HEALTHCHECKS_PING_URL: ${{ secrets.HEALTHCHECKS_PING_URL }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - name: Require deployment and independent monitoring before fetching
+        id: config
+        run: python3 .github/scripts/refresh_automation.py preflight
+      - uses: astral-sh/setup-uv@v7
+      - run: make setup
+      - name: Refresh published indicators only
+        id: refresh
+        continue-on-error: true
+        run: make refresh
+      - name: Validate candidate and build production (no drafts)
+        id: validate
+        if: steps.refresh.outcome == 'success'
+        run: |
+          # Validate refreshed data and candidate briefings; code tests stay in CI.
+          uv run python -m ukdash check
+          make build
+      - name: Commit release, or failed-attempt metadata only
+        id: persist
+        if: success() && (steps.refresh.outcome == 'failure' || steps.validate.outcome == 'success')
+        env:
+          REFRESH_OUTCOME: ${{ steps.refresh.outcome }}
+        run: |
+          if [ "$REFRESH_OUTCOME" = 'failure' ]; then
+            python3 .github/scripts/refresh_automation.py persist --failed
+            uv run python -m ukdash check
+            make build
+          else
+            python3 .github/scripts/refresh_automation.py persist
+          fi
+          # Reject a racing main update; never force-push or rebase a checked candidate.
+          git push origin HEAD:main
+      - name: Explicitly trigger Cloudflare (GITHUB_TOKEN pushes do not run push workflows)
+        id: deploy
+        if: success() && steps.persist.outcome == 'success'
+        run: python3 .github/scripts/refresh_automation.py deploy
+      - name: Verify the served production commit and absence of drafts
+        id: verify
+        if: success() && steps.deploy.outcome == 'success'
+        run: python3 .github/scripts/verify_deploy.py https://uk-accountability.pages.dev "$(git rev-parse HEAD)" false
+      - name: Signal success only after successful refresh and verified deployment
+        id: heartbeat
+        if: success() && steps.refresh.outcome == 'success' && steps.verify.outcome == 'success'
+        run: python3 .github/scripts/refresh_automation.py heartbeat
+      - name: Update the persistent failure issue or close it on full recovery
+        if: always() && !cancelled()
+        env:
+          CONFIG_RESULT: ${{ steps.config.outcome }}
+          REFRESH_RESULT: ${{ steps.refresh.outcome }}
+          VALIDATE_RESULT: ${{ steps.validate.outcome }}
+          PERSIST_RESULT: ${{ steps.persist.outcome }}
+          DEPLOY_RESULT: ${{ steps.deploy.outcome }}
+          VERIFY_RESULT: ${{ steps.verify.outcome }}
+          HEARTBEAT_RESULT: ${{ steps.heartbeat.outcome }}
+        run: |
+          if [ "$HEARTBEAT_RESULT" = 'success' ]; then
+            python3 .github/scripts/refresh_automation.py report --healthy
+          else
+            stage='setup'
+            for item in CONFIG REFRESH VALIDATE PERSIST DEPLOY VERIFY HEARTBEAT; do
+              key="${item}_RESULT"
+              if [ "${!key}" = 'failure' ]; then
+                stage="$item"
+                break
+              fi
+            done
+            python3 .github/scripts/refresh_automation.py report --stage "$stage"
+            exit 1
+          fi

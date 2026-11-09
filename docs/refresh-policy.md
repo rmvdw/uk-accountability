@@ -47,6 +47,48 @@ Cloudflare Pages builds every push. `main` is production and never shows drafts;
 
 A commit pushed with the default `GITHUB_TOKEN` does not trigger other push-triggered workflows. The refresh workflow therefore builds and deploys explicitly as later jobs in the same workflow, or dispatches deployment deliberately. Prove the actual route works; do not assume.
 
+The implementation is `.github/workflows/refresh.yml`: daily at 07:23 UTC, gated by
+repository variable `REFRESH_ENABLED=true` and restricted to `main`. It explicitly
+triggers a Cloudflare Pages **main** deploy hook and verifies the served commit in
+the same job. Both the hook and an independent Healthchecks UUID ping URL are
+required before a source fetch starts. See README for configuration and activation.
+Cloudflare's Git integration can also build the bot push; the explicit hook may
+produce a second build of the same commit. Verify the served SHA in either case.
+The production job validates refreshed data and briefing candidates with
+`uv run python -m ukdash check`, then builds the frozen production editions.
+Full code tests run in CI on code changes, not against a changing live release.
+
+An unchanged source advances and commits check metadata. On source failure, the
+workflow restores the prior observations/raw/manifest before committing only failed
+attempts. Successful-check timestamps may not advance in that failure commit.
+No code or indicator-definition changes are allowed in an automated data commit.
+If the remote main branch advances during the job, its ordinary push fails; never
+force or rebase the already checked candidate. A validation failure after refresh
+blocks all publication; a later deployment failure may leave refreshed data committed
+without being live. Inspect `build-info.json` before reporting recovery.
+
+One persistent workflow-level issue, labelled `data-failure`, tracks production
+failures and reopens on recurrence. It links to the failed run without leaking
+secret URLs. It closes only after successful refresh, deployed-commit verification
+and a monitor acknowledgement. Identical failures do not generate repeated comments.
+A cancelled/timed-out run may not report an issue, so the independent monitor is
+required; it receives no success signal for that run.
+
+The PR/manual rehearsal fetches all registered sources into a disposable copy and
+exercises changed raw capture, unchanged checks, injected source failure and recovery.
+The copy includes briefings, so it also renders candidate prose and charts against
+the refreshed observations while keeping published editions frozen.
+It has read-only permissions and cannot publish or send a production heartbeat.
+Fixture tests cover numerical changes, data-only/failed-attempt-only commits and the
+failure/recovery issue lifecycle. These checks are separate from the production
+activation evidence below.
+
 ## Before routine operation is switched on
 
 Demonstrate one changed refresh, one unchanged refresh and one failed refresh, and confirm that the failed candidate was not published and its issue was updated.
+
+Also prove a real production deploy hook, received independent-monitor heartbeat,
+tested notification route, and recovery closure on the real repository. Until then,
+leave the schedule disabled. Existing approved immigration drafts supply the second
+publisher/adapter rehearsal; do not publish an extra indicator just to exercise this
+workflow. Briefing editions remain subject to the atomic editorial-review process.
