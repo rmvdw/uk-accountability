@@ -1,7 +1,7 @@
-# Public wording below needs Ross's approval before status becomes "published".
+# Public wording approved by Ross on 2026-11-08 (PR #9). Changes to wording need his review.
 id: unemployment_rate
 title: Unemployment rate
-status: draft
+status: published
 what_it_measures: >-
   The share of people who are available for work and actively looking for a job,
   but don't have one, as a percentage of everyone working or looking for work.
