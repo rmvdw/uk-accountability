@@ -1,0 +1,26 @@
+# TEMPORARY (Claude, #26): find and save the previous ONS long-term migration edition
+# (Nov 2025) to verify the new/revised split against a genuine vintage pair.
+name: Probe ONS previous edition
+on:
+  push:
+    branches: [probe-ons-vintage]
+    paths: [.github/workflows/probe-ons.yml]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p probe
+          B=https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/internationalmigration/datasets/longterminternationalimmigrationemigrationandnetmigrationflowsprovisional
+          curl -sS -A "uk-accountability probe" -o probe/dataset.html "$B"
+          grep -oE '/file\?uri=[^"]+\.xlsx' probe/dataset.html | sort -u | tee probe/links.txt
+          sleep 5
+          for u in $(grep -i 'yearendingjune2025' probe/links.txt | head -1); do curl -sS -A "uk-accountability probe" -o probe/ltim_nov25.xlsx "https://www.ons.gov.uk$u"; echo "$u" > probe/ltim_nov25.url; done
+          ls -la probe
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add probe && git commit -m "ONS probe results (temporary)" && git push
