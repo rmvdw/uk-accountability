@@ -1,0 +1,37 @@
+# DRAFT for the immigration Briefing pilot (#13). Public wording needs Ross's approval.
+id: small_boat_arrivals
+title: Small boat arrivals
+status: draft
+what_it_measures: >-
+  The number of people detected arriving in the UK by small boat across the English Channel, over the previous 12 months.
+why_it_matters: >-
+  Small boat crossings are one of the most visible parts of the immigration debate. They are a small share of total migration but a large share of people claiming asylum.
+unit: people
+decimals: 0
+frequency: Y12
+measure_type: flow
+direction: neutral
+coverage:
+  population: People detected arriving by small boat. Counts people, not boats.
+  seasonal_adjustment: Not seasonally adjusted; each figure covers a full 12 months.
+  geography_note: The UK immigration and asylum system as a whole; not broken down by nation.
+source:
+  publisher: Home Office
+  dataset: Illegal entry routes to the UK summary tables (IER_01)
+  url: https://www.gov.uk/government/statistical-data-sets/immigration-system-statistics-data-tables
+  licence: Open Government Licence v3.0
+  licence_url: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+  attribution: "Source: Home Office, Immigration system statistics, licensed under the Open Government Licence v3.0"
+  adapter: homeoffice_summary
+  query:
+    attachment_title: "Illegal entry routes to the UK summary tables, year ending"
+    sheet: IER_01
+    header_first_cell: "Method of entry"
+    rows:
+      "Small boat arrivals": total
+caveats:
+  - >-
+    These are detected arrivals only. People who arrive undetected, or who enter legally and overstay, are not included.
+  - >-
+    This uses the quarterly published series, not the daily operational figures, which are provisional and revised.
+check_cadence_days: 100

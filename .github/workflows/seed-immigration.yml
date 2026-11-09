@@ -1,0 +1,35 @@
+# TEMPORARY (issue #13): runs only on this branch. Seeds the draft immigration
+# indicators with a real `ukdash refresh` on a GitHub runner (Claude's sandbox can't
+# reach ONS or GOV.UK) and commits the promoted data back for review. Removed before
+# merge; routine refresh is issue #4.
+name: seed-immigration
+on:
+  push:
+    branches: [immigration-briefing]
+    paths: [".github/workflows/seed-immigration.yml", "src/ukdash/sources/**", "indicators/**"]
+permissions:
+  contents: write
+concurrency: seed-immigration
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v6
+      - run: make setup
+      - name: Refresh immigration indicators (drafts)
+        run: >
+          uv run python -m ukdash refresh
+          --indicator net_migration --indicator immigration_long_term
+          --indicator emigration_long_term --indicator visas_granted
+          --indicator asylum_claims --indicator asylum_initial_decisions
+          --indicator asylum_awaiting_decision --indicator small_boat_arrivals
+      - run: make check
+      - name: Commit promoted data to this branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git commit -m "Seed immigration indicators from live ONS and Home Office (runner ${{ github.run_id }})"
+          git push

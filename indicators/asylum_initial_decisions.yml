@@ -1,0 +1,47 @@
+# DRAFT for the immigration Briefing pilot (#13). Public wording needs Ross's approval.
+id: asylum_initial_decisions
+title: Initial decisions on asylum claims
+status: draft
+what_it_measures: >-
+  The number of people who received an initial decision on their asylum claim, and how many were granted protection or refused, over the previous 12 months.
+why_it_matters: >-
+  Decisions show how quickly the asylum system is working through claims and how many people are granted protection. The number of decisions can rise or fall independently of the number of new claims.
+unit: people
+decimals: 0
+frequency: Y12
+measure_type: flow
+direction: neutral
+coverage:
+  population: People receiving an initial decision on an asylum claim, including dependants.
+  seasonal_adjustment: Not seasonally adjusted; each figure covers a full 12 months.
+  geography_note: The UK immigration and asylum system as a whole; not broken down by nation.
+source:
+  publisher: Home Office
+  dataset: Asylum summary tables (Asy_00a)
+  url: https://www.gov.uk/government/statistical-data-sets/immigration-system-statistics-data-tables
+  licence: Open Government Licence v3.0
+  licence_url: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+  attribution: "Source: Home Office, Immigration system statistics, licensed under the Open Government Licence v3.0"
+  adapter: homeoffice_summary
+  query:
+    attachment_title: "Asylum summary tables, year ending"
+    sheet: Asy_00a
+    header_first_cell: "Date / As at the end of..."
+    rows:
+      "People receiving initial decisions": total
+      "Grants of protection or other leave": grants
+      "Refusals": refusals
+    sum_checks:
+      - parent: "People receiving initial decisions"
+        children:
+          - "Grants of protection or other leave"
+          - "Refusals"
+breakdowns:
+  grants: Granted protection or other leave
+  refusals: Refused
+caveats:
+  - >-
+    Decisions in a year usually relate to claims made in earlier years, so grants divided by that year's claims is not a grant rate.
+  - >-
+    These are initial decisions only. Some refusals are overturned on appeal, which is not shown here. Withdrawn claims are not counted as decisions.
+check_cadence_days: 100

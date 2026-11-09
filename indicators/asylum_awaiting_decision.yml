@@ -1,0 +1,37 @@
+# DRAFT for the immigration Briefing pilot (#13). Public wording needs Ross's approval.
+id: asylum_awaiting_decision
+title: People waiting for an initial asylum decision
+status: draft
+what_it_measures: >-
+  The number of people waiting for an initial decision on an asylum claim at a given date (often called the asylum backlog).
+why_it_matters: >-
+  The backlog shows how many people are in the system without an answer, which affects their lives and the cost of supporting them. It is a count at a point in time, not a total for a year.
+unit: people
+decimals: 0
+frequency: AT
+measure_type: stock
+direction: neutral
+coverage:
+  population: People, including dependants, waiting for an initial asylum decision at the end of the period.
+  seasonal_adjustment: Not seasonally adjusted; a count at a single date.
+  geography_note: The UK immigration and asylum system as a whole; not broken down by nation.
+source:
+  publisher: Home Office
+  dataset: Asylum summary tables (Asy_00a)
+  url: https://www.gov.uk/government/statistical-data-sets/immigration-system-statistics-data-tables
+  licence: Open Government Licence v3.0
+  licence_url: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+  attribution: "Source: Home Office, Immigration system statistics, licensed under the Open Government Licence v3.0"
+  adapter: homeoffice_summary
+  query:
+    attachment_title: "Asylum summary tables, year ending"
+    sheet: Asy_00a
+    header_first_cell: "Date / As at the end of..."
+    rows:
+      "People awaiting an initial decision": total
+caveats:
+  - >-
+    This is a count at a single date. It should not be added to the number of claims or decisions in a year.
+  - >-
+    It covers people awaiting an initial decision only, not those waiting for an appeal or further review. The number can fall because claims are withdrawn, not only because they are decided.
+check_cadence_days: 100

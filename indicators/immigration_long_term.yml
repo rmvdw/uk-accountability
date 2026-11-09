@@ -1,0 +1,42 @@
+# DRAFT for the immigration Briefing pilot (#13). Public wording needs Ross's approval.
+id: immigration_long_term
+title: Long-term immigration
+status: draft
+what_it_measures: >-
+  The number of people who moved to the UK intending to stay for at least a year, over the previous 12 months.
+why_it_matters: >-
+  Immigration is one half of net migration. Looking at it separately from emigration shows whether a change in net migration comes from fewer people arriving or more people leaving.
+unit: people
+decimals: 0
+frequency: Y12
+measure_type: flow
+direction: neutral
+coverage:
+  population: People moving into or out of the UK for at least 12 months, all nationalities (British, EU+ and non-EU+ shown separately).
+  seasonal_adjustment: Not seasonally adjusted; each figure covers a full 12 months.
+  geography_note: United Kingdom as a whole.
+source:
+  publisher: Office for National Statistics
+  dataset: Long-term international immigration, emigration and net migration flows, provisional (Table 1)
+  url: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/internationalmigration/datasets/longterminternationalimmigrationemigrationandnetmigrationflowsprovisional
+  licence: Open Government Licence v3.0
+  licence_url: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+  attribution: "Source: Office for National Statistics, licensed under the Open Government Licence v3.0"
+  adapter: ons_ltim
+  query:
+    dataset_page: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/internationalmigration/datasets/longterminternationalimmigrationemigrationandnetmigrationflowsprovisional
+    flow: Immigration
+breakdowns:
+  british: British nationals
+  eu_plus: EU+ nationals
+  non_eu_plus: Non-EU+ nationals
+caveats:
+  - >-
+    These are provisional estimates and "official statistics in development". ONS revises them, sometimes substantially, as more travel data arrive; each edition replaces earlier figures for recent periods.
+  - >-
+    Each figure covers a rolling 12 months (for example, the year ending December 2025), not a calendar year unless it ends in December.
+  - >-
+    Long-term migration means changing usual residence for at least 12 months. It includes British citizens, and is not the same as visas granted or people arriving.
+  - >-
+    Figures are rounded to the nearest 1,000.
+check_cadence_days: 200
