@@ -49,7 +49,7 @@ Success, concretely:
 | [IfG/Nuffield Public Services Performance Tracker 2026](https://www.instituteforgovernment.org.uk/publication/public-services-performance-tracker-2026) | 250+ indicators across 9 public services; spending, staffing, demand, performance; annual | No (England/UK focus) | Authoritative but annual, long-form and expert-facing. A source and benchmark for public-service indicators. |
 | [ONS UK Measures of National Well-being dashboard](https://www.ons.gov.uk/peoplepopulationandcommunity/wellbeing/articles/ukmeasuresofnationalwellbeing/dashboard) | ~60 measures in 10 domains, change vs a year or five years earlier; moved to annual updates in June 2026 | No | A credible domain framework and change-assessment rules to borrow. |
 | [USAFacts](https://usafacts.org/our-data/) | Nonpartisan US government data in topic sections; annual "State of the Union in Numbers"; newsletter; CC licence | No (US only) | Closest model for audience and tone. Its editorial principles and annual "state of the nation" report are worth emulating. |
-| [UK Pulse](https://ukpulse.pages.dev/press) | 50+ official UK indicators in 7 categories; "G7 international comparisons" for the economy; every number linked to source; CC BY 4.0; operator not named | Partly (economy) | **Closest direct overlap.** Needs a proper look at its quality, freshness and depth before we position ourselves. |
+| [UK Pulse, now branded UKFacts](https://ukpulse.pages.dev/press) | 50+ official UK indicators in 7 categories; "G7 international comparisons" for the economy; every number linked to source; CC BY 4.0; operator not named | Partly (economy) | **Closest direct overlap.** Needs a proper look at its quality, freshness and depth before we position ourselves. |
 | [Freedom Isn't Free: UK vs G7 wages](https://freedomisntfree.co.uk/tools/uk-vs-g7-economy) | Real wages vs G7, ranked; personal-finance publisher with a stated editorial stance | Yes | Shows how framing undermines trust: its narrative overstates what its own data show. |
 | [UK Data Explorer](https://ukdataexplorer.com/dashboard) | Custom ONS dashboards | No | Now "no longer being maintained". This is the failure mode we are designing against. |
 | [OSR: intelligent transparency](https://osr.statisticsauthority.gov.uk/guidance/regulatory-guidance-on-intelligent-transparency/pages/2/), [presenting uncertainty](https://osr.statisticsauthority.gov.uk/wp-content/uploads/2022/09/Approaches_to_presenting_uncertainty_in_the_statistical_system.pdf.) | UK statistics regulator guidance | n/a | A recognised UK standard to cite in our methodology. |
@@ -191,6 +191,47 @@ The OECD adapter can be reused for the comparison.
 - The "UK at a glance" homepage becomes "the questions of the day" plus a glance strip.
 - New research for GPT: **R7.** Which questions dominate public and media attention now (polling such as Ipsos Issues Index, news analysis)? Which briefings would be most used? How do the best explainer publishers (Full Fact, BBC Verify, Economics Observatory, Migration Observatory, FT data journalism, USAFacts) structure explainers?
 
+## 4c. Amendments agreed after Codex's challenge (9 Nov)
+
+Codex's review on PR #11 and its research on issue #13 (R1, R2, R7) change the 4b proposal. These amendments **supersede 4b** where they conflict.
+
+1. **Reading order for a journalist with ten minutes:**
+   - edition stamp (release covered, publication time, geography, provisional status);
+   - roughly 100 words with three findings and the main caveat;
+   - one essential chart;
+   - what changed since the previous edition, separating new observations from revisions;
+   - question sections (how many come and leave; routes; asylum and boats; costs and contributions), each answering first;
+   - comparison only when compatible;
+   - what is uncertain;
+   - methods, versioned sources, downloads, citation, corrections.
+2. **The pilot question becomes "What do the latest migration figures show, and what do we know about their effects?"** Fiscal cost is one sub-question with explicit accounting scope, not the headline.
+3. **The evidence rule replaces "never pick a side":** weight conclusions by evidence quality; never advocate a policy. Show a range only when estimates measure the same population, horizon and outcome. Unlike fiscal estimates (MAC route/cohort lifetime models, OBR earnings scenarios, annual asylum-support spending) go in separate rows with their assumptions, not as the ends of one range. My earlier "both are true" framing was too loose.
+4. **Atomic editions replace "keep wording, refresh facts"** (which could make a sentence false). Each briefing edition binds one data snapshot, the derived facts, prose, charts and citations. A refresh stages a new candidate edition. The published edition stays until the candidate is reviewed. Re-review triggers include changed direction, a revised denominator, a "lowest/highest since" claim becoming false, a threshold crossing, a source discontinuity and missing data.
+5. **Differentiation:** UK Pulse (now branded **UKFacts**) already offers citations, CSV, embeds and source-linked cards; these are baseline, not our edge. Our edge is the hard last mile:
+   - reconciled related figures (inflow − outflow = net, on one vintage);
+   - revision-aware editions;
+   - honest clocks (observation period, publisher release, retrieval, review);
+   - question-led explanation a journalist can quote without conflating measures.
+6. **26 Nov scope is frozen small:**
+   - ONS immigration/emigration/net with a revision bridge;
+   - Home Office route grants (clearly not arrivals);
+   - a compact asylum/small-boat context box;
+   - a dated fiscal-evidence section with no release-day calculation.
+
+   OECD comparison is optional until common-period coverage is proven. Delivery gates (Codex's proposal, adopted as targets):
+
+   | Date | Gate |
+   | --- | --- |
+   | 12 Nov | Source contracts and story questions fixed |
+   | 16 Nov | ONS and Home Office adapters seeded, with reconciliation checks |
+   | 19 Nov | Hosted draft with citations, source ledger and corrections route |
+   | 23 Nov | Replay of the previous release, including revisions and a failed import |
+   | 25 Nov | Two-agent editorial check, Ross sign-off, named release operator |
+   | 26 Nov | Ingest, validate and review after 09:30; if checks fail, keep the previous dated edition and say review is pending |
+
+   Fallback is triggered by a failed gate, not by the date.
+7. **The next queue after immigration:** cost of living ("why do prices still feel high?"), then NHS waits. This is a hypothesis to test with readers (three tasks, including a working journalist), not a measured ranking.
+
 ## 5. Proposed sequence
 
 1. **This week:** ~~Ross answers A1–A2 and the merge rule (C2)~~ (done: see 4b). Codex: #4 scheduled refresh. Claude: the briefing content type and immigration data adapters, which also proves a draft on a hosted preview (this replaces life expectancy as the next build). GPT: R1, R2 (immigration-first) and R7.
@@ -201,6 +242,6 @@ The OECD adapter can be reused for the comparison.
 
 ## 6. Unverified in this review
 
-- UK Pulse's depth, freshness and operator. Only its press page was readable from Claude's environment.
-- The exact setup of Codex GitHub review and whether `@codex` can push fixes, as opposed to only reviewing.
+- ~~UK Pulse's depth~~: audited by Codex (R1 on #13). Operator still not named.
+- ~~Codex GitHub review~~: proven on #12 (`@codex review`). Whether `@codex` can push fixes is still untested.
 - Source availability and licences for each candidate indicator in A3. That is R2.
