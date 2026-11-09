@@ -1,0 +1,53 @@
+# DRAFT for the immigration briefing's peer comparison (#22, #13). Definition, peers and
+# public wording need Ross's approval before publication.
+id: asylum_applications_per_1000
+title: New asylum applications per 1,000 residents
+status: draft
+what_it_measures: >-
+  The number of people who made a new asylum application in a year, for every 1,000
+  people living in the country.
+why_it_matters: >-
+  It shows how many people seek protection in each country relative to its size.
+unit: per 1,000 residents
+decimals: 2
+frequency: A
+measure_type: rate
+direction: neutral
+coverage:
+  population: >-
+    New applications at first instance, counted as people (including dependants
+    where countries report them). Excludes repeat applications, appeals and
+    re-examinations.
+  seasonal_adjustment: Not seasonally adjusted; each figure covers a calendar year.
+  geography_note: >-
+    United Kingdom as a whole. Other countries are national totals. Population is the
+    World Bank's mid-year estimate for the same year.
+source:
+  publisher: UNHCR and World Bank
+  dataset: Asylum applications, Refugee Population Statistics Database (UNHCR); Population, total (World Bank)
+  url: https://www.unhcr.org/refugee-statistics/
+  licence: CC BY 4.0 (UNHCR, with UNHCR's supplemental terms; World Bank)
+  licence_url: https://www.unhcr.org/terms-use-datasets
+  attribution: >-
+    Source: UNHCR Refugee Population Statistics Database (terms:
+    https://www.unhcr.org/terms-use-datasets); World Bank, Population, total
+    (SP.POP.TOTL), CC BY 4.0
+  adapter: per_1000
+  query:
+    numerator: unhcr_asylum_new
+    countries: [GBR, CAN, FRA, DEU, ITA, JPN, USA]
+    start_year: 2015
+peers:
+  group: g7
+  exclusions: {}
+caveats:
+  - >-
+    Countries run different asylum procedures and record applications differently,
+    so small differences between countries are not meaningful.
+  - >-
+    For the UK this matches the Home Office count of people claiming asylum,
+    including dependants.
+  - >-
+    The latest year every country has can be a year or more behind the UK's own
+    figures.
+check_cadence_days: 120

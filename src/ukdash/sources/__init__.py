@@ -9,7 +9,7 @@ saved responses.
 from __future__ import annotations
 
 # Import adapter modules here so they register themselves.
-from . import homeoffice, oecd, ons_ltim  # noqa: E402, F401  (registers the adapters)
+from . import homeoffice, oecd, ons_ltim, per_1000  # noqa: E402, F401  (registers the adapters)
 from .base import ADAPTERS, Adapter, Fetched, register
 
 __all__ = ["ADAPTERS", "Adapter", "Fetched", "register"]
