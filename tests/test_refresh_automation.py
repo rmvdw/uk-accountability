@@ -55,6 +55,40 @@ def test_no_recovery_issue_when_nothing_has_failed():
     assert not api.writes
 
 
+def test_candidate_failure_repeats_recovers_and_reopens_without_production_failure():
+    api = FakeGitHub()
+    run = "https://github.com/example/repo/actions/runs/1"
+    automation.sync_candidate_issue(api, "failure", run)
+    assert api.issue["labels"] == ["review"]
+    assert automation.CANDIDATE_MARKER in api.issue["body"]
+    assert automation.MARKER not in api.issue["body"]
+    automation.sync_candidate_issue(api, "failure", run + "2")
+    assert len(api.writes) == 1
+    automation.sync_issue(api, True, "", run, {})
+    assert api.issue["state"] == "open"  # production recovery cannot clear editorial work
+    automation.sync_candidate_issue(api, "skipped", run)
+    assert len(api.writes) == 1 and api.issue["state"] == "open"
+    automation.sync_candidate_issue(api, "success", run)
+    assert api.issue["state"] == "closed"
+    assert "not publication approval" in api.writes[-2][2]["body"]
+    automation.sync_candidate_issue(api, "failure", run)
+    assert api.issue["state"] == "open"
+    assert sum(path == "issues" for _, path, _ in api.writes) == 1
+
+
+def test_candidate_success_cannot_close_production_failure():
+    api = FakeGitHub()
+    automation.sync_issue(api, False, "VERIFY", "run", {})
+    automation.sync_candidate_issue(api, "success", "run")
+    assert len(api.writes) == 1 and api.issue["state"] == "open"
+
+
+def test_healthy_candidate_does_not_create_a_review_issue():
+    api = FakeGitHub()
+    automation.sync_candidate_issue(api, "success", "run")
+    assert not api.writes
+
+
 @pytest.fixture
 def git_root(tmp_path):
     root = tmp_path / "repo"

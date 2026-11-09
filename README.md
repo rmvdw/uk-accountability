@@ -130,9 +130,8 @@ Never disable the monitor as an automatic response to a failing refresh.
 ### What the production workflow does
 
 - Requires both secret URLs before fetching; serialises refresh runs.
-- Runs `make refresh`, then `uv run python -m ukdash check` and `make build`
-  for a valid candidate. Full code tests stay in CI; refreshed observations must
-  pass data and briefing-candidate validation, not assertions tied to an old release.
+- Runs `make refresh`, then `make build`, which validates data and frozen production
+  editions without rendering draft candidates. Full code tests stay in CI.
 - Commits only allowlisted data paths. An unchanged source still commits its
   new successful-check timestamp. A failed refresh may commit only failed-attempt
   metadata; prior observations/raw data and successful-check times are preserved.
@@ -145,6 +144,12 @@ Never disable the monitor as an automatic response to a failing refresh.
 - Signals the independent monitor only after full success, then closes the single
   persistent `data-failure` issue. Repeated identical failures do not create more
   issues; recurrence reopens the same issue.
+- After the production heartbeat, checks briefing candidates separately. A failure
+  opens/reopens one `review` issue; it does not block valid production or suppress
+  its heartbeat. A later successful candidate check closes only that review issue,
+  never a production failure issue, and does not approve publication. A skipped
+  check cannot close pending review work. Candidate reporting failures remain visible
+  in workflow logs without changing production health.
 
 If validation or deployment fails after the source refresh, inspect the stage and
 run linked in the issue. A deployment failure can leave new data committed while

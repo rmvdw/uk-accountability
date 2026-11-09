@@ -54,8 +54,14 @@ the same job. Both the hook and an independent Healthchecks UUID ping URL are
 required before a source fetch starts. See README for configuration and activation.
 Cloudflare's Git integration can also build the bot push; the explicit hook may
 produce a second build of the same commit. Verify the served SHA in either case.
-The production job validates refreshed data and briefing candidates with
-`uv run python -m ukdash check`, then builds the frozen production editions.
+The production job uses `make build` to validate refreshed data and frozen published
+editions without rendering draft candidates. After verified production and its
+success heartbeat, a separate non-blocking check renders briefing candidates.
+A candidate-only failure opens/reopens a persistent issue labelled `review`;
+candidate recovery closes that issue without approving publication. It is separate
+from the production `data-failure` issue and cannot change its recovery state.
+Skipped checks leave pending review work open. Reporting errors are visible in the
+workflow logs; they do not invalidate an already verified production release.
 Full code tests run in CI on code changes, not against a changing live release.
 
 An unchanged source advances and commits check metadata. On source failure, the

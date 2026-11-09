@@ -3,6 +3,16 @@
 Author: Claude · Status: **proposal for Ross; GPT/Otto invited to challenge** (comment on the PR).
 Decisions only become decisions when recorded in `docs/decisions.md`.
 
+## Current execution plan (Ross agreed, 9 November)
+
+The [release checklist in #13](https://github.com/rmvdw/uk-accountability/issues/13) is authoritative for current work. Ross agreed Codex's recommendations and asked us to implement them in ChatGPT: "I agree with your recommendations. How do we implement and take forward".
+
+Finish the immigration pilot: operational refresh/monitoring (#4, #25), independently checked peer measures (#24), release-change explanation and retrievable editions/downloads (#26), reader acceptance and full publication rehearsal (#27), and concise ownership/editorial/corrections information (#28). The selected layout is chart first, approved through #19. Preserve the atomic-edition and evidence rules in 4c.
+
+Earlier proposals below to batch-build roughly 20 indicators, expand peer groups, or rely on external reader interviews before launch are deferred. No new topics, scoring, paid services or extra dashboard machinery before this pilot is complete. Model walkthroughs check task coverage; they do not establish audience demand.
+
+First complete rehearsal target: 12 November; complete hosted pilot: 19 November; final rehearsal: 23 November; editorial sign-off/operator: 25 November; release target: 26 November. Failed gates retain the previous dated edition. Detailed ownership, acknowledgement and evidence states live in #13 rather than duplicated status lists.
+
 ## 1. The goal, restated
 
 A free, trustworthy public reference that lets an ordinary person answer **"How is the UK doing, and how does it compare with similar countries?"** It should be in plain English, always current, honest about what the numbers can and can't show, and maintained by one person and AI agents. Later, it should support a transparent and defensible scoring layer (decision 12).
@@ -232,16 +242,12 @@ Codex's review on PR #11 and its research on issue #13 (R1, R2, R7) change the 4
    Fallback is triggered by a failed gate, not by the date.
 7. **The next queue after immigration:** cost of living ("why do prices still feel high?"), then NHS waits. This is a hypothesis to test with readers (three tasks, including a working journalist), not a measured ranking.
 
-## 5. Proposed sequence
+## 5. Delivery sequence
 
-1. **This week:** ~~Ross answers A1–A2 and the merge rule (C2)~~ (done: see 4b). Codex: #4 scheduled refresh. Claude: the briefing content type and immigration data adapters, which also proves a draft on a hosted preview (this replaces life expectancy as the next build). GPT: R1, R2 (immigration-first) and R7.
-1a. **By 26 Nov:** immigration briefing in draft preview for Ross, ready to update on the ONS release morning.
-2. **Next week:** Ross approves the v1 indicator list. Agents batch-build. Claude prototypes the homepage (R3) once ~8 indicators exist.
-3. **Weeks 3–4:** reach ~20 indicators; methodology and corrections pages; R6 reader tests; then a soft launch to a small audience.
-4. **After launch:** the second peer group, the "UK in numbers" digest, then a scoring methodology proposal.
+Use the current execution plan above and #13. Finish the complete immigration reader/release workflow, then consider cost of living and NHS waits. Wider indicator batches, additional peer groups, a digest and scoring remain later proposals requiring their own prioritisation/approval.
 
 ## 6. Unverified in this review
 
 - ~~UK Pulse's depth~~: audited by Codex (R1 on #13). Operator still not named.
-- ~~Codex GitHub review~~: proven on #12 (`@codex review`). Whether `@codex` can push fixes is still untested.
+- Codex GitHub review is proven on #12 (`@codex review`); the Codex agent's connected push/PR route is proven by merged #17. A posted Claude review request still needs acknowledgement by the receiving session.
 - Source availability and licences for each candidate indicator in A3. That is R2.
