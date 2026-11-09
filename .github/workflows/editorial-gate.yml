@@ -1,0 +1,29 @@
+# Decision 17: PRs touching Ross-owned paths (.github/CODEOWNERS) need the `ross-approved` label.
+name: Editorial gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Read CODEOWNERS from the base branch, so a PR cannot loosen its own gate.
+          ref: ${{ github.event.pull_request.base.sha }}
+      - name: List changed files and labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --jq '.[].filename' > changed.txt
+          gh api "repos/$GITHUB_REPOSITORY/issues/$PR/labels" --jq '.[].name' > labels.txt
+      - name: Check
+        run: python3 .github/scripts/editorial_gate.py changed.txt labels.txt
