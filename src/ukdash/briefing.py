@@ -288,7 +288,7 @@ def sources_for(project: Project, b: Briefing) -> list[dict]:
                 "dataset": d.source.dataset,
                 "url": d.source.url,
                 "file": e.request if e else None,
-                "vintage": e.vintage if e else None,
+                "vintage": _vintage(e.vintage) if e else None,
                 "released": e.publisher_release_date if e else None,
                 "retrieved": e.retrieved_at.isoformat() if e else None,
                 "sha256": e.sha256 if e else None,
@@ -296,6 +296,21 @@ def sources_for(project: Project, b: Briefing) -> list[dict]:
                 "attribution": d.source.attribution,
             }
         )
+    return out
+
+
+def _vintage(v: str | None) -> str | None:
+    """Readers see 'year ending', never the 'YE' shorthand older manifests stored."""
+    return re.sub(r"^YE ", "year ending ", v) if v else v
+
+
+def attribution_lines(sources: list[dict]) -> list[str]:
+    """Each required attribution once, e.g. 'Source: Home Office, ... (OGL v3.0)'."""
+    out = []
+    for s in sources:
+        line = f"{s['attribution']} ({s['licence']})"
+        if line not in out:
+            out.append(line)
     return out
 
 

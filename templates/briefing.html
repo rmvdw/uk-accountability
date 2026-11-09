@@ -42,7 +42,7 @@
   {% endfor %}
   </tbody>
 </table>
-<p class="meta">{% for s in b.sources %}{{ s.attribution }} ({{ s.licence }}){{ "; " if not loop.last else "." }}{% endfor %}</p>
+<p class="meta">{{ b.attribution_lines|join("; ") }}.</p>
 
 <h2>Cite this</h2>
 <p class="cite">UK Dashboard, "{{ b.title }}", {% if b.candidate %}candidate edition (not published){% else %}edition {{ b.edition }}{% endif %}. Data: {{ b.source_lines|join("; ") }}.</p>

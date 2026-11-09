@@ -56,7 +56,7 @@ def latest_edition(page_html: str) -> tuple[str, str]:
     if not found:
         raise ValueError("no LTIM edition links found on the ONS dataset page")
     _, href, month, year = max(found)
-    return "https://www.ons.gov.uk" + href, f"YE {month.capitalize()} {year}"
+    return "https://www.ons.gov.uk" + href, f"year ending {month.capitalize()} {year}"
 
 
 def parse_table(raw: bytes) -> dict[tuple[str, str, str], tuple[float | None, str]]:

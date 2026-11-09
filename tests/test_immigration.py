@@ -137,7 +137,7 @@ def test_ons_edition_choice_uses_path_not_filename():
     )
     url, vintage = ons_ltim.latest_edition(page)
     assert url.endswith("yearendingdecember2025/aaa.xlsx")
-    assert vintage == "YE December 2025"
+    assert vintage == "year ending December 2025"
 
 
 def test_homeoffice_missing_row_fails():
