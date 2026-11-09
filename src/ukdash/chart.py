@@ -4,11 +4,21 @@ from __future__ import annotations
 
 from html import escape
 
-from .schema import Observation, period_ordinal
+from .schema import IRREGULAR_STEP, Observation, period_ordinal
 
 
 def _fmt(v: float, decimals: int) -> str:
     return f"{v:,.{decimals}f}"
+
+
+def _axis_fmt(v: float, decimals: int, span: float) -> str:
+    """Short axis labels: 934,900 becomes 935k, 1,234,000 becomes 1.23m."""
+    a = abs(v)
+    if span >= 10_000 or a >= 100_000:
+        if a >= 1_000_000:
+            return f"{v / 1_000_000:.2f}".rstrip("0").rstrip(".") + "m"
+        return f"{v / 1_000:,.0f}k"
+    return _fmt(v, decimals)
 
 
 def line_path(rows: list[Observation]) -> list[list[tuple[int, float]]]:
@@ -24,7 +34,7 @@ def line_path(rows: list[Observation]) -> list[list[tuple[int, float]]]:
         if o.value is None:
             prev = None
             continue
-        if prev is None or k != prev + 1:
+        if prev is None or (k != prev + 1 and o.frequency not in IRREGULAR_STEP):
             segments.append([])
         segments[-1].append((k, o.value))
         prev = k
@@ -38,6 +48,7 @@ def line_chart(
     decimals: int,
     period_label=lambda p: p,
 ) -> str:
+    rows = [o for o in rows if o.breakdown == "total"]
     pts = [(o.period, o.value) for o in sorted(rows, key=lambda o: o.period) if o.value is not None]
     if len(pts) < 2:
         return ""
@@ -72,7 +83,7 @@ def line_chart(
     grid = "".join(
         f'<line x1="{pl}" x2="{w - pr}" y1="{y(t):.1f}" y2="{y(t):.1f}" class="grid"/>'
         f'<text x="{pl - 6}" y="{y(t):.1f}" class="axis" text-anchor="end" '
-        f'dominant-baseline="middle">{_fmt(t, decimals)}</text>'
+        f'dominant-baseline="middle">{_axis_fmt(t, decimals, hi - lo)}</text>'
         for t in ticks
     )
     first, last = pts[0], pts[-1]

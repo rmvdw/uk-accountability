@@ -1,0 +1,89 @@
+# DRAFT for the immigration Briefing pilot (#13). Public wording needs Ross's approval.
+id: visas_granted
+title: Visas granted to come to the UK
+status: draft
+what_it_measures: >-
+  The number of visas granted to people outside the UK to come and live, work, study or join family, excluding visitor and transit visas, over the previous 12 months.
+why_it_matters: >-
+  Visas show the routes people use to come to the UK, such as work, study and family. They help explain what is behind the migration figures, but they count permissions granted, not people who arrive.
+unit: visas
+decimals: 0
+frequency: Y12
+measure_type: flow
+direction: neutral
+coverage:
+  population: Entry clearance visas granted by the UK immigration system, main applicants and dependants. Visitor and transit visas are excluded; the total is calculated by us from the Home Office categories.
+  seasonal_adjustment: Not seasonally adjusted; each figure covers a full 12 months.
+  geography_note: The UK immigration and asylum system as a whole; not broken down by nation.
+source:
+  publisher: Home Office
+  dataset: Entry clearance visas summary tables (Vis_01)
+  url: https://www.gov.uk/government/statistical-data-sets/immigration-system-statistics-data-tables
+  licence: Open Government Licence v3.0
+  licence_url: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+  attribution: "Source: Home Office, Immigration system statistics"
+  adapter: homeoffice_summary
+  query:
+    attachment_title: "Entry clearance visas summary tables, year ending"
+    sheet: Vis_01
+    header_first_cell: "Visa type"
+    rows:
+      "Work visas": work
+      "Study visas": study
+      "Family visas": family
+      "EU Settlement Scheme permits": euss
+      "BN(O) visa route": bno
+      "Ukraine Visa Schemes": ukraine
+      "EEA Family Permit": eea_family_permit
+      "Other visas": other
+    sum_checks:
+      - parent: "Work visas"
+        children:
+          - "Worker"
+          - "Temporary Worker"
+          - "Investor, business development and talent"
+          - "Other work visas and exemptions"
+      - parent: "Family visas"
+        children:
+          - "Family: Child"
+          - "Family: Other"
+          - "Family: Partner"
+          - "Refugee Family Reunion"
+      - parent: "Total entry clearance visas"
+        children:
+          - "Work visas"
+          - "Study visas"
+          - "Family visas"
+          - "EEA Family Permit"
+          - "EU Settlement Scheme permits"
+          - "BN(O) visa route"
+          - "Ukraine Visa Schemes"
+          - "Other visas"
+          - "Visitor visas"
+          - "Transit visas"
+    calculated_total:
+      - "Work visas"
+      - "Study visas"
+      - "Family visas"
+      - "EEA Family Permit"
+      - "EU Settlement Scheme permits"
+      - "BN(O) visa route"
+      - "Ukraine Visa Schemes"
+      - "Other visas"
+breakdowns:
+  work: Work
+  study: Study
+  family: Family
+  euss: EU Settlement Scheme permits
+  bno: BN(O) route
+  ukraine: Ukraine schemes
+  eea_family_permit: EEA Family Permit
+  other: Other visas
+caveats:
+  - >-
+    These are visas granted, not people arriving. Some visas go unused, and one person can be granted more than one visa.
+  - >-
+    Many people move without an entry clearance visa, including British and Irish citizens and some people already in the UK who switch visa, so these figures do not add up to the migration estimates.
+  - >-
+    Work, study and family include dependants (partners and children) as well as main applicants.
+check_cadence_days: 100

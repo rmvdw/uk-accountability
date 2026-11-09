@@ -1,0 +1,11 @@
+indicator_id,geography_id,breakdown,period,frequency,value,status
+small_boat_arrivals,iso:GBR,total,2018-12,Y12,299.0,
+small_boat_arrivals,iso:GBR,total,2019-12,Y12,1843.0,
+small_boat_arrivals,iso:GBR,total,2020-12,Y12,8466.0,
+small_boat_arrivals,iso:GBR,total,2021-12,Y12,28526.0,
+small_boat_arrivals,iso:GBR,total,2022-12,Y12,45774.0,
+small_boat_arrivals,iso:GBR,total,2023-12,Y12,29437.0,
+small_boat_arrivals,iso:GBR,total,2024-12,Y12,36816.0,
+small_boat_arrivals,iso:GBR,total,2025-06,Y12,43309.0,
+small_boat_arrivals,iso:GBR,total,2025-12,Y12,41472.0,
+small_boat_arrivals,iso:GBR,total,2026-06,Y12,33374.0,

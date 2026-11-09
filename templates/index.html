@@ -12,7 +12,7 @@
     <div class="headline">{{ "{:,.{}f}".format(c.uk_latest.value, c.d.decimals) }}<small> {{ c.d.unit }}</small></div>
     <div class="meta">UK, {{ c.uk_latest_label }}</div>
     {% endif %}
-    {% if c.comp.uk_rank %}
+    {% if c.comp and c.comp.uk_rank %}
     <div class="meta">{{ c.comp.uk_rank }} of {{ c.comp.values|length }} in the {{ c.group.label }}, {{ c.comp_label }}</div>
     {% endif %}
   </a>

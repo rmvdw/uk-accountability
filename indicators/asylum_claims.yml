@@ -1,0 +1,37 @@
+# DRAFT for the immigration Briefing pilot (#13). Public wording needs Ross's approval.
+id: asylum_claims
+title: People claiming asylum
+status: draft
+what_it_measures: >-
+  The number of people who claimed asylum in the UK, including dependants, over the previous 12 months.
+why_it_matters: >-
+  Asylum is one specific route into the UK, for people seeking protection. It is often discussed alongside small boat crossings and hotel accommodation, which are related but different measures.
+unit: people
+decimals: 0
+frequency: Y12
+measure_type: flow
+direction: neutral
+coverage:
+  population: People who claimed asylum in the UK, counting main applicants and their dependants.
+  seasonal_adjustment: Not seasonally adjusted; each figure covers a full 12 months.
+  geography_note: The UK immigration and asylum system as a whole; not broken down by nation.
+source:
+  publisher: Home Office
+  dataset: Asylum summary tables (Asy_00a)
+  url: https://www.gov.uk/government/statistical-data-sets/immigration-system-statistics-data-tables
+  licence: Open Government Licence v3.0
+  licence_url: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+  attribution: "Source: Home Office, Immigration system statistics"
+  adapter: homeoffice_summary
+  query:
+    attachment_title: "Asylum summary tables, year ending"
+    sheet: Asy_00a
+    header_first_cell: "Date / As at the end of..."
+    rows:
+      "People claiming asylum": total
+caveats:
+  - >-
+    This counts people claiming asylum, not all migrants. Many people claiming asylum arrived by small boat, but the two measures overlap and should never be added together.
+  - >-
+    A claim is not a decision: whether someone is granted protection is decided later.
+check_cadence_days: 100

@@ -1,5 +1,82 @@
 [
   {
+    "indicator_id": "asylum_awaiting_decision",
+    "path": "data/raw/asylum_awaiting_decision/tables.ods",
+    "sha256": "f935782ab90190deb04a1a86f7b6ba7515f32e238c14b96c55993f4793096d14",
+    "request": "https://assets.publishing.service.gov.uk/media/6a85c315b0504df9f2c89800/asylum-summary-jun-2026-tables.ods",
+    "retrieval_method": "live",
+    "retrieved_at": "2026-11-09T17:23:27Z",
+    "publisher_release_date": null,
+    "vintage": "year ending June 2026",
+    "licence": "Open Government Licence v3.0"
+  },
+  {
+    "indicator_id": "asylum_claims",
+    "path": "data/raw/asylum_claims/tables.ods",
+    "sha256": "f935782ab90190deb04a1a86f7b6ba7515f32e238c14b96c55993f4793096d14",
+    "request": "https://assets.publishing.service.gov.uk/media/6a85c315b0504df9f2c89800/asylum-summary-jun-2026-tables.ods",
+    "retrieval_method": "live",
+    "retrieved_at": "2026-11-09T17:23:27Z",
+    "publisher_release_date": null,
+    "vintage": "year ending June 2026",
+    "licence": "Open Government Licence v3.0"
+  },
+  {
+    "indicator_id": "asylum_initial_decisions",
+    "path": "data/raw/asylum_initial_decisions/tables.ods",
+    "sha256": "f935782ab90190deb04a1a86f7b6ba7515f32e238c14b96c55993f4793096d14",
+    "request": "https://assets.publishing.service.gov.uk/media/6a85c315b0504df9f2c89800/asylum-summary-jun-2026-tables.ods",
+    "retrieval_method": "live",
+    "retrieved_at": "2026-11-09T17:23:27Z",
+    "publisher_release_date": null,
+    "vintage": "year ending June 2026",
+    "licence": "Open Government Licence v3.0"
+  },
+  {
+    "indicator_id": "emigration_long_term",
+    "path": "data/raw/emigration_long_term/ltim.xlsx",
+    "sha256": "254a57a0d1e30c40c42843290c6dcc8ccb935ad26ac9148ad2665846ff7e9147",
+    "request": "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/populationandmigration/internationalmigration/datasets/longterminternationalimmigrationemigrationandnetmigrationflowsprovisional/yearendingdecember2025/may2026publicationspreadsheet.xlsx",
+    "retrieval_method": "live",
+    "retrieved_at": "2026-11-09T17:23:27Z",
+    "publisher_release_date": null,
+    "vintage": "YE December 2025",
+    "licence": "Open Government Licence v3.0"
+  },
+  {
+    "indicator_id": "immigration_long_term",
+    "path": "data/raw/immigration_long_term/ltim.xlsx",
+    "sha256": "254a57a0d1e30c40c42843290c6dcc8ccb935ad26ac9148ad2665846ff7e9147",
+    "request": "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/populationandmigration/internationalmigration/datasets/longterminternationalimmigrationemigrationandnetmigrationflowsprovisional/yearendingdecember2025/may2026publicationspreadsheet.xlsx",
+    "retrieval_method": "live",
+    "retrieved_at": "2026-11-09T17:23:27Z",
+    "publisher_release_date": null,
+    "vintage": "YE December 2025",
+    "licence": "Open Government Licence v3.0"
+  },
+  {
+    "indicator_id": "net_migration",
+    "path": "data/raw/net_migration/ltim.xlsx",
+    "sha256": "254a57a0d1e30c40c42843290c6dcc8ccb935ad26ac9148ad2665846ff7e9147",
+    "request": "https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/populationandmigration/internationalmigration/datasets/longterminternationalimmigrationemigrationandnetmigrationflowsprovisional/yearendingdecember2025/may2026publicationspreadsheet.xlsx",
+    "retrieval_method": "live",
+    "retrieved_at": "2026-11-09T17:23:27Z",
+    "publisher_release_date": null,
+    "vintage": "YE December 2025",
+    "licence": "Open Government Licence v3.0"
+  },
+  {
+    "indicator_id": "small_boat_arrivals",
+    "path": "data/raw/small_boat_arrivals/tables.ods",
+    "sha256": "247cdb26e11953ce73a88589c9edc9ade531328a5f97b75c56abf612217c293f",
+    "request": "https://assets.publishing.service.gov.uk/media/6a8c11c3a8f84a582b84281a/illegal-entry-routes-to-the-uk-summary-jun-2026-tables.ods",
+    "retrieval_method": "live",
+    "retrieved_at": "2026-11-09T17:23:27Z",
+    "publisher_release_date": null,
+    "vintage": "year ending June 2026",
+    "licence": "Open Government Licence v3.0"
+  },
+  {
     "indicator_id": "unemployment_rate",
     "path": "data/raw/unemployment_rate/response.csv",
     "sha256": "cd151816745c870460459d9fdb5e8c879c1ebca2469d0cce38529d2778b7c390",
@@ -7,6 +84,18 @@
     "retrieval_method": "live",
     "retrieved_at": "2026-11-08T17:59:59Z",
     "publisher_release_date": null,
+    "vintage": null,
     "licence": "OECD Terms and Conditions"
+  },
+  {
+    "indicator_id": "visas_granted",
+    "path": "data/raw/visas_granted/tables.ods",
+    "sha256": "b9be2771c963478500ab75104915d4495a63938a7baf5eddedb4644288c08a81",
+    "request": "https://assets.publishing.service.gov.uk/media/6a85c6003d82f78d5c514552/visas-summary-jun-2026-tables.ods",
+    "retrieval_method": "live",
+    "retrieved_at": "2026-11-09T17:23:27Z",
+    "publisher_release_date": null,
+    "vintage": "year ending June 2026",
+    "licence": "Open Government Licence v3.0"
   }
 ]

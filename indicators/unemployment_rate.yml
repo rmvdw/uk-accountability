@@ -12,6 +12,7 @@ why_it_matters: >-
 unit: "%"
 decimals: 1
 frequency: M
+measure_type: rate
 direction: lower_is_better
 coverage:
   population: People aged 15 and over, using the international (ILO) definition of unemployment.

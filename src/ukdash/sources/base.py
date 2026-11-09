@@ -11,6 +11,7 @@ class Fetched:
     filename: str  # stable name under data/raw/<indicator_id>/, e.g. "response.csv"
     request: str  # URL or plain description of what was requested
     publisher_release_date: str | None = None
+    vintage: str | None = None
 
 
 class Adapter:

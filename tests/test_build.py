@@ -74,7 +74,7 @@ def test_draft_without_data_renders_in_preview(fixture_root, tmp_path):
     assert build(project, tmp_path / "prev", include_drafts=True) == []
     page = (tmp_path / "prev/not_fetched_yet/index.html").read_text()
     assert "No data fetched yet" in page
-    assert "Download all countries" not in page
+    assert "Download the data" not in page
     assert not (tmp_path / "prev/not_fetched_yet/not_fetched_yet.csv").exists()
 
 
@@ -128,3 +128,35 @@ def test_cli_build_includes_drafts_only_on_cloudflare_preview(monkeypatch, tmp_p
         assert info["preview_with_drafts"] is expected
         assert info["source_commit"] == "abc123" and info["branch"] == branch
         assert ("Review preview" in (out / "index.html").read_text()) is expected
+
+
+def test_uk_only_indicator_has_no_comparison(fixture_root, tmp_path):
+    p = fixture_root / "indicators/test_unemployment.yml"
+    text = p.read_text()
+    start = text.index("peers:")
+    end = text.index("caveats:")
+    p.write_text(text[:start] + text[end:])
+    project = Project.load(fixture_root)
+    assert project.indicators["test_unemployment"].peers is None
+    assert build(project, tmp_path / "site") == []
+    page = (tmp_path / "site/test_unemployment/index.html").read_text()
+    assert "no reliable international comparison" in page
+    assert "Compared with the" not in page
+
+
+def test_rolling_and_stock_period_labels():
+    from ukdash.build import _period_label
+
+    assert _period_label("2025-12", "Y12") == "year ending December 2025"
+    assert _period_label("2026-06", "Y12", short=True) == "YE Jun 2026"
+    assert _period_label("2026-06", "AT") == "end of June 2026"
+
+
+def test_undeclared_breakdown_is_rejected(fixture_root):
+    from ukdash.validate import validate
+
+    csv = fixture_root / "data/observations/test_unemployment.csv"
+    lines = csv.read_text().splitlines()
+    lines.append(lines[1].replace(",total,", ",british,"))
+    csv.write_text("\n".join(lines) + "\n")
+    assert any("undeclared breakdown" in e for e in validate(Project.load(fixture_root)))

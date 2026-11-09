@@ -182,6 +182,7 @@ def _release(
                         retrieval_method=method,
                         retrieved_at=now,
                         publisher_release_date=c.fetched.publisher_release_date,
+                        vintage=c.fetched.vintage,
                         licence=c.d.source.licence,
                     )
                 write_observations(stage / "data" / "observations" / f"{c.d.id}.csv", c.rows)
