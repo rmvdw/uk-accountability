@@ -2,7 +2,7 @@
 id: immigration
 title: "What do the latest migration figures show, and what do we know about their effects?"
 status: draft
-standfirst: "How many people move to and from the UK, why they come, what is happening with asylum and small boats, and what the evidence says about costs and contributions."
+standfirst: "How many people move to and from the UK, why they come, and what it costs."
 indicators:
   - net_migration
   - immigration_long_term
@@ -21,59 +21,65 @@ indicators:
 
 **The short answer**
 
-- **Net migration to the UK was {{ num("net_migration") }}** in the {{ when("net_migration") }} (a provisional estimate). It {{ c.verb }} by {{ c.by }} from {{ c.from }} a year earlier. At its highest in the ONS series, which starts in 2012, it was {{ pk.value }} in the {{ pk.when }}.
-- **Both flows changed.** Long-term immigration {{ ci.verb }} by {{ ci.by }} to {{ num("immigration_long_term") }}, and emigration {{ ce.verb }} by {{ ce.by }} to {{ num("emigration_long_term") }}.
-- **By nationality,** net migration was {{ num("net_migration", breakdown="non_eu_plus") }} for non-EU+ nationals, {{ num("net_migration", breakdown="british") }} for British nationals and {{ num("net_migration", breakdown="eu_plus") }} for EU+ nationals. A negative figure means more people left than arrived.
-
-**Main caveat:** these are provisional estimates, and ONS revises them as more travel data arrive. Recent revisions have changed the headline figure by as much as {{ largest_revision() }} (see below).
+- **Net migration was {{ num("net_migration") }}** in the {{ when("net_migration") }}. It {{ c.verb }} by {{ c.by }} on a year earlier, and peaked at {{ pk.value }} in the {{ pk.when }}.
+- **Immigration {{ ci.verb }}** to {{ num("immigration_long_term") }}, and emigration {{ ce.verb }} to {{ num("emigration_long_term") }}.
+- **These are provisional.** Recent figures have been revised by up to {{ largest_revision() }}.
 
 </div>
 
 ## How many people come and go
 
-Net migration is the difference between two large flows: people moving to the UK for at least a year (immigration) and people leaving for at least a year (emigration). Each point covers the previous 12 months.
-
 {{ lines([["immigration_long_term", "total", "Immigration", "imm"], ["emigration_long_term", "total", "Emigration", "emi"], ["net_migration", "total", "Net migration", "net"]]) }}
 
-These figures include British citizens moving abroad or returning, and they count people, not visas. They are rounded to the nearest 1,000.
+Net migration is immigration (people arriving for at least a year) minus emigration (people leaving for at least a year). Each point covers the previous 12 months. The figures count people, not visas, include British citizens, and are rounded to the nearest 1,000.
+
+By nationality, net migration was {{ num("net_migration", breakdown="non_eu_plus") }} for non-EU+ nationals, {{ num("net_migration", breakdown="british") }} for British nationals and {{ num("net_migration", breakdown="eu_plus") }} for EU+ nationals (negative means more left than arrived).
 
 ## How much the figures change between editions
 
-ONS publishes these estimates twice a year. Each edition revises recent periods as more information arrives about who actually stayed or left. The table shows net migration for each period as first published and as it stands now.
+ONS revises each estimate as more travel data arrive, by up to {{ largest_revision() }} for recent periods. The next edition is due on 26 November 2026.
+
+<details markdown="1">
+<summary>First published and latest estimates</summary>
 
 | Period | First published | Latest estimate | Change |
 | --- | --- | --- | --- |
 {% for r in revisions() %}| {{ r.when }} | {{ r.first }} ({{ r.first_pub }}) | {{ r.latest }} ({{ r.latest_pub }}) | {{ r.change }} |
 {% endfor %}
 
-The most recent periods are the most likely to change. The next ONS edition is scheduled for 26 November 2026.
+</details>
 
 ## Why people come: visas granted
 
 {% set cv = change("visas_granted") %}
 In the {{ when("visas_granted") }}, **{{ num("visas_granted") }} visas** were granted to people outside the UK to come to work, study, join family or use a humanitarian scheme, excluding visitor and transit visas. That {{ cv.verb }} by {{ cv.pct }} from a year earlier.
 
-{{ bars("visas_granted", {"study": "Study", "work": "Work", "family": "Family", "ukraine": "Ukraine schemes", "other": "Other visas", "euss": "EU Settlement Scheme permits", "bno": "BN(O) route"}) }}
+{{ bars("visas_granted", {"study": "Study", "work": "Work", "family": "Family", "ukraine": "Ukraine schemes", "other": "Other visas", "euss": "EU Settlement Scheme", "bno": "BN(O) route"}) }}
 
-Visas are not the same as migration. They count permissions granted, not people arriving: some visas go unused, one person can receive more than one, and British and Irish citizens need no visa. They also cover a different 12 months from the ONS figures above (the {{ when("visas_granted") }}, versus the {{ when("net_migration") }}), so the two cannot be added together or compared directly.
+Visas count permissions, not people: some go unused and British and Irish citizens need none. They also cover a different 12 months from the ONS figures (the {{ when("visas_granted") }}, not the {{ when("net_migration") }}), so the two can't be compared directly.
 
 ## Asylum and small boats
 
 {% set ca = change("asylum_claims") %}
 {% set cb = change("small_boat_arrivals") %}
 {% set cw = change("asylum_awaiting_decision") %}
-- **{{ num("asylum_claims") }} people claimed asylum** in the {{ when("asylum_claims") }}, including dependants. That {{ ca.verb }} by {{ ca.pct }} from a year earlier.
-- **{{ num("small_boat_arrivals") }} people were detected arriving by small boat** over the same period, which {{ cb.verb }} by {{ cb.pct }}.
-- **{{ num("asylum_initial_decisions") }} people received an initial decision.** {{ num("asylum_initial_decisions", breakdown="grants") }} were granted protection or other leave and {{ num("asylum_initial_decisions", breakdown="refusals") }} were refused.
-- **{{ num("asylum_awaiting_decision") }} people were waiting for an initial decision** at the {{ when("asylum_awaiting_decision") }}. That {{ cw.verb }} by {{ cw.by }} from {{ cw.from }} a year earlier.
+- **{{ num("asylum_claims") }} people claimed asylum** in the {{ when("asylum_claims") }}, including dependants, {{ ca.pct }} {{ "more" if ca.up else "fewer" }} than a year earlier.
+- **{{ num("small_boat_arrivals") }} arrived by small boat** over the same period, {{ cb.pct }} {{ "more" if cb.up else "fewer" }}.
+
+<details markdown="1">
+<summary>Decisions and the backlog</summary>
+
+{{ num("asylum_initial_decisions") }} people received an initial decision: {{ num("asylum_initial_decisions", breakdown="grants") }} were granted protection or other leave and {{ num("asylum_initial_decisions", breakdown="refusals") }} were refused. {{ num("asylum_awaiting_decision") }} were waiting for an initial decision at the {{ when("asylum_awaiting_decision") }}, {{ cw.by }} {{ "more" if cw.up else "fewer" }} than a year earlier. Decisions in a year mostly concern earlier claims, so grants divided by that year's claims is not a grant rate.
+
+</details>
 
 {{ lines([["asylum_claims", "total", "People claiming asylum", "imm"], ["small_boat_arrivals", "total", "Small boat arrivals", "net"]]) }}
 
-These measures overlap, so they should never be added together. Many people who arrive by small boat then claim asylum. Anyone in either group who stays for a year or more is also counted in the long-term migration estimates. Decisions in a year mostly concern claims made in earlier years, so dividing grants by that year's claims does not give a grant rate.
+These overlap, so never add them: most small-boat arrivals claim asylum, and anyone staying a year or more is also in the migration estimates above.
 
 ## What it costs and contributes
 
-There is no single official figure for "the cost of immigration". Studies ask different questions about different groups of people over different time spans, so their results cannot be added together or averaged.
+There is no single official figure for "the cost of immigration". Studies ask different questions about different people over different time spans, so their results can't be added or averaged.
 
 <div class="evidence" markdown="1">
 

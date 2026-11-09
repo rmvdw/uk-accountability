@@ -75,3 +75,13 @@ def test_multi_line_legend_labels_a_value_from_an_earlier_period():
     svg = multi_line_chart([("A", a, "imm"), ("B", b, "emi")], "people", 0)
     assert "A: <strong>3</strong></span>" in svg
     assert "B: <strong>6</strong> (2025-02)</span>" in svg
+
+
+def test_nice_scale_uses_round_steps():
+    from ukdash.chart import nice_scale
+
+    assert nice_scale(0, 1_590_000)[2] == [0, 400_000, 800_000, 1_200_000, 1_600_000]
+    lo, hi, ticks = nice_scale(3.3, 5.2)
+    assert ticks == [3.2, 3.6, 4.0, 4.4, 4.8, 5.2] and lo <= 3.3 and hi >= 5.2
+    lo, hi, ticks = nice_scale(-120_000, 950_000)  # crosses zero: zero is a tick
+    assert 0 in ticks and lo <= -120_000 and hi >= 950_000

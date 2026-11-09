@@ -14,11 +14,34 @@ def _fmt(v: float, decimals: int) -> str:
 def _axis_fmt(v: float, decimals: int, span: float) -> str:
     """Short axis labels: 934,900 becomes 935k, 1,234,000 becomes 1.23m."""
     a = abs(v)
+    if a == 0:
+        return "0"
     if span >= 10_000 or a >= 100_000:
         if a >= 1_000_000:
             return f"{v / 1_000_000:.2f}".rstrip("0").rstrip(".") + "m"
         return f"{v / 1_000:,.0f}k"
     return _fmt(v, decimals)
+
+
+def nice_scale(lo: float, hi: float) -> tuple[float, float, list[float]]:
+    """Round axis covering lo..hi in 3 to 6 steps of 1, 2, 2.5, 4 or 5 x 10^k, choosing
+    the tightest fit so the data fill the chart (0 to 1.6m in 400k steps, not 0 to 2m)."""
+    import math
+
+    if hi <= lo:
+        hi = lo + 1
+    best = None
+    mag0 = 10 ** math.floor(math.log10((hi - lo) / 6))
+    for mag in (mag0, mag0 * 10):
+        for m in (1, 2, 2.5, 4, 5):
+            step = m * mag
+            lo2 = math.floor(lo / step + 1e-9) * step
+            hi2 = math.ceil(hi / step - 1e-9) * step
+            n = round((hi2 - lo2) / step)
+            if 3 <= n <= 6 and (best is None or hi2 - lo2 < best[1] - best[0]):
+                best = (lo2, hi2, step, n)
+    lo2, hi2, step, n = best
+    return lo2, hi2, [round(lo2 + i * step, 10) for i in range(n + 1)]
 
 
 def line_path(rows: list[Observation]) -> list[list[tuple[int, float]]]:
@@ -52,11 +75,11 @@ def line_chart(
     pts = [(o.period, o.value) for o in sorted(rows, key=lambda o: o.period) if o.value is not None]
     if len(pts) < 2:
         return ""
-    w, h, pl, pr, pt, pb = 640, 280, 64, 24, 16, 36
+    w, h, pl, pr, pt, pb = 640, 280, 76, 24, 16, 36
     vals = [v for _, v in pts]
     lo, hi = min(vals), max(vals)
     pad = (hi - lo) * 0.1 or abs(hi) * 0.1 or 1
-    lo, hi = lo - pad, hi + pad
+    lo, hi, ticks = nice_scale(lo - pad, hi + pad)
     segments = line_path(rows)
     k0 = segments[0][0][0]
     k1 = segments[-1][-1][0]
@@ -79,7 +102,6 @@ def line_chart(
         for seg in segments
         if len(seg) == 1
     )
-    ticks = [lo + (hi - lo) * k / 4 for k in range(5)]
     grid = "".join(
         f'<line x1="{pl}" x2="{w - pr}" y1="{y(t):.1f}" y2="{y(t):.1f}" class="grid"/>'
         f'<text x="{pl - 6}" y="{y(t):.1f}" class="axis" text-anchor="end" '
@@ -116,8 +138,9 @@ def bar_chart(
     # Size the label and value margins to the text (labels render at ~18px in a 640 box,
     # roughly 10px per character), so nothing is clipped on a phone.
     w, row = 640, 34
-    pl = min(max(80, 10 * max(len(labels[g]) for g, _ in values) + 16), 300)
-    pr = 10 * max(len(_fmt(v, decimals)) for _, v in values) + 16
+    # Room for labels at the larger phone text size (about 16 units per character).
+    pl = min(max(80, 16 * max(len(labels[g]) for g, _ in values) + 16), 360)
+    pr = 14 * max(len(_fmt(v, decimals)) for _, v in values) + 16
     h = row * len(values) + 8
     top = max(abs(v) for _, v in values) or 1
     bars = []
@@ -160,12 +183,12 @@ def multi_line_chart(
             usable.append((label, rows, cls, valid))
     if not usable:
         return ""
-    w, h, pl, pr, pt, pb = 640, 300, 64, 24, 16, 36
+    w, h, pl, pr, pt, pb = 640, 300, 76, 24, 16, 36
     vals = [o.value for *_, valid in usable for o in valid]
     lo, hi = min(vals + [0.0]), max(vals + [0.0])
     pad = (hi - lo) * 0.08 or 1
     # Counts that can't go negative start the axis at zero rather than below it.
-    lo, hi = (lo - pad if lo < 0 else 0.0), hi + pad
+    lo, hi, ticks = nice_scale(lo - pad if lo < 0 else 0.0, hi + pad)
     ks = [period_ordinal(o.period, o.frequency) for *_, valid in usable for o in valid]
     k0, k1 = min(ks), max(ks)
     span = max(k1 - k0, 1)
@@ -176,7 +199,6 @@ def multi_line_chart(
     def y(v: float) -> float:
         return pt + (h - pt - pb) * (1 - (v - lo) / (hi - lo))
 
-    ticks = [lo + (hi - lo) * k / 4 for k in range(5)]
     grid = "".join(
         f'<line x1="{pl}" x2="{w - pr}" y1="{y(t):.1f}" y2="{y(t):.1f}" class="grid"/>'
         f'<text x="{pl - 6}" y="{y(t):.1f}" class="axis" text-anchor="end" '

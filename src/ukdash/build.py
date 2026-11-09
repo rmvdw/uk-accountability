@@ -171,6 +171,7 @@ def build_briefings(project: Project, out: Path, env, common: dict, include_draf
             continue
         page["source_lines"] = briefing.source_summary(page["sources"])
         page["attribution_lines"] = briefing.attribution_lines(page["sources"])
+        page["blocks"] = briefing.split_blocks(page["body_html"])
         target = out / "briefings" / b.id / "index.html"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
