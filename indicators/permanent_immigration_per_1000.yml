@@ -31,11 +31,11 @@ source:
   publisher: OECD and World Bank
   dataset: Standardised inflows of permanent-type migrants (OECD); Population, total (World Bank)
   url: https://www.oecd.org/en/data/indicators/permanent-immigrant-inflows.html
-  licence: OECD Terms and Conditions; World Bank population CC BY 4.0
+  licence: OECD Terms and Conditions; World Bank data CC BY 4.0
   licence_url: https://www.oecd.org/en/about/terms-conditions.html
   attribution: >-
     Source: OECD, Standardised inflows of permanent-type migrants, OECD Data Explorer;
-    World Bank, Population, total (SP.POP.TOTL), CC BY 4.0
+    World Bank, Population, total (SP.POP.TOTL)
   adapter: per_1000
   query:
     numerator: oecd_permanent

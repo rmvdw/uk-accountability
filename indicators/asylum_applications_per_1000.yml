@@ -26,12 +26,11 @@ source:
   publisher: UNHCR and World Bank
   dataset: Asylum applications, Refugee Population Statistics Database (UNHCR); Population, total (World Bank)
   url: https://www.unhcr.org/refugee-statistics/
-  licence: CC BY 4.0 (UNHCR, with UNHCR's supplemental terms; World Bank)
+  licence: "CC BY 4.0, with UNHCR's terms of use for datasets: https://www.unhcr.org/terms-use-datasets"
   licence_url: https://www.unhcr.org/terms-use-datasets
   attribution: >-
-    Source: UNHCR Refugee Population Statistics Database (terms:
-    https://www.unhcr.org/terms-use-datasets); World Bank, Population, total
-    (SP.POP.TOTL), CC BY 4.0
+    Source: UNHCR Refugee Population Statistics Database; World Bank, Population,
+    total (SP.POP.TOTL)
   adapter: per_1000
   query:
     numerator: unhcr_asylum_new

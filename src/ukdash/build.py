@@ -145,12 +145,56 @@ def _comparison_basis_note(project: Project, d, comp) -> str | None:
     )
 
 
+# Public address used in citations. Update when the site is named (#1).
+SITE_URL = "https://uk-accountability.pages.dev"
+
+
+def _finish_page(briefing, page: dict) -> dict:
+    page["source_lines"] = briefing.source_summary(page["sources"])
+    page["attribution_lines"] = briefing.attribution_lines(page["sources"])
+    page["blocks"] = briefing.split_blocks(page["body_html"])
+    return page
+
+
+def _write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
 def build_briefings(project: Project, out: Path, env, common: dict, include_drafts: bool):
-    """Production renders only frozen, published editions. Previews render candidates."""
+    """Production renders only frozen, published editions. Previews render candidates.
+
+    Every frozen edition up to the published one also gets a permanent page and a CSV
+    of its exact figures at /briefings/<id>/editions/<edition>/, so a citation keeps
+    working after later editions (#26). Production never shows an edition newer than
+    the published one (it may be awaiting approval); previews show them all.
+    """
     from . import briefing
 
     cards = []
     for b in briefing.load_all(project.root).values():
+        base = out / "briefings" / b.id
+        all_editions = briefing.editions(project.root, b.id)
+        if b.status == "published":
+            shown = [e for e in all_editions if e <= (b.published_edition or "")]
+        else:
+            shown = all_editions if include_drafts else []
+        for ed_id in shown:
+            ed = briefing.read_edition(project.root, b.id, ed_id)
+            current = ed_id == b.published_edition and b.status == "published"
+            page = _finish_page(briefing, {
+                **ed, "id": b.id, "candidate": False, "status": b.status, "changes": None,
+                "edition_url": f"{SITE_URL}/briefings/{b.id}/editions/{ed_id}/",
+                "download": "figures.csv",
+                "superseded_by": None if current or not b.published_edition
+                else f"/briefings/{b.id}/editions/{b.published_edition}/",
+                "editions": [e for e in shown],
+            })  # fmt: skip
+            _write(base / "editions" / ed_id / "figures.csv", briefing.facts_csv(ed["facts"]))
+            _write(
+                base / "editions" / ed_id / "index.html",
+                env.get_template("briefing.html").render(**common, b=page),
+            )
         if include_drafts:
             if not all(project.read_observations(i) for i in b.indicators):
                 continue
@@ -162,21 +206,22 @@ def build_briefings(project: Project, out: Path, env, common: dict, include_draf
             page = {
                 "id": b.id, "title": b.title, "standfirst": b.standfirst, "body_html": html,
                 "sources": sources, "edition": None, "frozen_at": None, "candidate": True,
-                "status": b.status, "changes": changes,
+                "status": b.status, "changes": changes, "edition_url": None,
+                "download": "candidate-figures.csv", "superseded_by": None, "editions": shown,
             }  # fmt: skip
+            _write(base / "candidate-figures.csv", briefing.facts_csv(facts))
         elif b.status == "published":
             ed = briefing.load_edition(project.root, b)
-            page = {**ed, "id": b.id, "candidate": False, "status": b.status, "changes": None}
+            page = {
+                **ed, "id": b.id, "candidate": False, "status": b.status, "changes": None,
+                "edition_url": f"{SITE_URL}/briefings/{b.id}/editions/{b.published_edition}/",
+                "download": f"editions/{b.published_edition}/figures.csv",
+                "superseded_by": None, "editions": shown,
+            }  # fmt: skip
         else:
             continue
-        page["source_lines"] = briefing.source_summary(page["sources"])
-        page["attribution_lines"] = briefing.attribution_lines(page["sources"])
-        page["blocks"] = briefing.split_blocks(page["body_html"])
-        target = out / "briefings" / b.id / "index.html"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(
-            env.get_template("briefing.html").render(**common, b=page), encoding="utf-8"
-        )
+        _finish_page(briefing, page)
+        _write(base / "index.html", env.get_template("briefing.html").render(**common, b=page))
         cards.append(page)
     return cards
 
