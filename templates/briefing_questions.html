@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{# Question-led layout: the list of questions comes straight after the title, then the
+   short answer (always visible), then every section as a question to open. Sections fold to keep the page short; the last one (what the figures
+   can't tell you) stays open. Same blocks and wording as the editorial layout. #}
+{% block title %}{{ b.title }} · UK Dashboard{% endblock %}
+{% block main %}
+{% include "_briefing_switch.html" %}
+{% include "_briefing_title.html" %}
+<nav class="qnav-box" id="questions" aria-label="Questions on this page">
+<strong>Questions on this page</strong>
+<ol class="qnav">
+<li><a href="#short-answer">The short answer</a></li>
+{% for s in b.blocks.sections %}<li><a href="#{{ s.id }}">{{ s.title|safe }}</a></li>
+{% endfor %}
+</ol>
+</nav>
+{% include "_briefing_stamp.html" %}
+<div class="prose" id="short-answer">
+{{ b.blocks.answer|safe }}
+{% for s in b.blocks.sections %}
+<details id="{{ s.id }}" class="qsection"{% if loop.last %} open{% endif %}>
+<summary><h2>{{ s.title|safe }}</h2></summary>
+{{ s.html|safe }}
+<p class="meta"><a href="#questions">Back to the questions</a></p>
+</details>
+{% endfor %}
+</div>
+<script>
+// Open a folded question when it is linked to, so the jump lands on its content.
+function openTarget() {
+  var el = location.hash && document.getElementById(location.hash.slice(1));
+  if (el && el.tagName === "DETAILS") el.open = true;
+}
+window.addEventListener("hashchange", openTarget);
+openTarget();
+</script>
+{% include "_briefing_foot.html" %}
+{% endblock %}

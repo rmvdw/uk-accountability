@@ -1,0 +1,7 @@
+{# Status tag, title and standfirst. #}
+{% if b.candidate %}
+<span class="draft-tag">Candidate edition{% if b.status == "draft" %} · draft{% endif %}: not yet approved</span>
+{% endif %}
+<h1>{{ b.title }}</h1>
+<p class="lede">{{ b.standfirst }}</p>
+

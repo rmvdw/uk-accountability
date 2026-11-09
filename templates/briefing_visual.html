@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{# Visual-led layout: the briefing's first chart leads, straight under the title, then
+   the short answer and the remaining sections. Same blocks and wording as the
+   editorial layout; only the order differs. #}
+{% block title %}{{ b.title }} · UK Dashboard{% endblock %}
+{% block main %}
+{% include "_briefing_switch.html" %}
+{% set lead = b.blocks.lead %}
+{% include "_briefing_title.html" %}
+<div class="prose">
+{% if lead %}<section id="{{ lead.id }}" class="lead-visual">
+<h2>{{ lead.title|safe }}</h2>
+{{ lead.chart|safe }}
+{{ lead.text|safe }}
+</section>{% endif %}
+</div>
+{% include "_briefing_stamp.html" %}
+<div class="prose">
+{{ b.blocks.answer|safe }}
+{% for s in b.blocks.sections if not lead or s.id != lead.id %}
+<section id="{{ s.id }}"><h2>{{ s.title|safe }}</h2>
+{{ s.html|safe }}
+</section>
+{% endfor %}
+</div>
+{% include "_briefing_foot.html" %}
+{% endblock %}

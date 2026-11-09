@@ -246,3 +246,32 @@ def test_missing_year_earlier_value_is_never_replaced():
     f = briefing.Facts(p, ["asylum_claims"], period_label)
     with pytest.raises(ValueError, match="12 months before " + top.period):
         f.change("asylum_claims")
+
+
+def test_layouts_share_blocks_and_only_previews_get_alternatives(tmp_path):
+    p = Project.load()
+    b = briefing.load_all(p.root)["immigration"]
+    html, _, _ = briefing.render_candidate(p, b, period_label)
+    blocks = briefing.split_blocks(html)
+    assert 'class="answer"' in blocks["answer"]
+    ids = [s["id"] for s in blocks["sections"]]
+    assert "what-these-figures-cant-tell-you" in ids and len(ids) == len(set(ids))
+    assert blocks["lead"]["chart"].startswith('<div class="chart-block">')
+    assert 'id="how-many-people-come-and-go"' in blocks["html"]
+
+    assert build(p, tmp_path / "prev", include_drafts=True) == []
+    pages = {
+        lid: (tmp_path / "prev/briefings/immigration" / sub / "index.html").read_text(
+            encoding="utf-8"
+        )
+        for lid, sub in [("editorial", ""), ("visual", "visual"), ("questions", "questions")]
+    }
+    # Same wording and numbers in every layout: only the arrangement differs.
+    for page in pages.values():
+        assert blocks["answer"] in page
+        for s in blocks["sections"]:
+            assert s["title"] in page
+    v = pages["visual"]
+    assert v.index('class="chart-block"') < v.index('class="answer"')
+    q = pages["questions"]
+    assert q.index('class="qnav-box"') < q.index('class="answer"')

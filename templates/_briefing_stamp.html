@@ -1,0 +1,19 @@
+{# Edition stamp and, in previews, what a new edition would change. #}
+<div class="stamp">
+  {% if b.candidate %}
+  Built from the latest data on {{ built_at[:10] }}. Not yet reviewed or published.
+  {% else %}
+  Edition {{ b.edition }}, reviewed and published {{ b.frozen_at[:10] }}. Figures stay as published until the next reviewed edition.
+  {% endif %}
+  <br>Data: {{ b.source_lines|join("; ") }}.
+</div>
+
+{% if b.changes is not none %}
+<div class="card">
+  <strong>What a new edition would change</strong>
+  {% if b.changes %}
+  <ul>{% for c in b.changes %}<li>{{ c }}</li>{% endfor %}</ul>
+  {% else %}<p class="meta">No figures would change.</p>{% endif %}
+</div>
+{% endif %}
+

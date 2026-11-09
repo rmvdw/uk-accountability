@@ -376,6 +376,40 @@ def render_candidate(project: Project, b: Briefing, period_label, extra: dict | 
     return html, facts.used, sources_for(project, b)
 
 
+def slug(text: str) -> str:
+    text = re.sub(r"&#39;|&rsquo;|['\u2019]", "", text)  # "can't" -> "cant"
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+
+
+ANSWER = re.compile(r'<div class="answer">.*?</div>', re.S)
+H2 = re.compile(r"<h2>(.*?)</h2>", re.S)
+CHART_BLOCK = re.compile(r'<div class="chart-block">.*?</svg>\s*</div>', re.S)
+
+
+def split_blocks(html: str) -> dict:
+    """Named blocks from one rendered briefing, so layouts can arrange the same content
+    differently without copying any wording or numbers:
+    answer (the short-answer box), sections [{id, title, html}] split at each <h2>,
+    and lead (the first section with a chart, for the visual-led layout)."""
+    m = ANSWER.search(html)
+    answer = m.group(0) if m else ""
+    rest = html.replace(answer, "", 1) if answer else html
+    parts = H2.split(rest)
+    sections = []
+    for i in range(1, len(parts), 2):
+        title = parts[i].strip()
+        sections.append({"id": slug(re.sub(r"<[^>]+>", "", title)), "title": title,
+                         "html": parts[i + 1]})  # fmt: skip
+    lead = next((s for s in sections if 'class="chart-block"' in s["html"]), None)
+    if lead:  # the visual-led layout shows the chart before the section's text
+        c = CHART_BLOCK.search(lead["html"])
+        lead = {**lead, "chart": c.group(0), "text": lead["html"].replace(c.group(0), "", 1)}
+    # The whole page with linkable headings, for the editorial layout.
+    full = H2.sub(lambda m: f'<h2 id="{slug(re.sub(r"<[^>]+>", "", m.group(1)))}">'
+                            f"{m.group(1)}</h2>", html)  # fmt: skip
+    return {"answer": answer, "sections": sections, "lead": lead, "html": full}
+
+
 def freeze(root: Path, project: Project, b: Briefing, period_label, extra=None) -> Path:
     html, facts, sources = render_candidate(project, b, period_label, extra)
     if TO_VERIFY in html:

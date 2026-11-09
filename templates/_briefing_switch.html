@@ -1,0 +1,6 @@
+{# Previews only: links between layout options with the same content. #}
+{% if b.layouts %}
+<nav class="layouts" aria-label="Layout options for review">Review layout:
+{% for l in b.layouts %}{% if l.id == b.layout %}<strong>{{ l.name }}</strong>{% else %}<a href="{{ l.href }}">{{ l.name }}</a>{% endif %}{{ " · " if not loop.last }}{% endfor %}
+</nav>
+{% endif %}

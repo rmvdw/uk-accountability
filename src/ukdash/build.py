@@ -145,6 +145,14 @@ def _comparison_basis_note(project: Project, d, comp) -> str | None:
     )
 
 
+# (id, name, path under /briefings/<id>/, template). The first is the production layout.
+LAYOUTS = [
+    ("editorial", "Answer first", "", "briefing.html"),
+    ("visual", "Chart first", "visual/", "briefing_visual.html"),
+    ("questions", "Questions first", "questions/", "briefing_questions.html"),
+]
+
+
 def build_briefings(project: Project, out: Path, env, common: dict, include_drafts: bool):
     """Production renders only frozen, published editions. Previews render candidates."""
     from . import briefing
@@ -171,11 +179,22 @@ def build_briefings(project: Project, out: Path, env, common: dict, include_draf
             continue
         page["source_lines"] = briefing.source_summary(page["sources"])
         page["attribution_lines"] = briefing.attribution_lines(page["sources"])
-        target = out / "briefings" / b.id / "index.html"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(
-            env.get_template("briefing.html").render(**common, b=page), encoding="utf-8"
-        )
+        page["blocks"] = briefing.split_blocks(page["body_html"])
+        base = out / "briefings" / b.id
+        # Previews also show the alternative layouts (#13) over the same blocks, linked
+        # from each other; production serves the editorial layout only.
+        layouts = LAYOUTS if include_drafts else LAYOUTS[:1]
+        page["layouts"] = [
+            {"id": lid, "name": name, "href": f"/briefings/{b.id}/{sub}"}
+            for lid, name, sub, _ in layouts
+        ] if include_drafts else None  # fmt: skip
+        for lid, _, sub, template in layouts:
+            target = base / sub / "index.html"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(
+                env.get_template(template).render(**common, b={**page, "layout": lid}),
+                encoding="utf-8",
+            )
         cards.append(page)
     return cards
 
