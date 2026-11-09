@@ -21,7 +21,7 @@ source:
   url: https://www.gov.uk/government/statistical-data-sets/immigration-system-statistics-data-tables
   licence: Open Government Licence v3.0
   licence_url: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
-  attribution: "Source: Home Office, Immigration system statistics, licensed under the Open Government Licence v3.0"
+  attribution: "Source: Home Office, Immigration system statistics"
   adapter: homeoffice_summary
   query:
     attachment_title: "Entry clearance visas summary tables, year ending"

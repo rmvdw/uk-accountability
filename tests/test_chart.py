@@ -39,3 +39,12 @@ def test_quarterly_and_annual_ordinals_are_consecutive():
     ]
     assert len(line_path(q)) == 1
     assert len(line_path(a)) == 1
+
+
+def test_axis_labels_are_compact_for_large_numbers():
+    from ukdash.chart import _axis_fmt
+
+    assert _axis_fmt(934_900, 0, 800_000) == "935k"
+    assert _axis_fmt(1_234_000, 0, 800_000) == "1.23m"
+    assert _axis_fmt(-55_900, 0, 800_000) == "-56k"
+    assert _axis_fmt(4.25, 1, 2) == "4.2"

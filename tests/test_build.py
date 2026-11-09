@@ -74,7 +74,7 @@ def test_draft_without_data_renders_in_preview(fixture_root, tmp_path):
     assert build(project, tmp_path / "prev", include_drafts=True) == []
     page = (tmp_path / "prev/not_fetched_yet/index.html").read_text()
     assert "No data fetched yet" in page
-    assert "Download all countries" not in page
+    assert "Download the data" not in page
     assert not (tmp_path / "prev/not_fetched_yet/not_fetched_yet.csv").exists()
 
 

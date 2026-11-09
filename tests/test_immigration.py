@@ -183,3 +183,7 @@ def test_homeoffice_picks_newest_attachment():
         "b.ods",
         "year ending June 2026",
     )
+
+
+def test_ons_publication_date_from_cover_sheet():
+    assert ons_ltim.publication_date(FILES["ons_ltim"].read_bytes()) == "21 May 2026"

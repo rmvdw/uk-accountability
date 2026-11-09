@@ -21,7 +21,7 @@ source:
   url: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/internationalmigration/datasets/longterminternationalimmigrationemigrationandnetmigrationflowsprovisional
   licence: Open Government Licence v3.0
   licence_url: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
-  attribution: "Source: Office for National Statistics, licensed under the Open Government Licence v3.0"
+  attribution: "Source: Office for National Statistics"
   adapter: ons_ltim
   query:
     dataset_page: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/internationalmigration/datasets/longterminternationalimmigrationemigrationandnetmigrationflowsprovisional

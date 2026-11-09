@@ -122,6 +122,15 @@ def _reconcile(t: dict[tuple[str, str, str], tuple[float | None, str]]) -> None:
                 raise ValueError(f"{f} {p}: All {total:.0f} != sum of groups {sum(parts):.0f}")
 
 
+def publication_date(raw: bytes) -> str | None:
+    """Release date from the cover sheet, e.g. '21 May 2026', or None if not stated."""
+    for r in read_spreadsheet(raw).get("Cover Sheet", []):
+        m = re.search(r"originally published at .*? on (\d{1,2} [A-Z][a-z]+ \d{4})", " ".join(r))
+        if m:
+            return m.group(1)
+    return None
+
+
 @register
 class ONSLongTermMigration(Adapter):
     name = "ons_ltim"
@@ -130,14 +139,7 @@ class ONSLongTermMigration(Adapter):
         page = _get(d.source.query["dataset_page"]).decode("utf-8", "replace")
         url, vintage = latest_edition(page)
         raw = _get(url)
-        release = None
-        cover = read_spreadsheet(raw).get("Cover Sheet", [])
-        for r in cover:
-            text = " ".join(r)
-            m = re.search(r"published at [0-9:.]+\s*(?:am|pm)? on (\d{1,2} \w+ \d{4})", text)
-            if m:
-                release = m.group(1)
-                break
+        release = publication_date(raw)
         return Fetched(
             raw=raw,
             filename="ltim.xlsx",
