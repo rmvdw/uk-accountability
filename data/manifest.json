@@ -1,5 +1,16 @@
 [
   {
+    "indicator_id": "asylum_applications_per_1000",
+    "path": "data/raw/asylum_applications_per_1000/bundle.json",
+    "sha256": "7b31afb1bc8015bcbeb19d12a01e0eaafd51f3a89f13391544a2ce3bd60bf3c2",
+    "request": "https://api.unhcr.org/population/v1/asylum-applications/?coa=GBR&yearFrom=2015&limit=1000 ; https://api.unhcr.org/population/v1/asylum-applications/?coa=CAN&yearFrom=2015&limit=1000 ; https://api.unhcr.org/population/v1/asylum-applications/?coa=FRA&yearFrom=2015&limit=1000 ; https://api.unhcr.org/population/v1/asylum-applications/?coa=GFR&yearFrom=2015&limit=1000 ; https://api.unhcr.org/population/v1/asylum-applications/?coa=ITA&yearFrom=2015&limit=1000 ; https://api.unhcr.org/population/v1/asylum-applications/?coa=JPN&yearFrom=2015&limit=1000 ; https://api.unhcr.org/population/v1/asylum-applications/?coa=USA&yearFrom=2015&limit=1000 ; https://api.worldbank.org/v2/country/GBR;CAN;FRA;DEU;ITA;JPN;USA/indicator/SP.POP.TOTL?date=2015:2100&format=json&per_page=1000",
+    "retrieval_method": "live",
+    "retrieved_at": "2026-11-09T20:23:03Z",
+    "publisher_release_date": null,
+    "vintage": null,
+    "licence": "CC BY 4.0 (UNHCR, with UNHCR's supplemental terms; World Bank)"
+  },
+  {
     "indicator_id": "asylum_awaiting_decision",
     "path": "data/raw/asylum_awaiting_decision/tables.ods",
     "sha256": "f935782ab90190deb04a1a86f7b6ba7515f32e238c14b96c55993f4793096d14",
@@ -64,6 +75,17 @@
     "publisher_release_date": null,
     "vintage": "YE December 2025",
     "licence": "Open Government Licence v3.0"
+  },
+  {
+    "indicator_id": "permanent_immigration_per_1000",
+    "path": "data/raw/permanent_immigration_per_1000/bundle.json",
+    "sha256": "7918b58fdb65f4eabab00f63be348fe16221fe791d45db2b9fa8d63fcecb0396",
+    "request": "https://sdmx.oecd.org/public/rest/data/OECD.ELS.IMD,DSD_MIG_INT@DF_MIG_INT_PER,1.0/all?startPeriod=2015&format=csvfile ; https://api.worldbank.org/v2/country/GBR;CAN;FRA;DEU;ITA;JPN;USA/indicator/SP.POP.TOTL?date=2015:2100&format=json&per_page=1000",
+    "retrieval_method": "live",
+    "retrieved_at": "2026-11-09T20:23:03Z",
+    "publisher_release_date": null,
+    "vintage": null,
+    "licence": "OECD Terms and Conditions; World Bank population CC BY 4.0"
   },
   {
     "indicator_id": "small_boat_arrivals",
