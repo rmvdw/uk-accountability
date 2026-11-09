@@ -21,6 +21,15 @@ A free public reference dashboard that helps ordinary people understand UK outco
 
 Otto (Ross's GPT) is the provisional prioritisation lead. Any authorised agent can take over: coordination state lives in GitHub, not in chat memory.
 
+## Current release and handoffs
+
+The [immigration release checklist](https://github.com/rmvdw/uk-accountability/issues/13) is the current execution plan: complete that pilot before new topics, scoring or extra peer groups. It lists each owner, reviewer, next action, evidence and approval still needed. External surveys are not assumed before launch.
+
+- Check the review queue before starting another feature. Each agent has at most one implementation PR plus review work.
+- A requested handoff is pending until the receiving agent acknowledges it. Post findings or an explicit ready-to-merge decision on the same PR, naming the exact reviewed head.
+- Integrate with current main before final review. Substantive UI changes include phone/desktop and published/preview evidence, checking sources, attribution, citation, corrections and frozen editions. Tests use fixtures or data-relative expectations.
+- Keep Ross's requests concrete: editorial decisions or demonstrated account-access blockers, with the proposed result available to inspect. Additional model critiques focus on complete-page milestones.
+
 ## Working rules
 
 1. Read `README.md`, `docs/decisions.md` and the issue. Check open PRs and branches for overlapping work.

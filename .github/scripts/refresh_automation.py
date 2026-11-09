@@ -18,6 +18,7 @@ import urllib.request
 from pathlib import Path
 
 MARKER = "<!-- ukdash:routine-refresh:production -->"
+CANDIDATE_MARKER = "<!-- ukdash:routine-refresh:candidates -->"
 DATA_PATHS = ["data/raw", "data/observations", "data/manifest.json", "data/checks.json"]
 
 
@@ -135,16 +136,60 @@ class GitHub:
             return json.load(response)
 
 
-def sync_issue(api, healthy: bool, stage: str, run_url: str, checks: dict) -> None:
-    """Reuse the same issue across failures; no duplicate comments on unchanged errors."""
-    issue = None
+def find_issue(api, label: str, marker: str):
+    """Find only this kind of issue; editorial review and production health are separate."""
     page = 1
     while True:
-        items = api.request("GET", f"issues?state=all&labels=data-failure&per_page=100&page={page}")
-        issue = next((i for i in items if MARKER in (i.get("body") or "")), None)
+        items = api.request("GET", f"issues?state=all&labels={label}&per_page=100&page={page}")
+        issue = next((i for i in items if marker in (i.get("body") or "")), None)
         if issue or len(items) < 100:
-            break
+            return issue
         page += 1
+
+
+def sync_candidate_issue(api, outcome: str, run_url: str) -> None:
+    """A candidate failure is a review task, never a production failure or approval."""
+    if outcome not in {"success", "failure"}:
+        return  # A skipped/cancelled check must not close an outstanding review.
+    issue = find_issue(api, "review", CANDIDATE_MARKER)
+    if outcome == "success":
+        if issue and issue["state"] == "open":
+            api.request(
+                "POST",
+                f"issues/{issue['number']}/comments",
+                {
+                    "body": f"Candidate validation passed. This is not publication approval.\n\n"
+                    f"[Run]({run_url})\n\nCodex (routine refresh automation)"
+                },
+            )
+            api.request("PATCH", f"issues/{issue['number']}", {"state": "closed"})
+        return
+    body = (
+        f"{CANDIDATE_MARKER}\nDraft briefing candidates need review.\n\n"
+        f"[Inspect the candidate-validation step]({run_url}).\n\n"
+        "Published briefings remain on their frozen editions. Valid production refreshes "
+        "have a separate data/build/deploy gate and are not blocked by this review task. "
+        "Fix the candidate and obtain editorial approval before publishing a new edition.\n\n"
+        "Codex (routine refresh automation)"
+    )
+    if issue:
+        if issue["state"] == "closed":
+            api.request("PATCH", f"issues/{issue['number']}", {"state": "open", "body": body})
+    else:
+        api.request(
+            "POST",
+            "issues",
+            {
+                "title": "Briefing candidates need review",
+                "body": body,
+                "labels": ["review"],
+            },
+        )
+
+
+def sync_issue(api, healthy: bool, stage: str, run_url: str, checks: dict) -> None:
+    """Reuse the same issue across failures; no duplicate comments on unchanged errors."""
+    issue = find_issue(api, "data-failure", MARKER)
     if healthy:
         if issue and issue["state"] == "open":
             api.request(
@@ -186,11 +231,13 @@ def sync_issue(api, healthy: bool, stage: str, run_url: str, checks: dict) -> No
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "command", choices=["preflight", "persist", "deploy", "heartbeat", "report"]
+        "command",
+        choices=["preflight", "persist", "deploy", "heartbeat", "report", "candidate-report"],
     )
     parser.add_argument("--failed", action="store_true")
     parser.add_argument("--healthy", action="store_true")
     parser.add_argument("--stage", default="workflow")
+    parser.add_argument("--outcome", choices=["success", "failure", "skipped"], default="skipped")
     args = parser.parse_args()
     try:
         if args.command == "preflight":
@@ -208,7 +255,10 @@ def main() -> None:
             checks = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
             url = f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}"
             url += f"/actions/runs/{os.environ['GITHUB_RUN_ID']}"
-            sync_issue(GitHub(), args.healthy, args.stage, url, checks)
+            if args.command == "candidate-report":
+                sync_candidate_issue(GitHub(), args.outcome, url)
+            else:
+                sync_issue(GitHub(), args.healthy, args.stage, url, checks)
     except Exception as exc:
         # urllib exceptions can include secret hook URLs. Never emit their text.
         message = f"{args.command} failed ({type(exc).__name__}); inspect this stage"

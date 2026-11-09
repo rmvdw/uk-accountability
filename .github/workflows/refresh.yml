@@ -60,13 +60,10 @@ jobs:
         id: refresh
         continue-on-error: true
         run: make refresh
-      - name: Validate candidate and build production (no drafts)
+      - name: Validate and build frozen production (no draft candidates)
         id: validate
         if: steps.refresh.outcome == 'success'
-        run: |
-          # Validate refreshed data and candidate briefings; code tests stay in CI.
-          uv run python -m ukdash check
-          make build
+        run: make build
       - name: Commit release, or failed-attempt metadata only
         id: persist
         if: success() && (steps.refresh.outcome == 'failure' || steps.validate.outcome == 'success')
@@ -75,7 +72,6 @@ jobs:
         run: |
           if [ "$REFRESH_OUTCOME" = 'failure' ]; then
             python3 .github/scripts/refresh_automation.py persist --failed
-            uv run python -m ukdash check
             make build
           else
             python3 .github/scripts/refresh_automation.py persist
@@ -94,6 +90,17 @@ jobs:
         id: heartbeat
         if: success() && steps.refresh.outcome == 'success' && steps.verify.outcome == 'success'
         run: python3 .github/scripts/refresh_automation.py heartbeat
+      - name: Validate draft briefing candidates separately
+        id: candidates
+        if: success() && steps.heartbeat.outcome == 'success'
+        continue-on-error: true
+        run: uv run python -m ukdash check
+      - name: Report candidate review without changing production health
+        if: always() && !cancelled() && (steps.candidates.outcome == 'success' || steps.candidates.outcome == 'failure')
+        continue-on-error: true
+        env:
+          CANDIDATE_RESULT: ${{ steps.candidates.outcome }}
+        run: python3 .github/scripts/refresh_automation.py candidate-report --outcome "$CANDIDATE_RESULT"
       - name: Update the persistent failure issue or close it on full recovery
         if: always() && !cancelled()
         env:
