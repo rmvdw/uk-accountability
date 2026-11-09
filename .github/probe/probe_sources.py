@@ -32,7 +32,7 @@ def inspect(path: Path, label: str) -> None:
         report.append(f"cannot open: {exc}")
         return
     for ws in wb.worksheets:
-        report.append(f"\n### sheet `{ws.title}` dims={ws.dimensions}")
+        report.append(f"\n### sheet `{ws.title}` rows={getattr(ws, 'max_row', '?')} cols={getattr(ws, 'max_column', '?')}")
         for i, row in enumerate(ws.iter_rows(max_row=14, values_only=True)):
             cells = [str(c)[:60] for c in row if c is not None]
             if cells:
@@ -49,11 +49,14 @@ page = get(ons_page).decode("utf-8", "replace")
 links = sorted(set(re.findall(r'href="(/file\?uri=[^"]+?\.xlsx)"', page)))
 report.append("# ONS dataset page xlsx links\n" + "\n".join(html.unescape(x) for x in links))
 for href in links[:2]:
-    url = "https://www.ons.gov.uk" + html.unescape(href)
-    p = OUT / ("ons_" + url.rsplit("/", 1)[-1])
-    p.write_bytes(get(url))
-    report.append(f"\nfetched {url}")
-    inspect(p, "ONS")
+    try:
+        url = "https://www.ons.gov.uk" + html.unescape(href)
+        p = OUT / ("ons_" + url.rsplit("/", 1)[-1])
+        p.write_bytes(get(url))
+        report.append(f"\nfetched {url}")
+        inspect(p, "ONS")
+    except Exception as exc:  # noqa: BLE001
+        report.append(f"ONS fetch failed: {exc}")
 
 # --- Home Office immigration system statistics data tables -------------------
 api = "https://www.gov.uk/api/content/government/statistical-data-sets/immigration-system-statistics-data-tables"
@@ -66,13 +69,16 @@ wanted = re.compile(r"(asylum claims|initial decisions|awaiting|small boat|illeg
 picked = [a for a in atts if wanted.search(a.get("title", "")) and str(a.get("url", "")).endswith((".xlsx", ".ods"))]
 report.append("\n# picked: " + ", ".join(a["title"] for a in picked))
 for a in picked[:8]:
-    url = a["url"]
-    p = OUT / ("ho_" + url.rsplit("/", 1)[-1])
-    data = get(url)
-    p.write_bytes(data)
-    report.append(f"\nfetched {url} ({len(data):,} bytes)")
-    if p.suffix == ".xlsx":
-        inspect(p, "Home Office: " + a["title"])
+    try:
+        url = a["url"]
+        p = OUT / ("ho_" + url.rsplit("/", 1)[-1])
+        data = get(url)
+        p.write_bytes(data)
+        report.append(f"\nfetched {url} ({len(data):,} bytes)")
+        if p.suffix == ".xlsx":
+            inspect(p, "Home Office: " + a["title"])
+    except Exception as exc:  # noqa: BLE001
+        report.append(f"Home Office fetch failed for {a.get('title')}: {exc}")
 
 (OUT / "REPORT.md").write_text("\n".join(report) + "\n")
 # Keep the repo small: drop very large workbooks from the commit, keep the report.
