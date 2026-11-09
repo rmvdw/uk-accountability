@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
       - name: make setup
         run: make setup
       - name: make check
@@ -27,7 +27,7 @@ jobs:
       - name: make build
         run: make build
       - name: Upload built site
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: site
           path: site/
@@ -35,7 +35,7 @@ jobs:
       - name: Build review preview (includes drafts)
         run: uv run python -m ukdash build --drafts --out site-preview
       - name: Upload review preview
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: site-preview-with-drafts
           path: site-preview/
@@ -48,8 +48,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - run: git config --global core.autocrlf true
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
       - run: uv sync --locked
       - run: uv run pytest -q
       - run: uv run python -m ukdash check
