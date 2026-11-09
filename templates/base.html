@@ -38,6 +38,8 @@ h2 { font-size: 1.2rem; margin: 32px 0 8px; }
 .chart { width: 100%; height: auto; display: block; }
 .chart .grid { stroke: var(--line); }
 .chart .axis, .chart .label { fill: var(--muted); font-size: 18px; }
+/* Charts scale down on phones; larger SVG text keeps labels readable (about 14px). */
+@media (max-width: 520px) { .chart .axis, .chart .label { font-size: 26px; } }
 .chart .line { fill: none; stroke: var(--uk); stroke-width: 2.5; }
 .chart .dot { fill: var(--uk); }
 .chart .bar { fill: var(--bar); }
@@ -66,8 +68,9 @@ ul.caveats li { margin-bottom: 6px; }
 .legend .key.net i { background: var(--uk); height: 4px; }
 .legend .key.emi i { background: repeating-linear-gradient(90deg, var(--muted) 0 5px, transparent 5px 9px); }
 .chart-block { margin: 12px 0 20px; }
-.stamp { font-size: 0.9rem; color: var(--muted); border-left: 3px solid var(--line);
-  padding: 4px 0 4px 12px; margin: 12px 0 20px; }
+.chart-notes { margin: 0 0 8px; }
+.chart-notes summary, .prose details summary { cursor: pointer; color: var(--accent); }
+.stamp { font-size: 0.85rem; color: var(--muted); margin: 8px 0 16px; }
 .answer { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
   padding: 4px 18px; margin: 16px 0; }
 .prose table { font-size: 0.92rem; margin: 8px 0 16px; display: block; overflow-x: auto; }
@@ -80,19 +83,7 @@ ul.caveats li { margin-bottom: 6px; }
   border-radius: 8px; padding: 10px 14px; word-break: break-word; }
 .questions { list-style: none; padding: 0; }
 .questions li { margin: 0 0 12px; }
-.layouts { font-size: 0.85rem; color: var(--muted); margin: 16px 0 0; }
 .lead-visual h2 { margin-top: 20px; }
-.qnav-box { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
-  padding: 10px 16px; margin: 12px 0; font-size: 0.95rem; }
-.qnav { padding-left: 1.4em; margin: 6px 0 2px; }
-.qnav li { margin: 3px 0; }
-.qsection { border-top: 1px solid var(--line); }
-.qsection summary { list-style: none; cursor: pointer; padding: 12px 0; }
-.qsection summary::-webkit-details-marker { display: none; }
-.qsection summary h2 { display: inline; font-size: 1.1rem; margin: 0; }
-.qsection summary::before { content: "+"; display: inline-block; width: 1.2em;
-  color: var(--accent); font-weight: 700; }
-.qsection[open] summary::before { content: "\2212"; }
 footer { color: var(--muted); font-size: 0.85rem; padding: 40px 16px; }
 </style>
 </head>

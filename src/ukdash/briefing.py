@@ -407,7 +407,9 @@ def split_blocks(html: str) -> dict:
     # The whole page with linkable headings, for the editorial layout.
     full = H2.sub(lambda m: f'<h2 id="{slug(re.sub(r"<[^>]+>", "", m.group(1)))}">'
                             f"{m.group(1)}</h2>", html)  # fmt: skip
-    return {"answer": answer, "sections": sections, "lead": lead, "html": full}
+    # Anything before the first heading other than the answer box, so no text is lost.
+    return {"answer": answer, "intro": parts[0], "sections": sections, "lead": lead,
+            "html": full}  # fmt: skip
 
 
 def freeze(root: Path, project: Project, b: Briefing, period_label, extra=None) -> Path:

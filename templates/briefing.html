@@ -1,11 +1,29 @@
 {% extends "base.html" %}
-{# Editorial-led layout: short answer and findings first, then each question in order. #}
+{# Chart-first layout (Ross, #13, 9 Nov): the briefing's first chart leads, straight
+   under the title, then the edition stamp, the short answer and the other sections. #}
 {% block title %}{{ b.title }} · UK Dashboard{% endblock %}
 {% block main %}
-{% include "_briefing_switch.html" %}
-{% include "_briefing_head.html" %}
+{% set lead = b.blocks.lead %}
+{% include "_briefing_title.html" %}
 <div class="prose">
-{{ b.blocks.html|safe }}
+{% if lead %}<section id="{{ lead.id }}" class="lead-visual">
+<h2>{{ lead.title|safe }}</h2>
+{{ lead.chart|safe }}
+{% if lead.text.strip() %}<details class="chart-notes">
+<summary>What this chart counts</summary>
+{{ lead.text|safe }}
+</details>{% endif %}
+</section>{% endif %}
+</div>
+{% include "_briefing_stamp.html" %}
+<div class="prose">
+{{ b.blocks.answer|safe }}
+{{ b.blocks.intro|safe }}
+{% for s in b.blocks.sections if not lead or s.id != lead.id %}
+<section id="{{ s.id }}"><h2>{{ s.title|safe }}</h2>
+{{ s.html|safe }}
+</section>
+{% endfor %}
 </div>
 {% include "_briefing_foot.html" %}
 {% endblock %}
