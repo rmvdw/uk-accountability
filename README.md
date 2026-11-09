@@ -13,6 +13,7 @@ make setup     # install pinned dependencies (needs network for packages)
 make check     # lint, tests, validate saved data — offline
 make build     # build the static site into site/ — offline
 make preview   # like build, but includes draft indicators, for review only
+               # (Cloudflare does this automatically for every non-main branch)
 make serve     # serve site/ at http://localhost:8000
 make refresh   # fetch live data; promotes only if everything validates
 make refresh ID=<indicator>   # fetch one indicator, drafts included
@@ -62,7 +63,7 @@ Read [AGENTS.md](AGENTS.md) first. Work is tracked in GitHub Issues; changes com
 | Claude (claude.ai cloud session): clone, branch, push, PR, issues via REST API | Proven 2026-11-08 |
 | GitHub Actions CI on pull requests (Linux + Windows) | Proven 2026-11-08 |
 | Codex: fresh checkout, `make setup/check/build/preview`, reviews posted to PRs | Proven 2026-11-08 (Codex review environments on Windows and Linux; Windows build also proven by CI) |
-| Cloudflare Pages: production deploy from `main` and a preview per PR | Proven 2026-11-09 (production `uk-accountability.pages.dev`; PR #9 preview) |
+| Cloudflare Pages: production deploy from `main` (no drafts) and a preview per PR (drafts included) | Proven 2026-11-09; checked after every deploy by the **Verify deploy** workflow |
 | Live fetch from statistical APIs on GitHub runners | Proven 2026-11-08 for OECD ([run 42507705905](https://github.com/rmvdw/uk-accountability/actions/runs/42507705905)) |
 
 ## Licence

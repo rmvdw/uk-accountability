@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from datetime import UTC, datetime
 from pathlib import Path
@@ -129,6 +130,21 @@ def _comparison_basis_note(project: Project, d, comp) -> str | None:
     )
 
 
+PRODUCTION_BRANCH = "main"
+
+
+def cloudflare_preview_branch() -> str | None:
+    """The branch name when running in a Cloudflare Pages build for a non-production branch.
+
+    Cloudflare sets CF_PAGES=1 and CF_PAGES_BRANCH in its build environment. Production
+    (main) is never treated as a preview, and nothing outside Cloudflare is either.
+    """
+    branch = os.environ.get("CF_PAGES_BRANCH")
+    if os.environ.get("CF_PAGES") == "1" and branch and branch != PRODUCTION_BRANCH:
+        return branch
+    return None
+
+
 def build(project: Project, out: Path, include_drafts: bool = False) -> list[str]:
     """Build the site. include_drafts is for review previews only, never production."""
     errors = validate(project)
@@ -163,6 +179,10 @@ def build(project: Project, out: Path, include_drafts: bool = False) -> list[str
             {
                 "built_at": common["built_at"],
                 "preview_with_drafts": include_drafts,
+                # From Cloudflare Pages or GitHub Actions: lets checks see which commit is live.
+                "source_commit": os.environ.get("CF_PAGES_COMMIT_SHA")
+                or os.environ.get("GITHUB_SHA"),
+                "branch": os.environ.get("CF_PAGES_BRANCH"),
                 "indicators": [d.id for d in published],
             },
             indent=2,

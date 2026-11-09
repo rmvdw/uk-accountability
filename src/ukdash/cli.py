@@ -14,7 +14,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from .build import build
+from .build import build, cloudflare_preview_branch
 from .project import REPO_ROOT, Project
 from .validate import validate
 
@@ -73,7 +73,12 @@ def main(argv: list[str] | None = None) -> int:
         if not errors:
             print(f"check: OK ({n} indicator(s), {len(project.published())} published)")
     else:
-        errors = build(project, args.out, include_drafts=args.drafts)
+        drafts = args.drafts
+        preview_branch = cloudflare_preview_branch()
+        if preview_branch and not drafts:
+            print(f"build: Cloudflare preview of branch {preview_branch!r}: including drafts")
+            drafts = True
+        errors = build(project, args.out, include_drafts=drafts)
         if not errors:
             print(f"build: OK -> {args.out}")
 

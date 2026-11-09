@@ -42,6 +42,9 @@ GitHub disables scheduled workflows in public repositories after 60 days with no
 
 ## Deployment
 
+Cloudflare Pages builds every push. `main` is production and never shows drafts; any other branch is a review preview that includes drafts and carries a "Review preview" banner. The site's `build-info.json` records the commit, branch and mode, and the **Verify deploy** workflow polls it after each push to confirm Cloudflare is serving the right commit in the right mode.
+
+
 A commit pushed with the default `GITHUB_TOKEN` does not trigger other push-triggered workflows. The refresh workflow therefore builds and deploys explicitly as later jobs in the same workflow, or dispatches deployment deliberately. Prove the actual route works; do not assume.
 
 ## Before routine operation is switched on
