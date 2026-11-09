@@ -61,8 +61,8 @@ Read [AGENTS.md](AGENTS.md) first. Work is tracked in GitHub Issues; changes com
 | --- | --- |
 | Claude (claude.ai cloud session): clone, branch, push, PR, issues via REST API | Proven 2026-11-08 |
 | GitHub Actions CI on pull requests (Linux + Windows) | Proven 2026-11-08 |
-| Codex: fresh checkout, `make setup/check/build/preview`, review via PR comments | Proven 2026-11-08 (Windows) |
-| Cloudflare Pages preview | Not yet set up (needs Ross's Cloudflare account) |
+| Codex: fresh checkout, `make setup/check/build/preview`, reviews posted to PRs | Proven 2026-11-08 (Codex review environments on Windows and Linux; Windows build also proven by CI) |
+| Cloudflare Pages: production deploy from `main` and a preview per PR | Proven 2026-11-09 (production `uk-accountability.pages.dev`; PR #9 preview) |
 | Live fetch from statistical APIs on GitHub runners | Proven 2026-11-08 for OECD ([run 42507705905](https://github.com/rmvdw/uk-accountability/actions/runs/42507705905)) |
 
 ## Licence
