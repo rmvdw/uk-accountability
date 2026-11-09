@@ -3,7 +3,8 @@
 /indicators/            @rmvdw
 /config/peers.yml       @rmvdw
 /docs/decisions.md      @rmvdw
-/templates/about.html   @rmvdw
+/templates/              @rmvdw
+/briefings/              @rmvdw
 /LICENSE                @rmvdw
 /.github/CODEOWNERS     @rmvdw
 /.github/workflows/editorial-gate.yml @rmvdw

@@ -33,3 +33,22 @@ def test_gate(tmp_path, monkeypatch):
     assert run(tmp_path, monkeypatch, ["indicators/x.yml"], []) == 1
     assert run(tmp_path, monkeypatch, ["indicators/x.yml"], ["review"]) == 1
     assert run(tmp_path, monkeypatch, ["indicators/x.yml"], ["ross-approved"]) == 0
+
+
+def test_rename_of_protected_file_is_caught(tmp_path, monkeypatch):
+    # The workflow passes both filename and previous_filename for renames.
+    renamed = ["docs/archived-decisions.md", "docs/decisions.md"]
+    assert run(tmp_path, monkeypatch, renamed, []) == 1
+    assert run(tmp_path, monkeypatch, renamed, ["ross-approved"]) == 0
+
+
+def test_workflow_collects_previous_filename():
+    wf = (ROOT / ".github/workflows/editorial-gate.yml").read_text()
+    assert "previous_filename" in wf
+
+
+def test_templates_and_briefings_are_ross_owned():
+    pats = gate.owned_patterns((ROOT / ".github/CODEOWNERS").read_text())
+    assert gate.is_owned("templates/index.html", pats)
+    assert gate.is_owned("templates/indicator.html", pats)
+    assert gate.is_owned("briefings/immigration.md", pats)

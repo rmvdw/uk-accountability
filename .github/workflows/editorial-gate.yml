@@ -27,7 +27,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
         run: |
-          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --jq '.[].filename' > changed.txt
+          # Include previous_filename so renaming a protected file away still counts.
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" \
+            --jq '.[] | .filename, (.previous_filename // empty)' | sort -u > changed.txt
           gh api "repos/$GITHUB_REPOSITORY/issues/$PR/labels" --jq '.[].name' > labels.txt
       - name: Check
         run: |
