@@ -35,8 +35,16 @@ def status_of(root: Path | None, path: str) -> str | None:
     f = root / path
     if not f.exists():
         return "absent"
-    m = STATUS.search(f.read_text(errors="replace"))
-    return m.group(1) if m else None
+    text = f.read_text(errors="replace")
+    if path.endswith(".md"):  # briefings: only the front matter counts
+        parts = text.split("\n---", 1)
+        if not text.startswith("---") or len(parts) < 2:
+            return None
+        text = parts[0]
+    found = STATUS.findall(text)
+    # Exactly one top-level status line. Duplicates are ambiguous (a YAML loader keeps
+    # the last one), so they count as unreadable and stay gated.
+    return found[0] if len(found) == 1 else None
 
 
 def draft_only(path: str, base_dir: Path | None, head_dir: Path | None) -> bool:

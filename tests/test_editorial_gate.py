@@ -104,3 +104,20 @@ def test_mixed_draft_and_owned_change_still_needs_approval(tmp_path, monkeypatch
     write(head, "indicators/z.yml", "status: draft\n")
     files = ["indicators/z.yml", "docs/decisions.md"]
     assert run_dirs(tmp_path, monkeypatch, files, [], base, head) == 1
+
+
+def test_duplicate_status_lines_fail_closed(tmp_path, monkeypatch):
+    base, head = tmp_path / "base", tmp_path / "head"
+    write(head, "indicators/d.yml", "id: d\nstatus: draft\nstatus: published\n")
+    assert run_dirs(tmp_path, monkeypatch, ["indicators/d.yml"], [], base, head) == 1
+
+
+def test_briefing_status_comes_from_front_matter_only(tmp_path, monkeypatch):
+    base, head = tmp_path / "base", tmp_path / "head"
+    f = "briefings/immigration.md"
+    write(head, f, "---\ntitle: X\nstatus: draft\n---\n\nBody text.\n")
+    assert run_dirs(tmp_path, monkeypatch, [f], [], base, head) == 0
+    write(head, f, "---\ntitle: X\nstatus: draft\n---\n\nstatus: published\n")  # body ignored
+    assert run_dirs(tmp_path, monkeypatch, [f], [], base, head) == 0
+    write(head, f, "No front matter\nstatus: draft\n")
+    assert run_dirs(tmp_path, monkeypatch, [f], [], base, head) == 1
