@@ -338,3 +338,21 @@ def test_peer_facts_keep_source_status_and_skip_incomplete_years():
             if o.geography_id == fact["geography"] and o.period == fact["period"]
         )  # fmt: skip
         assert fact["status"] == obs.status, key
+
+
+def test_edition_frozen_before_files_field_keeps_its_file_links(fixture_root, tmp_path):
+    import json as _json
+
+    p = write_brief(fixture_root)
+    b = briefing.load_all(fixture_root)["test_brief"]
+    path = briefing.freeze(fixture_root, p, b, period_label)
+    data = _json.loads(path.read_text(encoding="utf-8"))
+    for s in data["sources"]:
+        s.pop("files", None)  # the schema of editions frozen before "files" existed
+        s["file"] = "https://example.org/test-fixture/raw.csv?a=1&b=2"  # fixture URL
+    path.write_text(_json.dumps(data), encoding="utf-8")
+    p = write_brief(fixture_root, status="published", extra=f"published_edition: {path.stem}\n")
+    assert build(p, tmp_path / "prod") == []
+    page = (tmp_path / "prod/briefings/test_brief/index.html").read_text(encoding="utf-8")
+    raw = data["sources"][0]["file"]
+    assert f'<a href="{raw.replace("&", "&amp;")}">file</a>' in page

@@ -1,13 +1,14 @@
 # DRAFT for the immigration briefing's peer comparison (#21, #13). Definition, peers and
 # public wording need Ross's approval before publication.
 id: permanent_immigration_per_1000
-title: Permanent-type immigration per 1,000 residents
+title: Permanent-type immigration (OECD) per 1,000 residents
 status: draft
 what_it_measures: >-
-  How many people moved to the country in a year with the right to stay long term
-  (permanently, or on permits that can be renewed indefinitely), for every 1,000
-  people living there. The OECD standardises national figures so countries can be
-  compared.
+  How many foreign nationals were granted residence expected to last (permanently,
+  or on permits that can be renewed indefinitely) in a year, for every 1,000 people
+  living in the country. It includes people already living there who move from a
+  temporary to a long-term status. The OECD standardises national figures so
+  countries can be compared.
 why_it_matters: >-
   It shows how large immigration is relative to each country's size, using one
   definition for every country.
@@ -18,9 +19,10 @@ measure_type: rate
 direction: neutral
 coverage:
   population: >-
-    People granted residence expected to be long term, by work, family, accompanying
-    family, humanitarian, free movement and other routes. Excludes temporary
-    migration such as most students and seasonal workers.
+    Foreign nationals granted residence expected to be long term, by work, family,
+    accompanying family, humanitarian, free movement and other routes, including
+    changes from a temporary status. Excludes temporary migration such as most
+    students and seasonal workers.
   seasonal_adjustment: Not seasonally adjusted; each figure covers a calendar year.
   geography_note: >-
     United Kingdom as a whole. Other countries are national totals. Population is the
@@ -28,7 +30,7 @@ coverage:
 source:
   publisher: OECD and World Bank
   dataset: Standardised inflows of permanent-type migrants (OECD); Population, total (World Bank)
-  url: https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_MIG_INT%40DF_MIG_INT_PER&df[ag]=OECD.ELS.IMD
+  url: https://www.oecd.org/en/data/indicators/permanent-immigrant-inflows.html
   licence: OECD Terms and Conditions; World Bank population CC BY 4.0
   licence_url: https://www.oecd.org/en/about/terms-conditions.html
   attribution: >-
@@ -44,9 +46,10 @@ peers:
   exclusions: {}
 caveats:
   - >-
-    This is the OECD's harmonised measure, not the ONS long-term migration estimate,
-    so it will not match the UK figures above. It leaves out most temporary
-    migration, and counts people when they are granted long-term residence.
+    This is the OECD's harmonised measure, not the ONS long-term migration estimate.
+    The two differ in who is counted (foreign nationals only, including status
+    changes) and when (at the grant of long-term residence), so they should not be
+    compared directly.
   - >-
     Some recent figures are OECD estimates or provisional, and are revised later.
   - >-

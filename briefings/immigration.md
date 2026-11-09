@@ -43,7 +43,7 @@ By nationality, net migration was {{ num("net_migration", breakdown="non_eu_plus
 {% set pa = peers("asylum_applications_per_1000") %}
 Comparing countries needs one definition and one year for all of them, so these figures come from international sources and cover earlier years than the UK figures above.
 
-**Long-term immigration.** In {{ pp.when }}, {{ pp.uk }} people per 1,000 residents moved to the UK with the right to stay long term: {{ pp.position }}.
+**Permanent-type immigration (OECD).** In {{ pp.when }}, the UK granted permanent-type residence to {{ pp.uk }} foreign nationals per 1,000 residents: {{ pp.position }}.
 
 {{ pp.chart }}
 
@@ -54,7 +54,7 @@ Comparing countries needs one definition and one year for all of them, so these 
 <details markdown="1">
 <summary>What these comparisons count</summary>
 
-- **Long-term immigration** uses the OECD's harmonised count of people granted residence expected to last (permanently, or on permits that can be renewed indefinitely). It leaves out most temporary migration, such as students, so it is lower than the ONS figure above. Some recent figures are OECD estimates.
+- **Permanent-type immigration (OECD)** counts foreign nationals granted residence expected to last: permanently, or on permits that can be renewed indefinitely. It includes people already living in the country who move from a temporary to a long-term status, and leaves out most temporary migration, such as students. It measures something different from the ONS figures above (who is counted, and when), so the two should not be compared directly. Some recent figures are OECD estimates.
 - **Asylum** uses UNHCR's count of new applications by people, excluding repeat applications and appeals. Countries run different procedures, so small differences are not meaningful.
 - Both divide by the World Bank's population estimate for the same year.
 

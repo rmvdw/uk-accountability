@@ -5,7 +5,7 @@
   <tbody>
   {% for s in b.sources %}
     <tr>
-      <td><a href="{{ s.url }}">{{ s.publisher }}: {{ s.dataset }}</a>{% if s.files|length == 1 %} (<a href="{{ s.files[0] }}">file</a>){% elif s.files %} (files: {% for f in s.files %}<a href="{{ f }}">{{ loop.index }}</a>{{ ", " if not loop.last }}{% endfor %}){% endif %}</td>
+      <td><a href="{{ s.url }}">{{ s.publisher }}: {{ s.dataset }}</a>{% set files = s.files if s.files is defined else ([s.file] if s.file and s.file.startswith("http") else []) %}{% if files|length == 1 %} (<a href="{{ files[0] }}">file</a>){% elif files %} (files: {% for f in files %}<a href="{{ f }}">{{ loop.index }}</a>{{ ", " if not loop.last }}{% endfor %}){% endif %}</td>
       <td>{{ s.vintage or "" }}{% if s.released %}, published {{ s.released }}{% endif %}</td>
       <td>{{ (s.retrieved or "")[:10] }}</td>
     </tr>
