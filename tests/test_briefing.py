@@ -49,7 +49,12 @@ def test_real_immigration_briefing_renders_with_live_data():
     latest = max(o.period for o in p.read_observations("net_migration"))
     assert f"net_migration.total.{latest}" in facts
     assert "TO VERIFY" not in html  # fiscal cards verified on #13 (Codex, 2026-11-09)
-    assert {s["publisher"] for s in sources} == {"Office for National Statistics", "Home Office"}
+    assert {s["publisher"] for s in sources} == {
+        "Office for National Statistics",
+        "Home Office",
+        "OECD and World Bank",
+        "UNHCR and World Bank",
+    }
 
 
 def test_front_matter_rules(fixture_root):
@@ -301,3 +306,13 @@ def test_real_briefing_page_has_reader_elements(tmp_path):
     page = (tmp_path / "prev/briefings/immigration/index.html").read_text(encoding="utf-8")
     for el in READER_ELEMENTS:
         assert el in page
+
+
+def test_peers_use_one_common_year_and_record_every_country():
+    p = Project.load()
+    f = briefing.Facts(p, ["permanent_immigration_per_1000"], period_label)
+    pp = f.peers("permanent_immigration_per_1000")
+    years = {v["period"] for v in f.used.values()}
+    assert years == {"2024"} and pp["when"] == "2024"
+    assert len(f.used) == 7 and "iso:GBR" in "".join(f.used)
+    assert pp["position"].endswith("of the 7 G7 countries")

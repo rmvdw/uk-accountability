@@ -12,6 +12,8 @@ indicators:
   - asylum_initial_decisions
   - asylum_awaiting_decision
   - small_boat_arrivals
+  - permanent_immigration_per_1000
+  - asylum_applications_per_1000
 ---
 {% set c = change("net_migration") %}
 {% set pk = peak("net_migration") %}
@@ -34,6 +36,29 @@ indicators:
 Net migration is immigration (people arriving for at least a year) minus emigration (people leaving for at least a year). Each point covers the previous 12 months. The figures count people, not visas, include British citizens, and are rounded to the nearest 1,000.
 
 By nationality, net migration was {{ num("net_migration", breakdown="non_eu_plus") }} for non-EU+ nationals, {{ num("net_migration", breakdown="british") }} for British nationals and {{ num("net_migration", breakdown="eu_plus") }} for EU+ nationals (negative means more left than arrived).
+
+## How does the UK compare with other G7 countries?
+
+{% set pp = peers("permanent_immigration_per_1000") %}
+{% set pa = peers("asylum_applications_per_1000") %}
+Comparing countries needs one definition and one year for all of them, so these figures come from international sources and cover earlier years than the UK figures above.
+
+**Long-term immigration.** In {{ pp.when }}, {{ pp.uk }} people per 1,000 residents moved to the UK with the right to stay long term: {{ pp.position }}.
+
+{{ pp.chart }}
+
+**Asylum.** In {{ pa.when }}, {{ pa.uk }} people per 1,000 residents made a new asylum application in the UK: {{ pa.position }}.
+
+{{ pa.chart }}
+
+<details markdown="1">
+<summary>What these comparisons count</summary>
+
+- **Long-term immigration** uses the OECD's harmonised count of people granted residence expected to last (permanently, or on permits that can be renewed indefinitely). It leaves out most temporary migration, such as students, so it is lower than the ONS figure above. Some recent figures are OECD estimates.
+- **Asylum** uses UNHCR's count of new applications by people, excluding repeat applications and appeals. Countries run different procedures, so small differences are not meaningful.
+- Both divide by the World Bank's population estimate for the same year.
+
+</details>
 
 ## How much the figures change between editions
 
