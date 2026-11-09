@@ -122,9 +122,79 @@ No product found so far combines all five.
 | R5 | Scoring methods (OECD/JRC composite-indicator handbook, SDG Index, Social Progress Index, Better Life Index reweighting) | GPT, later | Methodology proposal (decision 12) once ~20 indicators exist |
 | R6 | Five short conversations with non-expert readers: "what would you check here?", plus three tasks on the preview | Ross (30 min each) | Notes in an issue; the most valuable research on the list |
 
+## 4b. Update after Ross's direction (9 Nov): explain the questions of the day
+
+Ross's answers (recorded as decisions 15–17 in PR #12):
+
+- **Reader:** a lay person or journalist looking for evidence on the questions of the day.
+- **Tone:** more "suggestive" than the closest comparable site, which is accurate but inert. The site should *explain* topical issues through data, e.g. immigration: the breakdown, how material it is, what it costs.
+- **UK-only indicators are allowed.**
+- **The standing merge rule is approved.**
+
+This shifts the product from a dashboard to **data-driven explainers, with indicators as their building blocks.**
+
+### Proposed content type: Briefings
+
+One page per live question, e.g. *"Immigration: how many people come, who are they, and what do they cost?"*
+
+| Section | What it does |
+| --- | --- |
+| **The short answer** | 3–5 plain sentences that lead with what the data say ("Net migration has fallen to X, its lowest since Y"). This is where the site is answer-led rather than inert. |
+| **The numbers** | 3–6 charts drawn from the indicator registry, each linking to its indicator page. |
+| **How the UK compares** | Peer comparison where a comparable series exists (decision 16 allows UK-only sections). |
+| **What's disputed, and why** | Where credible estimates differ, show the range side by side and explain why they differ (method, scope, assumptions). Never pick a side. |
+| **What the data can't tell you** | Limits, gaps and lags. |
+| **Sources and changes** | Every source, the last data update, and a changelog of wording changes. |
+
+**"Suggestive" without advocacy.** Headlines and short answers state findings directly; that is what makes the site useful to a journalist on deadline. They describe what happened, never what should happen. Loaded words ("flood", "crisis", "soaring") are banned unless quoted with attribution. Both agents check every briefing for this, and Ross approves the wording (briefings will be Ross-owned in `CODEOWNERS`).
+
+**Numbers in prose stay true.** Figures in briefing text are references to the data (e.g. `{{ fact("net_migration", "latest") }}`), not typed numbers, so they update with each refresh. Directional words ("fell", "rose") are computed from the data too. If a refresh changes the *direction* or crosses a set threshold, the build keeps the published wording and opens a "briefing needs re-review" issue, rather than silently changing what a sentence means.
+
+**Built for journalists:**
+- a permalink for every chart and fact;
+- a "cite this" line with source, date and definition;
+- chart downloads (PNG/SVG) and the CSV;
+- a "what changed in the latest release" box.
+
+**Timed to the news.** Agents watch the official release calendar for each briefing's sources and prepare updates before major releases.
+
+### Pilot: immigration, aimed at the ONS release on 26 Nov 2026
+
+The ONS publishes provisional long-term international migration estimates for the year ending June 2026 on **26 November 2026, 9:30am** ([ONS release calendar](https://www.ons.gov.uk/releases/longterminternationalmigrationprovisionalyearendingjune2026)). A briefing ready to update that morning is a strong, concrete launch test. The target is tight (17 days), with a fallback a week later.
+
+| Sub-question | Likely sources (GPT R2 to confirm) | Notes |
+| --- | --- | --- |
+| How many come and go; net migration | ONS long-term international migration (provisional) | UK; "official statistics in development"; revisions are large, so show them |
+| Why: work, study, family, humanitarian | Home Office immigration system statistics (visas by route) | Visas granted ≠ arrivals; say so |
+| Asylum and small boats | Home Office quarterly asylum and small-boat statistics | UK-only; distinguish applications, grants and backlog |
+| How the UK compares | OECD International Migration Outlook (inflows per person, foreign-born share) | Definitions differ by country; caveat heavily |
+| What it costs and contributes | MAC 2025 (lifetime fiscal impact by visa route), OBR 2024 (by earnings), [Migration Observatory synthesis, June 2026](https://migrationobservatory.ox.ac.uk/resources/briefings/the-fiscal-impact-of-immigration-in-the-uk/) | The model "What's disputed" section: static vs lifetime, what's counted, children, averages. Estimates range from positive to negative by route and earnings, and both are true. |
+| Cost of the asylum system | Home Office annual accounts; NAO reports | Spending, not net fiscal impact; keep them separate |
+
+**Engineering needed:**
+1. A briefing content type: Markdown with data references, rendered with the existing charts.
+2. Adapters for ONS and Home Office spreadsheet releases (`.xlsx`/`.ods`).
+3. A "fact" layer: latest value, change over a period, rank.
+4. The re-review trigger.
+
+The OECD adapter can be reused for the comparison.
+
+**Risk:** immigration is the most contested topic in UK politics. Piloting on it is high reward and high risk. It makes the neutrality design prove itself immediately. Mitigations:
+- two-agent fact-check and loaded-language check;
+- Ross's sign-off;
+- the corrections page and feedback form live before launch;
+- "what's disputed" written from published, attributable estimates only.
+
+### Effect on the plan
+
+- The v1 indicator list (R2) should be driven by the first 6–8 briefings, not by domain coverage. Candidates: immigration, cost of living, NHS performance, housing, public finances and tax, growth and productivity, crime, energy and net zero.
+- The "UK at a glance" homepage becomes "the questions of the day" plus a glance strip.
+- New research for GPT: **R7.** Which questions dominate public and media attention now (polling such as Ipsos Issues Index, news analysis)? Which briefings would be most used? How do the best explainer publishers (Full Fact, BBC Verify, Economics Observatory, Migration Observatory, FT data journalism, USAFacts) structure explainers?
+
 ## 5. Proposed sequence
 
-1. **This week:** Ross answers A1–A2 and the merge rule (C2). Codex: #4 scheduled refresh. Claude: second indicator (life expectancy, World Bank or OECD), which also proves a draft on a hosted preview. GPT: R1 and R2.
+1. **This week:** ~~Ross answers A1–A2 and the merge rule (C2)~~ (done: see 4b). Codex: #4 scheduled refresh. Claude: the briefing content type and immigration data adapters, which also proves a draft on a hosted preview (this replaces life expectancy as the next build). GPT: R1, R2 (immigration-first) and R7.
+1a. **By 26 Nov:** immigration briefing in draft preview for Ross, ready to update on the ONS release morning.
 2. **Next week:** Ross approves the v1 indicator list. Agents batch-build. Claude prototypes the homepage (R3) once ~8 indicators exist.
 3. **Weeks 3–4:** reach ~20 indicators; methodology and corrections pages; R6 reader tests; then a soft launch to a small audience.
 4. **After launch:** the second peer group, the "UK in numbers" digest, then a scoring methodology proposal.
