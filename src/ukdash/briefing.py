@@ -100,6 +100,16 @@ def _fmt(v: float, decimals: int = 0) -> str:
     return f"{v:,.{decimals}f}".replace("-", "\u2212")
 
 
+def latest_entries(project: Project) -> dict:
+    """The most recently retrieved manifest entry per indicator. Older files can remain
+    in the manifest (entries are keyed by path), so never take the first match."""
+    out: dict = {}
+    for e in project.read_manifest():
+        if e.indicator_id not in out or e.retrieved_at > out[e.indicator_id].retrieved_at:
+            out[e.indicator_id] = e
+    return out
+
+
 class Facts:
     """Template functions for briefing text. Every number used is recorded, so an edition
     can show where each came from and a later refresh can say what would change."""
@@ -111,12 +121,18 @@ class Facts:
         self.used: dict[str, dict] = {}
         self._rows: dict[str, list[Observation]] = {}
 
-    def _series(self, ind: str, breakdown: str = TOTAL) -> list[Observation]:
+    def _series(self, ind: str, breakdown: str = TOTAL, keep_missing=False) -> list[Observation]:
+        """UK rows for one breakdown. Charts keep explicitly missing rows (keep_missing)
+        so the line breaks there; everything else sees only real values."""
         if ind not in self.allowed:
             raise ValueError(f"indicator {ind!r} is not listed in the briefing's front matter")
         if ind not in self._rows:
             self._rows[ind] = self.p.read_observations(ind)
-        s = [o for o in series(self._rows[ind], UK, breakdown) if o.value is not None]
+        s = series(self._rows[ind], UK, breakdown)
+        if not any(o.value is not None for o in s):
+            s = []
+        elif not keep_missing:
+            s = [o for o in s if o.value is not None]
         if not s:
             raise ValueError(f"{ind}/{breakdown}: no data")
         return s
@@ -190,7 +206,7 @@ class Facts:
 
         if ind not in self.allowed:
             raise ValueError(f"indicator {ind!r} is not listed in the briefing's front matter")
-        entry = next((e for e in self.p.read_manifest() if e.indicator_id == ind), None)
+        entry = latest_entries(self.p).get(ind)
         if entry is None:
             raise ValueError(f"{ind}: no saved source file")
         rows = parse_revisions((self.p.root / entry.path).read_bytes())
@@ -233,7 +249,7 @@ class Facts:
         """specs: [[indicator, breakdown, label, css class], ...] drawn on one chart."""
         parts = []
         for ind, bd, label, cls in specs:
-            s = self._series(ind, bd)
+            s = self._series(ind, bd, keep_missing=True)
             for o in s:
                 self.used.setdefault(
                     f"{ind}.{bd}.{o.period}",
@@ -273,7 +289,7 @@ class Facts:
 
 
 def sources_for(project: Project, b: Briefing) -> list[dict]:
-    manifest = {e.indicator_id: e for e in project.read_manifest()}
+    manifest = latest_entries(project)
     out, seen = [], set()
     for ind in b.indicators:
         d = project.indicators[ind]

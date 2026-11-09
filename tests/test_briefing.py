@@ -182,3 +182,21 @@ def test_production_build_does_not_render_candidates(fixture_root, tmp_path, mon
     assert build(p, tmp_path / "prod") == []  # but production serves the frozen edition
     prod = (tmp_path / "prod/briefings/test_brief/index.html").read_text(encoding="utf-8")
     assert f"Edition {edition}" in prod
+
+
+def test_latest_manifest_entry_wins(fixture_root):
+    from datetime import timedelta
+
+    p = Project.load(fixture_root)
+    entries = p.read_manifest()
+    e = next(x for x in entries if x.indicator_id == "test_unemployment")
+    newer = e.model_copy(update={"path": "data/raw/newer.json", "vintage": "newer",
+                                 "retrieved_at": e.retrieved_at + timedelta(days=1)})  # fmt: skip
+    older = e.model_copy(update={"vintage": "older"})
+    p.read_manifest = lambda: [older, newer]  # old file listed first, as after a manual import
+    assert briefing.latest_entries(p)["test_unemployment"].vintage == "newer"
+    b = briefing.Briefing(
+        id="t", title="t", status="draft", standfirst="s", indicators=["test_unemployment"],
+        body="", path=fixture_root / "t.md",
+    )  # fmt: skip
+    assert briefing.sources_for(p, b)[0]["vintage"] == "newer"

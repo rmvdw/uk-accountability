@@ -151,20 +151,22 @@ def multi_line_chart(
     """Several series on one scale. `series` is [(label, rows, css class)]; a zero line is
     drawn when the range crosses zero. Labels appear in an HTML legend, not on the lines,
     so they never collide on a phone."""
+    # Explicitly missing rows stay in `rows` so line_path breaks the line there (Y12 and
+    # AT steps are irregular, so dates alone can't reveal a gap); `valid` sets the scale.
     usable = []
     for label, rows, cls in series:
-        rows = [o for o in rows if o.value is not None]
-        if len(rows) >= 2:
-            usable.append((label, rows, cls))
+        valid = [o for o in rows if o.value is not None]
+        if len(valid) >= 2:
+            usable.append((label, rows, cls, valid))
     if not usable:
         return ""
     w, h, pl, pr, pt, pb = 640, 300, 64, 24, 16, 36
-    vals = [o.value for _, rows, _ in usable for o in rows]
+    vals = [o.value for *_, valid in usable for o in valid]
     lo, hi = min(vals + [0.0]), max(vals + [0.0])
     pad = (hi - lo) * 0.08 or 1
     # Counts that can't go negative start the axis at zero rather than below it.
     lo, hi = (lo - pad if lo < 0 else 0.0), hi + pad
-    ks = [period_ordinal(o.period, o.frequency) for _, rows, _ in usable for o in rows]
+    ks = [period_ordinal(o.period, o.frequency) for *_, valid in usable for o in valid]
     k0, k1 = min(ks), max(ks)
     span = max(k1 - k0, 1)
 
@@ -187,14 +189,14 @@ def multi_line_chart(
         else ""
     )
     paths, desc_parts, legend = [], [], []
-    for label, rows, cls in usable:
+    for label, rows, cls, valid in usable:
         segs = line_path(rows)
         d = " ".join(
             f"{'M' if i == 0 else 'L'}{x(k):.1f},{y(v):.1f}"
             for seg in segs
             for i, (k, v) in enumerate(seg)
         )
-        last = max(rows, key=lambda o: o.period)
+        last = max(valid, key=lambda o: period_ordinal(o.period, o.frequency))
         paths.append(
             f'<path d="{d}" class="line {cls}"/>'
             f'<circle cx="{x(period_ordinal(last.period, last.frequency)):.1f}" '
@@ -207,8 +209,8 @@ def multi_line_chart(
             f'<span class="key {cls}"><i></i>{escape(label)}: '
             f"<strong>{_fmt(last.value, decimals)}</strong></span>"
         )
-    first_p = min(o.period for _, rows, _ in usable for o in rows)
-    last_p = max(o.period for _, rows, _ in usable for o in rows)
+    first_p = min(o.period for *_, valid in usable for o in valid)
+    last_p = max(o.period for *_, valid in usable for o in valid)
     desc = "; ".join(desc_parts) + "."
     return (
         f'<div class="legend">{"".join(legend)}</div>'

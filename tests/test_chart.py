@@ -48,3 +48,18 @@ def test_axis_labels_are_compact_for_large_numbers():
     assert _axis_fmt(1_234_000, 0, 800_000) == "1.23m"
     assert _axis_fmt(-55_900, 0, 800_000) == "-56k"
     assert _axis_fmt(4.25, 1, 2) == "4.2"
+
+
+def test_multi_line_chart_breaks_at_explicitly_missing_y12_value():
+    from ukdash.chart import multi_line_chart
+
+    def y12(period, value):
+        o = obs(period, value)
+        return o.model_copy(update={"frequency": "Y12"})
+
+    # Y12 steps are irregular (quarterly, then six-monthly), so only the missing row
+    # itself can show the gap.
+    rows = [y12("2024-06", 1.0), y12("2024-12", None), y12("2025-06", 3.0), y12("2025-12", 4.0)]
+    svg = multi_line_chart([("Net", rows, "net")], "people", 0)
+    path = svg.split('class="line net"')[0].rsplit('d="', 1)[1]
+    assert path.count("M") == 2
