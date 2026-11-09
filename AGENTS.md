@@ -43,7 +43,7 @@ An agent may merge a PR when all of these hold:
 - CI (Linux and Windows), Cloudflare Pages and Verify deploy are green;
 - the Editorial gate passes.
 
-Never add `ross-approved` yourself. Use squash merges. Delete the branch after merging if you can.
+Add `ross-approved` only if Ross approved explicitly, and then only in a comment that quotes his approval word for word with where and when he gave it. Otherwise leave it to Ross. Use squash merges. Delete the branch after merging if you can.
 
 All agents currently act through Ross's GitHub account, so sign every comment with your agent name.
 
