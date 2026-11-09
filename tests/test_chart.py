@@ -65,3 +65,13 @@ def test_multi_line_chart_breaks_at_explicitly_missing_y12_value():
     assert path.count("M") == 2
     # The June 2024 value is cut off by the gap; it still gets a marker, plus the final one.
     assert svg.count('class="dot net"') == 2
+
+
+def test_multi_line_legend_labels_a_value_from_an_earlier_period():
+    from ukdash.chart import multi_line_chart
+
+    a = [obs("2025-01", 1.0), obs("2025-02", 2.0), obs("2025-03", 3.0)]
+    b = [obs("2025-01", 5.0), obs("2025-02", 6.0), obs("2025-03", None)]
+    svg = multi_line_chart([("A", a, "imm"), ("B", b, "emi")], "people", 0)
+    assert "A: <strong>3</strong></span>" in svg
+    assert "B: <strong>6</strong> (2025-02)</span>" in svg

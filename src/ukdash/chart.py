@@ -211,12 +211,18 @@ def multi_line_chart(
         desc_parts.append(
             f"{label} {_fmt(last.value, decimals)} {unit} in {period_label(last.period)}"
         )
-        legend.append(
-            f'<span class="key {cls}"><i></i>{escape(label)}: '
-            f"<strong>{_fmt(last.value, decimals)}</strong></span>"
-        )
+        legend.append((cls, label, last))
     first_p = min(o.period for *_, valid in usable for o in valid)
     last_p = max(o.period for *_, valid in usable for o in valid)
+    # The legend gives each series' latest value; if a series has none for the chart's
+    # latest period, its value is labelled with its own period rather than passed off.
+    legend = [
+        f'<span class="key {cls}"><i></i>{escape(label)}: '
+        f"<strong>{_fmt(last.value, decimals)}</strong>"
+        + ("" if last.period == last_p else f" ({escape(period_label(last.period))})")
+        + "</span>"
+        for cls, label, last in legend
+    ]
     desc = "; ".join(desc_parts) + "."
     return (
         f'<div class="legend">{"".join(legend)}</div>'

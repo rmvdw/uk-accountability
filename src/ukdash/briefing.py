@@ -137,12 +137,32 @@ class Facts:
             raise ValueError(f"{ind}/{breakdown}: no data")
         return s
 
+    def latest(self, ind: str) -> Observation:
+        """The indicator's latest period, from all UK rows including missing ones, so
+        every breakdown is read at the same period (never silently an older one)."""
+        if ind not in self.allowed:
+            raise ValueError(f"indicator {ind!r} is not listed in the briefing's front matter")
+        if ind not in self._rows:
+            self._rows[ind] = self.p.read_observations(ind)
+        rows = [o for o in self._rows[ind] if o.geography_id == UK]
+        if not rows:
+            raise ValueError(f"{ind}: no data")
+        return max(rows, key=lambda o: period_ordinal(o.period, o.frequency))
+
     def obs(self, ind: str, period: str = "latest", breakdown: str = TOTAL) -> Observation:
         s = self._series(ind, breakdown)
-        if period == "latest":
-            o = s[-1]
-        elif period == "year_earlier":
-            o = self._offset(s, s[-1], 12)
+        if period in ("latest", "year_earlier"):
+            top = self.latest(ind)
+            k = period_ordinal(top.period, top.frequency) - (12 if period == "year_earlier" else 0)
+            matches = [x for x in s if period_ordinal(x.period, x.frequency) == k]
+            if not matches:
+                which = top.period if period == "latest" else f"12 months before {top.period}"
+                raise ValueError(
+                    f"{ind}/{breakdown}: no value for {which}, the indicator's "
+                    f"{period.replace('_', ' ')} period (missing or suppressed); "
+                    "an older value is never substituted"
+                )
+            o = matches[0]
         else:
             matches = [x for x in s if x.period == period]
             if not matches:
@@ -157,13 +177,6 @@ class Facts:
             "status": o.status,
         }
         return o
-
-    def _offset(self, s: list[Observation], o: Observation, months: int) -> Observation:
-        target = period_ordinal(o.period, o.frequency) - months
-        for x in s:
-            if period_ordinal(x.period, x.frequency) == target:
-                return x
-        raise ValueError(f"no value {months} months before {o.period}")
 
     # Functions available in briefing text --------------------------------------
 

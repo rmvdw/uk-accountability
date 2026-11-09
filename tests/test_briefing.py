@@ -48,7 +48,7 @@ def test_real_immigration_briefing_renders_with_live_data():
     html, facts, sources = briefing.render_candidate(p, b, period_label)
     latest = max(o.period for o in p.read_observations("net_migration"))
     assert f"net_migration.total.{latest}" in facts
-    assert "TO VERIFY" in html  # fiscal claims still need checking, so it can't be frozen yet
+    assert "TO VERIFY" not in html  # fiscal cards verified on #13 (Codex, 2026-11-09)
     assert {s["publisher"] for s in sources} == {"Office for National Statistics", "Home Office"}
 
 
@@ -200,3 +200,49 @@ def test_latest_manifest_entry_wins(fixture_root):
         body="", path=fixture_root / "t.md",
     )  # fmt: skip
     assert briefing.sources_for(p, b)[0]["vintage"] == "newer"
+
+
+def _with_missing(p, ind, breakdown, period):
+    """The real observations, with one cell set to missing in memory."""
+    real = p.read_observations
+
+    def read(i):
+        rows = real(i)
+        if i != ind:
+            return rows
+        return [
+            o.model_copy(update={"value": None, "status": "missing"})
+            if o.breakdown == breakdown and o.period == period and o.geography_id == "iso:GBR"
+            else o
+            for o in rows
+        ]
+
+    p.read_observations = read
+    return p
+
+
+def test_missing_latest_breakdown_is_never_replaced_by_an_older_value():
+    p = Project.load()
+    latest = max(o.period for o in p.read_observations("visas_granted"))
+    p = _with_missing(p, "visas_granted", "study", latest)
+    f = briefing.Facts(p, ["visas_granted"], period_label)
+    with pytest.raises(ValueError, match="never substituted"):
+        f.bars("visas_granted", {"study": "Study", "work": "Work"})
+    with pytest.raises(ValueError, match="never substituted"):
+        f.num("visas_granted", breakdown="study")
+    assert f.num("visas_granted", breakdown="work")  # other breakdowns still at `latest`
+    b = briefing.load_all(p.root)["immigration"]
+    with pytest.raises(ValueError, match="never substituted"):  # the candidate fails
+        briefing.render_candidate(p, b, period_label)
+
+
+def test_missing_year_earlier_value_is_never_replaced():
+    p = Project.load()
+    rows = p.read_observations("asylum_claims")
+    top = max(rows, key=lambda o: o.period)
+    f0 = briefing.Facts(p, ["asylum_claims"], period_label)
+    earlier = f0.obs("asylum_claims", "year_earlier").period
+    p = _with_missing(p, "asylum_claims", "total", earlier)
+    f = briefing.Facts(p, ["asylum_claims"], period_label)
+    with pytest.raises(ValueError, match="12 months before " + top.period):
+        f.change("asylum_claims")
