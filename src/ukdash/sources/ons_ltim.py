@@ -15,13 +15,12 @@ from __future__ import annotations
 
 import html
 import re
-import urllib.request
 
 from ..schema import Geography, IndicatorDefinition, Observation
 from .base import Adapter, Fetched, register
+from .http import get as _get
 from .spreadsheet import find_row, first_line, read_spreadsheet
 
-USER_AGENT = "uk-accountability (+https://github.com/rmvdw/uk-accountability)"
 SHEET = "1"
 HEADER = ["Flow", "Period", "All Nationalities", "British", "EU+", "Non-EU+"]
 COLUMNS = {
@@ -43,12 +42,6 @@ EDITION = re.compile(
 NET_TOLERANCE = 1_000
 SUM_TOLERANCE = 3_000
 UK = "iso:GBR"
-
-
-def _get(url: str) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(req, timeout=120) as resp:
-        return resp.read()
 
 
 def latest_edition(page_html: str) -> tuple[str, str]:

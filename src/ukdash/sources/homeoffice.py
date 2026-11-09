@@ -22,13 +22,12 @@ from __future__ import annotations
 
 import json
 import re
-import urllib.request
 
 from ..schema import Geography, IndicatorDefinition, Observation
 from .base import Adapter, Fetched, register
+from .http import get as _get
 from .spreadsheet import find_row, first_line, read_spreadsheet
 
-USER_AGENT = "uk-accountability (+https://github.com/rmvdw/uk-accountability)"
 COLLECTION_API = (
     "https://www.gov.uk/api/content/government/statistical-data-sets/"
     "immigration-system-statistics-data-tables"
@@ -44,12 +43,6 @@ TITLE_DATE = re.compile(r"year ending (" + _MONTH_ALT + r") (\d{4})\s*$", re.I)
 NOT_AVAILABLE = {":", "[x]", "x"}
 NOT_APPLICABLE = {"z", "[z]"}
 UK = "iso:GBR"
-
-
-def _get(url: str) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(req, timeout=120) as resp:
-        return resp.read()
 
 
 def pick_attachment(attachments: list[dict], title_prefix: str) -> tuple[str, str]:
