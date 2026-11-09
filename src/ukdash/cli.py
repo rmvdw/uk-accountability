@@ -44,6 +44,10 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--drafts", action="store_true", help="include drafts (review previews only)")
     r = sub.add_parser("refresh")
     r.add_argument("--indicator", action="append", help="limit to this indicator (drafts allowed)")
+    e = sub.add_parser("edition", help="freeze a briefing's current candidate as an edition")
+    e.add_argument("briefing")
+    bd = sub.add_parser("briefing-diff", help="what a new candidate would change")
+    bd.add_argument("briefing")
     m = sub.add_parser("import-manual")
     m.add_argument("--indicator", required=True)
     m.add_argument("--file", type=Path, required=True)
@@ -65,6 +69,28 @@ def main(argv: list[str] | None = None) -> int:
             args.indicator, args.file, args.request, publisher_release_date=args.release_date
         )
         return _report(result, "import-manual")
+
+    if args.cmd in ("edition", "briefing-diff"):
+        from . import briefing
+        from .build import period_label
+
+        project = Project.load()
+        b = briefing.load_all(project.root).get(args.briefing)
+        if b is None:
+            print(f"ERROR no briefing {args.briefing!r}", file=sys.stderr)
+            return 1
+        if args.cmd == "edition":
+            path = briefing.freeze(project.root, project, b, period_label)
+            print(f"edition: wrote {path.relative_to(project.root)}")
+            print("To publish: set status: published and published_edition in the front matter.")
+            return 0
+        if not b.published_edition:
+            print("briefing-diff: no published edition yet")
+            return 0
+        _, facts, _ = briefing.render_candidate(project, b, period_label)
+        changes = briefing.diff_facts(briefing.load_edition(project.root, b)["facts"], facts)
+        print("\n".join(changes) if changes else "briefing-diff: no changes")
+        return 0
 
     project = Project.load()
     if args.cmd == "check":

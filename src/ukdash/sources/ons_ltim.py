@@ -115,6 +115,64 @@ def _reconcile(t: dict[tuple[str, str, str], tuple[float | None, str]]) -> None:
                 raise ValueError(f"{f} {p}: All {total:.0f} != sum of groups {sum(parts):.0f}")
 
 
+REVISIONS_SHEET = "5"
+REVISION_COLUMNS = [
+    f"{flow}: {group}" for flow in FLOWS for group in ("All", "British", "EU+", "Non-EU+")
+]
+
+
+def _norm_header(cell: str) -> str:
+    """'Net migration: \nAll [note 2]' -> 'Net migration: All'."""
+    text = re.sub(r"\[[^\]]*\]", "", " ".join(cell.split()))
+    return re.sub(r"\s+", " ", text).replace(" :", ":").strip()
+
+
+def parse_revisions(raw: bytes) -> list[dict]:
+    """ONS Table 5: each period's estimates in successive editions (contract C2, #13).
+
+    Returns [{period, publication, estimate, values: {(flow, slug): value}}], estimates only
+    ('Revision for ...' difference rows and 'Not published' rows are dropped; we compute
+    differences ourselves from the estimates).
+    """
+    sheets = read_spreadsheet(raw)
+    if REVISIONS_SHEET not in sheets:
+        raise ValueError("workbook has no sheet '5' (contract C2)")
+    rows = sheets[REVISIONS_SHEET]
+    h = find_row(rows, "Period")
+    header = [_norm_header(c) for c in rows[h]]
+    expected = ["Period", "Publication", "Estimate History"] + REVISION_COLUMNS
+    if header[: len(expected)] != expected:
+        raise ValueError(f"sheet 5 header changed: {header} (contract C2)")
+    slug = {"All": "total", "British": "british", "EU+": "eu_plus", "Non-EU+": "non_eu_plus"}
+    out = []
+    for r in rows[h + 1 :]:
+        if len(r) < 4 or not r[0]:
+            continue
+        estimate = " ".join(r[2].split())
+        if estimate.startswith("Revision for") or r[3].strip() == "Not published":
+            continue
+        m = PERIOD.match(r[0].strip())
+        if not m:
+            raise ValueError(f"sheet 5: unexpected Period {r[0]!r} (contract C2)")
+        mon, yy, _ = m.groups()
+        values = {}
+        for i, col in enumerate(REVISION_COLUMNS, start=3):
+            flow, group = col.split(": ")
+            cell = r[i].strip() if i < len(r) else ""
+            values[(flow, slug[group])] = float(cell) if cell not in ("", ":", "z") else None
+        out.append(
+            {
+                "period": f"{2000 + int(yy)}-{MONTHS.index(mon) + 1:02d}",
+                "publication": r[1].strip(),
+                "estimate": estimate,
+                "values": values,
+            }
+        )
+    if not out:
+        raise ValueError("sheet 5 has no estimates (contract C2)")
+    return out
+
+
 def publication_date(raw: bytes) -> str | None:
     """Release date from the cover sheet, e.g. '21 May 2026', or None if not stated."""
     for r in read_spreadsheet(raw).get("Cover Sheet", []):

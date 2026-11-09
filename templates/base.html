@@ -52,6 +52,34 @@ ul.caveats li { margin-bottom: 6px; }
   text-transform: uppercase; color: var(--warn); }
 .grid-cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 .grid-cards a.card { text-decoration: none; color: inherit; display: block; margin: 0; }
+.chart .zero { stroke: var(--muted); stroke-width: 1; }
+.chart .line.imm, .chart .dot.imm { stroke: var(--accent); fill: none; }
+.chart .dot.imm { fill: var(--accent); }
+.chart .line.emi { stroke: var(--muted); stroke-dasharray: 5 4; fill: none; }
+.chart .dot.emi { fill: var(--muted); }
+.chart .line.net { stroke: var(--uk); stroke-width: 3; fill: none; }
+.chart .dot.net { fill: var(--uk); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.9rem; margin: 8px 0 4px; }
+.legend .key i { display: inline-block; width: 18px; height: 3px; vertical-align: middle;
+  margin-right: 6px; background: var(--muted); }
+.legend .key.imm i { background: var(--accent); }
+.legend .key.net i { background: var(--uk); height: 4px; }
+.legend .key.emi i { background: repeating-linear-gradient(90deg, var(--muted) 0 5px, transparent 5px 9px); }
+.chart-block { margin: 12px 0 20px; }
+.stamp { font-size: 0.9rem; color: var(--muted); border-left: 3px solid var(--line);
+  padding: 4px 0 4px 12px; margin: 12px 0 20px; }
+.answer { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 4px 18px; margin: 16px 0; }
+.prose table { font-size: 0.92rem; margin: 8px 0 16px; display: block; overflow-x: auto; }
+.evidence { border-top: 1px solid var(--line); padding: 10px 0; }
+.evidence p { margin: 4px 0; }
+.prose h2 { margin-top: 36px; }
+.prose blockquote { margin: 12px 0; padding: 4px 14px; border-left: 3px solid var(--accent);
+  color: var(--muted); }
+.cite { font-size: 0.88rem; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 14px; word-break: break-word; }
+.questions { list-style: none; padding: 0; }
+.questions li { margin: 0 0 12px; }
 footer { color: var(--muted); font-size: 0.85rem; padding: 40px 16px; }
 </style>
 </head>

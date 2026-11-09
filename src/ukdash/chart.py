@@ -113,7 +113,11 @@ def bar_chart(
 ) -> str:
     if not values:
         return ""
-    w, row, pl, pr = 640, 34, 120, 72
+    # Size the label and value margins to the text (labels render at ~18px in a 640 box,
+    # roughly 10px per character), so nothing is clipped on a phone.
+    w, row = 640, 34
+    pl = min(max(80, 10 * max(len(labels[g]) for g, _ in values) + 16), 300)
+    pr = 10 * max(len(_fmt(v, decimals)) for _, v in values) + 16
     h = row * len(values) + 8
     top = max(abs(v) for _, v in values) or 1
     bars = []
@@ -135,4 +139,82 @@ def bar_chart(
     return (
         f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="{escape(desc)}" class="chart">'
         f"<title>{escape(desc)}</title>{''.join(bars)}</svg>"
+    )
+
+
+def multi_line_chart(
+    series: list[tuple[str, list[Observation], str]],
+    unit: str,
+    decimals: int,
+    period_label=lambda p: p,
+) -> str:
+    """Several series on one scale. `series` is [(label, rows, css class)]; a zero line is
+    drawn when the range crosses zero. Labels appear in an HTML legend, not on the lines,
+    so they never collide on a phone."""
+    usable = []
+    for label, rows, cls in series:
+        rows = [o for o in rows if o.value is not None]
+        if len(rows) >= 2:
+            usable.append((label, rows, cls))
+    if not usable:
+        return ""
+    w, h, pl, pr, pt, pb = 640, 300, 64, 24, 16, 36
+    vals = [o.value for _, rows, _ in usable for o in rows]
+    lo, hi = min(vals + [0.0]), max(vals + [0.0])
+    pad = (hi - lo) * 0.08 or 1
+    # Counts that can't go negative start the axis at zero rather than below it.
+    lo, hi = (lo - pad if lo < 0 else 0.0), hi + pad
+    ks = [period_ordinal(o.period, o.frequency) for _, rows, _ in usable for o in rows]
+    k0, k1 = min(ks), max(ks)
+    span = max(k1 - k0, 1)
+
+    def x(k: int) -> float:
+        return pl + (w - pl - pr) * (k - k0) / span
+
+    def y(v: float) -> float:
+        return pt + (h - pt - pb) * (1 - (v - lo) / (hi - lo))
+
+    ticks = [lo + (hi - lo) * k / 4 for k in range(5)]
+    grid = "".join(
+        f'<line x1="{pl}" x2="{w - pr}" y1="{y(t):.1f}" y2="{y(t):.1f}" class="grid"/>'
+        f'<text x="{pl - 6}" y="{y(t):.1f}" class="axis" text-anchor="end" '
+        f'dominant-baseline="middle">{_axis_fmt(t, decimals, hi - lo)}</text>'
+        for t in ticks
+    )
+    zero = (
+        f'<line x1="{pl}" x2="{w - pr}" y1="{y(0):.1f}" y2="{y(0):.1f}" class="zero"/>'
+        if lo < 0 < hi
+        else ""
+    )
+    paths, desc_parts, legend = [], [], []
+    for label, rows, cls in usable:
+        segs = line_path(rows)
+        d = " ".join(
+            f"{'M' if i == 0 else 'L'}{x(k):.1f},{y(v):.1f}"
+            for seg in segs
+            for i, (k, v) in enumerate(seg)
+        )
+        last = max(rows, key=lambda o: o.period)
+        paths.append(
+            f'<path d="{d}" class="line {cls}"/>'
+            f'<circle cx="{x(period_ordinal(last.period, last.frequency)):.1f}" '
+            f'cy="{y(last.value):.1f}" r="4" class="dot {cls}"/>'
+        )
+        desc_parts.append(
+            f"{label} {_fmt(last.value, decimals)} {unit} in {period_label(last.period)}"
+        )
+        legend.append(
+            f'<span class="key {cls}"><i></i>{escape(label)}: '
+            f"<strong>{_fmt(last.value, decimals)}</strong></span>"
+        )
+    first_p = min(o.period for _, rows, _ in usable for o in rows)
+    last_p = max(o.period for _, rows, _ in usable for o in rows)
+    desc = "; ".join(desc_parts) + "."
+    return (
+        f'<div class="legend">{"".join(legend)}</div>'
+        f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="{escape(desc)}" class="chart">'
+        f"<title>{escape(desc)}</title>{grid}{zero}{''.join(paths)}"
+        f'<text x="{pl}" y="{h - 8}" class="axis">{escape(period_label(first_p))}</text>'
+        f'<text x="{w - pr}" y="{h - 8}" class="axis" text-anchor="end">'
+        f"{escape(period_label(last_p))}</text></svg>"
     )

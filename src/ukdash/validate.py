@@ -75,8 +75,41 @@ def validate(project: Project) -> list[str]:
         elif sha256_file(path) != e.sha256:
             errors.append(f"manifest: checksum mismatch for {e.path}")
 
+    errors.extend(validate_briefings(project))
+
     for ind_id in project.read_checks():
         if ind_id not in project.indicators:
             errors.append(f"checks.json: unknown indicator {ind_id}")
 
+    return errors
+
+
+def validate_briefings(project: Project) -> list[str]:
+    from . import briefing
+    from .build import period_label
+
+    errors: list[str] = []
+    try:
+        briefings = briefing.load_all(project.root)
+    except ValueError as exc:
+        return [f"briefing: {exc}"]
+    for b in briefings.values():
+        where = f"briefing {b.id}"
+        unknown = [i for i in b.indicators if i not in project.indicators]
+        if unknown:
+            errors.append(f"{where}: unknown indicators {unknown}")
+            continue
+        if b.status == "published":
+            try:
+                briefing.load_edition(project.root, b)
+            except ValueError as exc:
+                errors.append(f"{where}: {exc}")
+            drafts = [i for i in b.indicators if project.indicators[i].status != "published"]
+            if drafts:
+                errors.append(f"{where}: published briefing uses draft indicators {drafts}")
+        if all(project.read_observations(i) for i in b.indicators):
+            try:
+                briefing.render_candidate(project, b, period_label)
+            except Exception as exc:  # noqa: BLE001 - report any template or data error
+                errors.append(f"{where}: cannot render: {exc}")
     return errors
