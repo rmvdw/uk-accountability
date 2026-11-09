@@ -1,4 +1,4 @@
-# TEMPORARY (Claude, #21/#22): find which peer migration sources are reachable and what
+# TEMPORARY (Claude, #21/#22), run 2: find which peer migration sources are reachable and what
 # they contain. Saves raw responses to probe/ and commits them back. Delete after use.
 name: Probe peer migration sources
 on:
@@ -17,13 +17,8 @@ jobs:
           mkdir -p probe
           G7=GBR+USA+CAN+FRA+DEU+ITA+JPN
           get(){ echo "== $1"; curl -sS -m 120 -A "uk-accountability probe" -w "\nHTTP %{http_code}\n" -o "probe/$1" "$2" | tail -1 >> probe/status.txt; echo "$1 $(tail -c 300 probe/$1 | head -c 0)" ; sleep 8; }
-          O=https://sdmx.oecd.org/public/rest
-          get perm_all.csv "$O/data/OECD.ELS.IMD,DSD_MIG_INT@DF_MIG_INT_PER,1.0/all?startPeriod=2019&dimensionAtObservation=AllDimensions&format=csvfilewithlabels"
-          get mig_struct.xml "$O/dataflow/OECD.ELS.IMD/DSD_MIG@DF_MIG/1.0?references=all"
-          get mig_g7_total.csv "$O/data/OECD.ELS.IMD,DSD_MIG@DF_MIG,1.0/$G7._T.A..T._Z._Z.PS?startPeriod=2019&dimensionAtObservation=AllDimensions&format=csvfilewithlabels"
-          get perm_struct.xml "$O/dataflow/OECD.ELS.IMD/DSD_MIG_INT@DF_MIG_INT_PER/1.0?references=all"
-          get wb_pop.json "https://api.worldbank.org/v2/country/GBR;USA;CAN;FRA;DEU;ITA;JPN/indicator/SP.POP.TOTL?date=2019:2025&format=json&per_page=200"
-          for c in GBR USA CAN FRA DEU ITA JPN; do get "unhcr_asylum_$c.json" "https://api.unhcr.org/population/v1/asylum-applications/?coa=$c&yearFrom=2019&yearTo=2025&limit=1000"; done
+          get unhcr_asylum_GFR.json "https://api.unhcr.org/population/v1/asylum-applications/?coa=GFR&yearFrom=2019&yearTo=2025&limit=1000"
+          get unhcr_countries.json "https://api.unhcr.org/population/v1/countries/?limit=400"
           for f in probe/*; do echo "$f $(wc -c < $f) bytes"; done | tee -a probe/status.txt
       - name: Commit results
         run: |
