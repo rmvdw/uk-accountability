@@ -97,20 +97,28 @@ def parse_oecd_permanent(parts: list[dict], countries: list[str]) -> dict:
 
 
 def parse_unhcr_asylum_new(parts: list[dict], countries: list[str]) -> dict:
-    """New applications (app_type N), counted as persons (app_pc P), all procedures.
-    Repeat applications, appeals, re-examinations and counts of cases are excluded; a
-    country-year reported only as cases is missing, never converted."""
+    """New applications (app_type N) by persons (app_pc P), all procedures. Repeat
+    applications, appeals and re-examinations are excluded. A country-year where any
+    new-application row is counted in cases is missing, never converted or partly
+    totalled: e.g. the US in 2025 reports immigration-court filings as persons but
+    USCIS filings as cases, so a persons-only sum would understate it."""
     out: dict = {}
     for part in parts:
         items = json.loads(part["body"]).get("items", [])
         totals: dict = defaultdict(float)
+        mixed: set = set()
         for it in items:
             iso = it.get("coa_iso")
             if iso not in countries:
                 raise ValueError(f"UNHCR row for unexpected country {iso!r}")
-            if it.get("app_type") == "N" and it.get("app_pc") == "P":
-                totals[(iso, int(it["year"]))] += float(it.get("applied") or 0)
-        out.update({k: (v, "") for k, v in totals.items()})
+            if it.get("app_type") != "N":
+                continue
+            key = (iso, int(it["year"]))
+            if it.get("app_pc") == "P":
+                totals[key] += float(it.get("applied") or 0)
+            else:
+                mixed.add(key)
+        out.update({k: (v, "") for k, v in totals.items() if k not in mixed})
     return out
 
 

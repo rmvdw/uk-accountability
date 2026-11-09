@@ -86,3 +86,12 @@ def test_measure_drift_fails():
     )
     with pytest.raises(ValueError, match="definition drift"):
         parse("permanent_immigration_per_1000", json.dumps(bundle).encode())
+
+
+def test_mixed_persons_and_cases_make_the_year_missing():
+    # Genuine: the US reports 2025 immigration-court filings as persons and USCIS
+    # filings as cases. A persons-only sum would understate the national total.
+    obs = parse("asylum_applications_per_1000", "unhcr_asylum_bundle.json")
+    us = value(obs, "iso:USA", "2025")
+    assert us.value is None and us.status == "missing"
+    assert value(obs, "iso:USA", "2024").value == pytest.approx(2.14, abs=0.01)

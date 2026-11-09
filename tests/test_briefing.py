@@ -316,3 +316,13 @@ def test_peers_use_one_common_year_and_record_every_country():
     assert years == {"2024"} and pp["when"] == "2024"
     assert len(f.used) == 7 and "iso:GBR" in "".join(f.used)
     assert pp["position"].endswith("of the 7 G7 countries")
+
+
+def test_peer_facts_keep_source_status_and_skip_incomplete_years():
+    p = Project.load()
+    f = briefing.Facts(p, ["permanent_immigration_per_1000", "asylum_applications_per_1000"],
+                       period_label)  # fmt: skip
+    f.peers("permanent_immigration_per_1000")
+    assert f.used["permanent_immigration_per_1000.iso:GBR.2024"]["status"] == "estimated"
+    pa = f.peers("asylum_applications_per_1000")
+    assert pa["when"] == "2024"  # 2025 lacks a comparable US total

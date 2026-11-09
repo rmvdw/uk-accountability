@@ -300,10 +300,15 @@ class Facts:
             raise ValueError(f"{ind}: no year that every peer has")
         if comp.excluded:
             raise ValueError(f"{ind}: peers without data {sorted(comp.excluded)}; say so first")
+        status = {
+            o.geography_id: o.status
+            for o in self._rows[ind]
+            if o.period == comp.period and o.breakdown == TOTAL
+        }
         for g, v in comp.values:
             self.used[f"{ind}.{g}.{comp.period}"] = {
                 "indicator": ind, "breakdown": TOTAL, "geography": g, "period": comp.period,
-                "value": v, "status": "",
+                "value": v, "status": status.get(g, ""),
             }  # fmt: skip
         ranked = sorted(comp.values, key=lambda gv: gv[1], reverse=True)
         pos = next(i + 1 for i, (g, _) in enumerate(ranked) if g == UK)
@@ -354,6 +359,8 @@ def sources_for(project: Project, b: Briefing) -> list[dict]:
                 "dataset": d.source.dataset,
                 "url": d.source.url,
                 "file": e.request if e else None,
+                # A bundle (per_1000) records several requests separated by " ; ".
+                "files": [u for u in (e.request.split(" ; ") if e else []) if u.startswith("http")],
                 "vintage": _vintage(e.vintage) if e else None,
                 "released": e.publisher_release_date if e else None,
                 "retrieved": e.retrieved_at.isoformat() if e else None,
