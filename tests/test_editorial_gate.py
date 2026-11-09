@@ -52,3 +52,55 @@ def test_templates_and_briefings_are_ross_owned():
     assert gate.is_owned("templates/index.html", pats)
     assert gate.is_owned("templates/indicator.html", pats)
     assert gate.is_owned("briefings/immigration.md", pats)
+
+
+def write(root, rel, text):
+    p = root / rel
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text)
+
+
+def run_dirs(tmp_path, monkeypatch, files, labels, base, head):
+    monkeypatch.chdir(ROOT)
+    c, lab = tmp_path / "c.txt", tmp_path / "l.txt"
+    c.write_text("\n".join(files))
+    lab.write_text("\n".join(labels))
+    return gate.main(str(c), str(lab), ".github/CODEOWNERS", str(base), str(head))
+
+
+def test_draft_indicators_need_no_approval(tmp_path, monkeypatch):
+    base, head = tmp_path / "base", tmp_path / "head"
+    f = "indicators/new_thing.yml"
+    write(head, f, "id: new_thing\nstatus: draft\n")  # new draft
+    assert run_dirs(tmp_path, monkeypatch, [f], [], base, head) == 0
+    write(base, f, "id: new_thing\nstatus: draft\n")  # edited draft
+    assert run_dirs(tmp_path, monkeypatch, [f], [], base, head) == 0
+
+
+def test_publishing_or_changing_published_needs_approval(tmp_path, monkeypatch):
+    base, head = tmp_path / "base", tmp_path / "head"
+    f = "indicators/x.yml"
+    write(base, f, "status: draft\n")
+    write(head, f, "status: published\n")  # publishing
+    assert run_dirs(tmp_path, monkeypatch, [f], [], base, head) == 1
+    write(base, f, "status: published\n")
+    write(head, f, "status: draft\n")  # unpublishing a live indicator
+    assert run_dirs(tmp_path, monkeypatch, [f], [], base, head) == 1
+    (head / f).unlink()  # deleting a published one
+    assert run_dirs(tmp_path, monkeypatch, [f], [], base, head) == 1
+    assert run_dirs(tmp_path, monkeypatch, [f], ["ross-approved"], base, head) == 0
+
+
+def test_unreadable_status_and_other_paths_still_gated(tmp_path, monkeypatch):
+    base, head = tmp_path / "base", tmp_path / "head"
+    write(head, "indicators/y.yml", "id: y\n")  # no status line
+    assert run_dirs(tmp_path, monkeypatch, ["indicators/y.yml"], [], base, head) == 1
+    write(head, "templates/index.html", "status: draft\n")  # templates are never exempt
+    assert run_dirs(tmp_path, monkeypatch, ["templates/index.html"], [], base, head) == 1
+
+
+def test_mixed_draft_and_owned_change_still_needs_approval(tmp_path, monkeypatch):
+    base, head = tmp_path / "base", tmp_path / "head"
+    write(head, "indicators/z.yml", "status: draft\n")
+    files = ["indicators/z.yml", "docs/decisions.md"]
+    assert run_dirs(tmp_path, monkeypatch, files, [], base, head) == 1

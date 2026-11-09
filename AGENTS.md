@@ -33,7 +33,7 @@ Otto (Ross's GPT) is the provisional prioritisation lead. Any authorised agent c
 
 ## What comes back to Ross
 
-Changes to indicator meaning, peer selection, public wording or conclusions, spending, repository visibility or licensing. Those paths are listed in `.github/CODEOWNERS` (indicators, peers, decisions, all templates, briefings, licence, the gate itself); the **Editorial gate** check blocks them until Ross adds the `ross-approved` label. A change that alters public wording or conclusions needs Ross even if its path is not listed: label it `needs-ross` and do not merge it yourself. Agents decide and document routine schema and engineering details. Label editorial PRs `needs-ross`.
+Changes to indicator meaning, peer selection, public wording or conclusions, spending, repository visibility or licensing. Those paths are listed in `.github/CODEOWNERS` (indicators, peers, decisions, all templates, briefings, licence, the gate itself); the **Editorial gate** check blocks them until Ross adds the `ross-approved` label. A change that alters public wording or conclusions needs Ross even if its path is not listed: label it `needs-ross` and do not merge it yourself. Draft indicators and briefings (`status: draft`) don't need Ross until they are published (decision 18). Agents decide and document routine schema and engineering details. Label editorial PRs `needs-ross`.
 
 ## Merging (decision 17)
 
