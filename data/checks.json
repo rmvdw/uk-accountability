@@ -1,44 +1,44 @@
 {
   "asylum_awaiting_decision": {
-    "last_attempt_at": "2026-11-09T17:23:27Z",
-    "last_attempt_result": "ok",
-    "last_successful_check_at": "2026-11-09T17:23:27Z",
+    "last_attempt_at": "2026-11-09T17:27:23Z",
+    "last_attempt_result": "unchanged",
+    "last_successful_check_at": "2026-11-09T17:27:23Z",
     "last_error": null
   },
   "asylum_claims": {
-    "last_attempt_at": "2026-11-09T17:23:27Z",
-    "last_attempt_result": "ok",
-    "last_successful_check_at": "2026-11-09T17:23:27Z",
+    "last_attempt_at": "2026-11-09T17:27:23Z",
+    "last_attempt_result": "unchanged",
+    "last_successful_check_at": "2026-11-09T17:27:23Z",
     "last_error": null
   },
   "asylum_initial_decisions": {
-    "last_attempt_at": "2026-11-09T17:23:27Z",
-    "last_attempt_result": "ok",
-    "last_successful_check_at": "2026-11-09T17:23:27Z",
+    "last_attempt_at": "2026-11-09T17:27:23Z",
+    "last_attempt_result": "unchanged",
+    "last_successful_check_at": "2026-11-09T17:27:23Z",
     "last_error": null
   },
   "emigration_long_term": {
-    "last_attempt_at": "2026-11-09T17:23:27Z",
-    "last_attempt_result": "ok",
-    "last_successful_check_at": "2026-11-09T17:23:27Z",
+    "last_attempt_at": "2026-11-09T17:27:23Z",
+    "last_attempt_result": "unchanged",
+    "last_successful_check_at": "2026-11-09T17:27:23Z",
     "last_error": null
   },
   "immigration_long_term": {
-    "last_attempt_at": "2026-11-09T17:23:27Z",
-    "last_attempt_result": "ok",
-    "last_successful_check_at": "2026-11-09T17:23:27Z",
+    "last_attempt_at": "2026-11-09T17:27:23Z",
+    "last_attempt_result": "unchanged",
+    "last_successful_check_at": "2026-11-09T17:27:23Z",
     "last_error": null
   },
   "net_migration": {
-    "last_attempt_at": "2026-11-09T17:23:27Z",
-    "last_attempt_result": "ok",
-    "last_successful_check_at": "2026-11-09T17:23:27Z",
+    "last_attempt_at": "2026-11-09T17:27:23Z",
+    "last_attempt_result": "unchanged",
+    "last_successful_check_at": "2026-11-09T17:27:23Z",
     "last_error": null
   },
   "small_boat_arrivals": {
-    "last_attempt_at": "2026-11-09T17:23:27Z",
-    "last_attempt_result": "ok",
-    "last_successful_check_at": "2026-11-09T17:23:27Z",
+    "last_attempt_at": "2026-11-09T17:27:23Z",
+    "last_attempt_result": "unchanged",
+    "last_successful_check_at": "2026-11-09T17:27:23Z",
     "last_error": null
   },
   "unemployment_rate": {
@@ -48,9 +48,9 @@
     "last_error": null
   },
   "visas_granted": {
-    "last_attempt_at": "2026-11-09T17:23:27Z",
-    "last_attempt_result": "ok",
-    "last_successful_check_at": "2026-11-09T17:23:27Z",
+    "last_attempt_at": "2026-11-09T17:27:23Z",
+    "last_attempt_result": "unchanged",
+    "last_successful_check_at": "2026-11-09T17:27:23Z",
     "last_error": null
   }
 }
