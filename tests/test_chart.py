@@ -48,3 +48,30 @@ def test_axis_labels_are_compact_for_large_numbers():
     assert _axis_fmt(1_234_000, 0, 800_000) == "1.23m"
     assert _axis_fmt(-55_900, 0, 800_000) == "-56k"
     assert _axis_fmt(4.25, 1, 2) == "4.2"
+
+
+def test_multi_line_chart_breaks_at_explicitly_missing_y12_value():
+    from ukdash.chart import multi_line_chart
+
+    def y12(period, value):
+        o = obs(period, value)
+        return o.model_copy(update={"frequency": "Y12"})
+
+    # Y12 steps are irregular (quarterly, then six-monthly), so only the missing row
+    # itself can show the gap.
+    rows = [y12("2024-06", 1.0), y12("2024-12", None), y12("2025-06", 3.0), y12("2025-12", 4.0)]
+    svg = multi_line_chart([("Net", rows, "net")], "people", 0)
+    path = svg.split('class="line net"')[0].rsplit('d="', 1)[1]
+    assert path.count("M") == 2
+    # The June 2024 value is cut off by the gap; it still gets a marker, plus the final one.
+    assert svg.count('class="dot net"') == 2
+
+
+def test_multi_line_legend_labels_a_value_from_an_earlier_period():
+    from ukdash.chart import multi_line_chart
+
+    a = [obs("2025-01", 1.0), obs("2025-02", 2.0), obs("2025-03", 3.0)]
+    b = [obs("2025-01", 5.0), obs("2025-02", 6.0), obs("2025-03", None)]
+    svg = multi_line_chart([("A", a, "imm"), ("B", b, "emi")], "people", 0)
+    assert "A: <strong>3</strong></span>" in svg
+    assert "B: <strong>6</strong> (2025-02)</span>" in svg

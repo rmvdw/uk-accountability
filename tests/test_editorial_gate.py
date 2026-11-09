@@ -8,7 +8,7 @@ spec.loader.exec_module(gate)
 
 
 def test_patterns_come_from_codeowners():
-    pats = gate.owned_patterns((ROOT / ".github/CODEOWNERS").read_text())
+    pats = gate.owned_patterns((ROOT / ".github/CODEOWNERS").read_text(encoding="utf-8"))
     assert "indicators/" in pats and "docs/decisions.md" in pats
 
 
@@ -23,8 +23,8 @@ def test_ownership_matching():
 def run(tmp_path, monkeypatch, files, labels):
     monkeypatch.chdir(ROOT)
     c, lab = tmp_path / "c.txt", tmp_path / "l.txt"
-    c.write_text("\n".join(files))
-    lab.write_text("\n".join(labels))
+    c.write_text("\n".join(files), encoding="utf-8")
+    lab.write_text("\n".join(labels), encoding="utf-8")
     return gate.main(str(c), str(lab))
 
 
@@ -43,12 +43,12 @@ def test_rename_of_protected_file_is_caught(tmp_path, monkeypatch):
 
 
 def test_workflow_collects_previous_filename():
-    wf = (ROOT / ".github/workflows/editorial-gate.yml").read_text()
+    wf = (ROOT / ".github/workflows/editorial-gate.yml").read_text(encoding="utf-8")
     assert "previous_filename" in wf
 
 
 def test_templates_and_briefings_are_ross_owned():
-    pats = gate.owned_patterns((ROOT / ".github/CODEOWNERS").read_text())
+    pats = gate.owned_patterns((ROOT / ".github/CODEOWNERS").read_text(encoding="utf-8"))
     assert gate.is_owned("templates/index.html", pats)
     assert gate.is_owned("templates/indicator.html", pats)
     assert gate.is_owned("briefings/immigration.md", pats)
@@ -57,14 +57,14 @@ def test_templates_and_briefings_are_ross_owned():
 def write(root, rel, text):
     p = root / rel
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(text)
+    p.write_text(text, encoding="utf-8")
 
 
 def run_dirs(tmp_path, monkeypatch, files, labels, base, head):
     monkeypatch.chdir(ROOT)
     c, lab = tmp_path / "c.txt", tmp_path / "l.txt"
-    c.write_text("\n".join(files))
-    lab.write_text("\n".join(labels))
+    c.write_text("\n".join(files), encoding="utf-8")
+    lab.write_text("\n".join(labels), encoding="utf-8")
     return gate.main(str(c), str(lab), ".github/CODEOWNERS", str(base), str(head))
 
 

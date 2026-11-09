@@ -7,6 +7,7 @@ license = "MIT"
 requires-python = ">=3.12"
 dependencies = [
     "jinja2>=3.1",
+    "markdown>=3.6",
     "openpyxl>=3.1",
     "pydantic>=2.7",
     "pyyaml>=6.0",
@@ -37,3 +38,9 @@ select = ["E", "F", "I", "B", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# With PYTHONWARNDEFAULTENCODING=1 (set by `make check`), text I/O that relies on the
+# platform encoding fails on Linux too, not only on Windows (cp1252).
+filterwarnings = [
+    "error::EncodingWarning",
+    "ignore::EncodingWarning:openpyxl",  # its xlsx writer, used only by tests
+]

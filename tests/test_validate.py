@@ -12,8 +12,8 @@ def test_fixture_is_valid(fixture_project):
 
 def test_duplicate_observation_is_rejected(fixture_root):
     csv = fixture_root / "data/observations/test_unemployment.csv"
-    lines = csv.read_text().splitlines()
-    csv.write_text("\n".join(lines + [lines[1]]) + "\n")
+    lines = csv.read_text(encoding="utf-8").splitlines()
+    csv.write_text("\n".join(lines + [lines[1]]) + "\n", encoding="utf-8")
     errors = validate(Project.load(fixture_root))
     assert any("duplicate" in e for e in errors)
 
@@ -27,6 +27,6 @@ def test_checksum_mismatch_is_rejected(fixture_root):
 
 def test_unknown_geography_is_rejected(fixture_root):
     csv = fixture_root / "data/observations/test_unemployment.csv"
-    csv.write_text(csv.read_text().replace("iso:CAN", "iso:XYZ"))
+    csv.write_text(csv.read_text(encoding="utf-8").replace("iso:CAN", "iso:XYZ"), encoding="utf-8")
     errors = validate(Project.load(fixture_root))
     assert any("unknown geography iso:XYZ" in e for e in errors)

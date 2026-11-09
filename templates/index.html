@@ -3,6 +3,20 @@
 <h1>How is the UK doing?</h1>
 <p class="lede">Official public data on UK outcomes over time, compared with similar countries. Every figure links to its source.</p>
 
+{% if briefings %}
+<h2>Questions of the day</h2>
+<ul class="questions">
+{% for b in briefings %}
+  <li><a class="card" href="/briefings/{{ b.id }}/" style="display:block;text-decoration:none;color:inherit">
+    {% if b.candidate %}<span class="draft-tag">Candidate edition{% if b.status == "draft" %} · draft{% endif %}</span>{% endif %}
+    <strong>{{ b.title }}</strong>
+    <div class="meta">{{ b.standfirst }}</div>
+  </a></li>
+{% endfor %}
+</ul>
+<h2>Indicators</h2>
+{% endif %}
+
 {% if cards %}
 <div class="grid-cards">
 {% for c in cards %}

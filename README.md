@@ -52,6 +52,15 @@ docs/                 decisions, data contract, refresh policy
      It is parsed by the same adapter, checksummed and recorded as `retrieval_method: manual`. It does not count as a live check.
 5. Set `status: published` in a PR for Ross to review.
 
+## Briefings
+
+Question-led explainers in `briefings/<id>.md` (front matter plus Markdown). Numbers are template calls such as `{{ num("net_migration") }}`, `{{ change(...).verb }}` or `{{ lines([...]) }}`, never typed figures, so every number is traceable to data.
+
+- Review previews (any non-`main` branch) show a **candidate** built from current data.
+- `uv run python -m ukdash edition <id>` freezes the candidate into `briefings/editions/<id>/<edition>.json`: page, facts and source vintages together. It refuses while any `[TO VERIFY` marker remains.
+- To publish, set `status: published` and `published_edition: <edition>` in a PR. That needs Ross (decision 18). Production shows only that frozen edition, so a data refresh never changes published wording.
+- `uv run python -m ukdash briefing-diff <id>` lists what a new candidate would change.
+
 ## For agents
 
 Read [AGENTS.md](AGENTS.md) first. Work is tracked in GitHub Issues; changes come back as pull requests.

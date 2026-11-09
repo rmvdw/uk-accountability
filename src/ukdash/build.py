@@ -62,6 +62,11 @@ def _period_label(period: str, frequency: str, short: bool = False) -> str:
     return period
 
 
+def period_label(period: str, frequency: str, short: bool = False) -> str:
+    """Public name for _period_label, used by briefings."""
+    return _period_label(period, frequency, short)
+
+
 def _month_offset(period: str, k: int) -> tuple[int, int]:
     y, m = (int(x) for x in period.split("-"))
     n = y * 12 + (m - 1) + k
@@ -140,6 +145,41 @@ def _comparison_basis_note(project: Project, d, comp) -> str | None:
     )
 
 
+def build_briefings(project: Project, out: Path, env, common: dict, include_drafts: bool):
+    """Production renders only frozen, published editions. Previews render candidates."""
+    from . import briefing
+
+    cards = []
+    for b in briefing.load_all(project.root).values():
+        if include_drafts:
+            if not all(project.read_observations(i) for i in b.indicators):
+                continue
+            html, facts, sources = briefing.render_candidate(project, b, period_label)
+            changes = None
+            if b.published_edition:
+                published = briefing.load_edition(project.root, b)
+                changes = briefing.diff_facts(published["facts"], facts)
+            page = {
+                "id": b.id, "title": b.title, "standfirst": b.standfirst, "body_html": html,
+                "sources": sources, "edition": None, "frozen_at": None, "candidate": True,
+                "status": b.status, "changes": changes,
+            }  # fmt: skip
+        elif b.status == "published":
+            ed = briefing.load_edition(project.root, b)
+            page = {**ed, "id": b.id, "candidate": False, "status": b.status, "changes": None}
+        else:
+            continue
+        page["source_lines"] = briefing.source_summary(page["sources"])
+        page["attribution_lines"] = briefing.attribution_lines(page["sources"])
+        target = out / "briefings" / b.id / "index.html"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
+            env.get_template("briefing.html").render(**common, b=page), encoding="utf-8"
+        )
+        cards.append(page)
+    return cards
+
+
 PRODUCTION_BRANCH = "main"
 
 
@@ -157,7 +197,7 @@ def cloudflare_preview_branch() -> str | None:
 
 def build(project: Project, out: Path, include_drafts: bool = False) -> list[str]:
     """Build the site. include_drafts is for review previews only, never production."""
-    errors = validate(project)
+    errors = validate(project, render_candidates=include_drafts)
     if errors:
         return errors
 
@@ -176,14 +216,22 @@ def build(project: Project, out: Path, include_drafts: bool = False) -> list[str
         ctx = indicator_context(project, d.id)
         page = out / d.id / "index.html"
         page.parent.mkdir(parents=True)
-        page.write_text(env.get_template("indicator.html").render(**common, **ctx))
+        page.write_text(
+            env.get_template("indicator.html").render(**common, **ctx), encoding="utf-8"
+        )
         if ctx["has_data"]:  # a draft may not have been fetched yet
             shutil.copy(project.observations_path(d.id), out / d.id / f"{d.id}.csv")
         cards.append(ctx)
 
-    (out / "index.html").write_text(env.get_template("index.html").render(**common, cards=cards))
+    briefing_cards = build_briefings(project, out, env, common, include_drafts)
+    (out / "index.html").write_text(
+        env.get_template("index.html").render(**common, cards=cards, briefings=briefing_cards),
+        encoding="utf-8",
+    )
     (out / "about").mkdir()
-    (out / "about" / "index.html").write_text(env.get_template("about.html").render(**common))
+    (out / "about" / "index.html").write_text(
+        env.get_template("about.html").render(**common), encoding="utf-8"
+    )
     (out / "build-info.json").write_text(
         json.dumps(
             {
@@ -194,9 +242,11 @@ def build(project: Project, out: Path, include_drafts: bool = False) -> list[str
                 or os.environ.get("GITHUB_SHA"),
                 "branch": os.environ.get("CF_PAGES_BRANCH"),
                 "indicators": [d.id for d in published],
+                "briefings": [c["id"] for c in briefing_cards],
             },
             indent=2,
         )
-        + "\n"
+        + "\n",
+        encoding="utf-8",
     )
     return []

@@ -11,8 +11,13 @@ def sha256_file(path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def validate(project: Project) -> list[str]:
-    """Return a list of human-readable problems. Empty means valid."""
+def validate(project: Project, render_candidates: bool = True) -> list[str]:
+    """Return a list of human-readable problems. Empty means valid.
+
+    render_candidates also renders each briefing's candidate from current data. A
+    production build turns it off: it shows only frozen editions, so a candidate that
+    no longer renders must not block it (check and previews still report it).
+    """
     errors: list[str] = []
     geos = project.geographies
 
@@ -75,8 +80,41 @@ def validate(project: Project) -> list[str]:
         elif sha256_file(path) != e.sha256:
             errors.append(f"manifest: checksum mismatch for {e.path}")
 
+    errors.extend(validate_briefings(project, render_candidates))
+
     for ind_id in project.read_checks():
         if ind_id not in project.indicators:
             errors.append(f"checks.json: unknown indicator {ind_id}")
 
+    return errors
+
+
+def validate_briefings(project: Project, render_candidates: bool = True) -> list[str]:
+    from . import briefing
+    from .build import period_label
+
+    errors: list[str] = []
+    try:
+        briefings = briefing.load_all(project.root)
+    except ValueError as exc:
+        return [f"briefing: {exc}"]
+    for b in briefings.values():
+        where = f"briefing {b.id}"
+        unknown = [i for i in b.indicators if i not in project.indicators]
+        if unknown:
+            errors.append(f"{where}: unknown indicators {unknown}")
+            continue
+        if b.status == "published":
+            try:
+                briefing.load_edition(project.root, b)
+            except ValueError as exc:
+                errors.append(f"{where}: {exc}")
+            drafts = [i for i in b.indicators if project.indicators[i].status != "published"]
+            if drafts:
+                errors.append(f"{where}: published briefing uses draft indicators {drafts}")
+        if render_candidates and all(project.read_observations(i) for i in b.indicators):
+            try:
+                briefing.render_candidate(project, b, period_label)
+            except Exception as exc:  # noqa: BLE001 - report any template or data error
+                errors.append(f"{where}: cannot render: {exc}")
     return errors
