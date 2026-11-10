@@ -1,8 +1,8 @@
 ---
 id: immigration
-title: "What do the latest migration figures show, and what do we know about their effects?"
+title: "Immigration: what the figures show"
 status: draft
-standfirst: "How many people move to and from the UK, why they come, and what it costs."
+standfirst: "Four common questions, answered with the latest official figures, then the detail."
 indicators:
   - net_migration
   - immigration_long_term
@@ -17,15 +17,45 @@ indicators:
 ---
 {% set c = change("net_migration") %}
 {% set pk = peak("net_migration") %}
-{% set ci = change("immigration_long_term") %}
-{% set ce = change("emigration_long_term") %}
-<div class="answer" markdown="1">
+{% set sh = survey("bf_tracker_2026_net_direction", "Higher") %}
+{% set sl = survey("bf_tracker_2026_net_direction", "Lower") %}
+{% set cb = change("small_boat_arrivals") %}
+{% set hs = cited("home_office_asylum_support_2025_26") %}
+{% set pp = peers("permanent_immigration_per_1000") %}
+<div class="answer cards" markdown="1">
 
-**The short answer**
+<div class="qcard" markdown="1">
+<p class="q">How has net migration changed?</p>
 
-- **Net migration was {{ num("net_migration") }}** in the {{ when("net_migration") }}. It {{ c.verb }} by {{ c.by }} on a year earlier, and peaked at {{ pk.value }} in the {{ pk.when }}.
-- **Immigration {{ ci.verb }}** to {{ num("immigration_long_term") }}, and emigration {{ ce.verb }} to {{ num("emigration_long_term") }}.
-- **These are provisional.** Recent figures have been revised by up to {{ largest_revision() }}.
+**It {{ c.verb }} by {{ c.pct }}** to {{ num("net_migration") }} in the {{ when("net_migration") }}, from {{ c.from }}. Peak: {{ pk.value }} ({{ pk.when }}).
+
+<p class="belief">Before these figures came out, about half of adults in Great Britain ({{ sh.pct }}) thought it had risen; {{ sl.pct }} thought it had fallen ({{ sh.when }}). <a href="{{ sh.url }}">Survey</a></p>
+<p class="limit">Provisional; recent figures revised by up to {{ largest_revision() }}.</p>
+</div>
+
+<div class="qcard" markdown="1">
+<p class="q">How many people arrived by small boat?</p>
+
+**{{ num("small_boat_arrivals") }}** detected in the {{ when("small_boat_arrivals") }}, {{ cb.pct }} {{ "more" if cb.up else "fewer" }} than a year earlier.
+
+<p class="limit">For scale, ONS estimates {{ num("immigration_long_term") }} people moved to the UK for a year or more in the {{ when("immigration_long_term") }}. Different measures: the first is not a share of the second.</p>
+</div>
+
+<div class="qcard" markdown="1">
+<p class="q">How much does the Home Office spend on asylum support?</p>
+
+**{{ hs.value }}** in {{ hs.period_short }} on asylum support, resettlement and accommodation.
+
+<p class="limit">One department's spending in one year, including resettlement. Not the total cost of asylum or of immigration. <a href="{{ hs.url }}">What it covers</a></p>
+</div>
+
+<div class="qcard" markdown="1">
+<p class="q">How does the UK compare?</p>
+
+**{{ pp.uk }} per 1,000 residents** in {{ pp.when }}: {{ pp.position }} for permanent-type immigration.
+
+<p class="limit">OECD measure, not the ONS one; {{ pp.when }} is the latest year all seven report. <a href="#how-does-the-uk-compare-with-other-g7-countries">Comparison</a></p>
+</div>
 
 </div>
 
@@ -36,6 +66,14 @@ indicators:
 Net migration is immigration (people arriving for at least a year) minus emigration (people leaving for at least a year). Each point covers the previous 12 months. The figures count people, not visas, include British citizens, and are rounded to the nearest 1,000.
 
 By nationality, net migration was {{ num("net_migration", breakdown="non_eu_plus") }} for non-EU+ nationals, {{ num("net_migration", breakdown="british") }} for British nationals and {{ num("net_migration", breakdown="eu_plus") }} for EU+ nationals (negative means more left than arrived).
+
+## What people think and what the figures show
+
+| Question asked | What people said | What the official figures show |
+| --- | --- | --- |
+| Was net migration in 2025 higher or lower than in 2024? | Higher: {{ sh.pct }}<br>Lower: {{ sl.pct }}<br><span class="meta">{{ sh.who }}, {{ sh.when }}</span> | {{ c.verb|capitalize }}: {{ num("net_migration") }} in the {{ when("net_migration") }}, from {{ c.from }} a year earlier (ONS, provisional) |
+
+Survey results record what people said at a date, not facts; see the [full survey record]({{ sh.url }}). We add a row only where a survey question can be matched exactly to an official figure, whichever way the answer points.
 
 ## How does the UK compare with other G7 countries?
 
@@ -121,9 +159,9 @@ Visas count permissions, not people: some go unused and British and Irish citize
 
 These overlap, so never add them: most small-boat arrivals claim asylum, and anyone staying a year or more is also in the migration estimates above.
 
-## What it costs and contributes
+## Effects, evidence and uncertainty
 
-There is no single official figure for "the cost of immigration". Studies ask different questions about different people over different time spans, so their results can't be added or averaged.
+There is no single official figure for "the cost of immigration". The studies below ask different questions about different people over different time spans, so they are not ends of one range and can't be added or averaged. Effects on wages, housing and demand for public services are separate questions; this page does not yet cover them.
 
 <div class="evidence" markdown="1">
 
@@ -152,7 +190,7 @@ There is no single official figure for "the cost of immigration". Studies ask di
 
 *Covers:* that departmental spending category, including resettlement · *Time span:* 1 April 2025 to 31 March 2026
 
-*Finding:* the Home Office recorded £4.18 billion in resource spending on asylum support, resettlement and accommodation in 2025–26. This is not a total cost of immigration or a net fiscal impact.
+*Finding:* the Home Office recorded {{ hs.value }} in resource spending on asylum support, resettlement and accommodation in {{ hs.period }} ([details]({{ hs.url }})). This is not a total cost of immigration or a net fiscal impact.
 
 </div>
 

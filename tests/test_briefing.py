@@ -254,21 +254,24 @@ def test_missing_year_earlier_value_is_never_replaced():
         f.change("asylum_claims")
 
 
-def test_chart_first_layout_keeps_every_block(tmp_path):
+def test_question_led_layout_keeps_every_block(tmp_path):
     p = Project.load()
     b = briefing.load_all(p.root)["immigration"]
     html, _, _ = briefing.render_candidate(p, b, period_label)
     blocks = briefing.split_blocks(html)
-    assert 'class="answer"' in blocks["answer"]
+    assert blocks["answer"].startswith('<div class="answer')
     ids = [s["id"] for s in blocks["sections"]]
     assert "what-these-figures-cant-tell-you" in ids and len(ids) == len(set(ids))
     assert blocks["lead"]["chart"].startswith('<div class="chart-block">')
 
     assert build(p, tmp_path / "prev", include_drafts=True) == []
     page = (tmp_path / "prev/briefings/immigration/index.html").read_text(encoding="utf-8")
-    # The lead chart comes before the stamp and the short answer, and nothing is dropped.
-    assert page.index('class="chart-block"') < page.index('class="stamp"')
-    assert page.index('class="stamp"') < page.index('class="answer"')
+    # Question-led (10 Nov): stamp, then the answer cards, then the lead chart, and
+    # nothing is dropped. Each card has a question, an answer and a limitation.
+    assert page.index('class="stamp"') < page.index('class="answer')
+    assert page.index('class="answer') < page.index('class="chart-block"')
+    assert page.count('class="qcard"') == 4 and page.count('class="limit"') == 4
+    assert 'href="/evidence/bf_tracker_2026_net_direction/"' in page
     assert blocks["answer"] in page
     for s in blocks["sections"]:
         assert f'id="{s["id"]}"' in page
@@ -544,3 +547,36 @@ def test_archive_holds_exactly_the_approved_editions(fixture_root, tmp_path, mon
         assert ids["B"] not in page and ids["D"] not in page
     a = (site / "editions" / ids["A"] / "index.html").read_text(encoding="utf-8")
     assert "This is an earlier edition" in a and f"/editions/{ids['C']}/" in a
+
+
+def test_evidence_records_are_complete_and_rendered(tmp_path):
+    from ukdash import evidence
+
+    recs = evidence.load_all(Project.load().root)
+    s = recs["bf_tracker_2026_net_direction"]
+    assert s["population"].startswith("Adults aged 18 and over in Great Britain")
+    assert {r["answer"]: r["percent"] for r in s["results"]}["Higher"] == 49
+    assert evidence.money(4181193, "GBP thousand") == "£4.18 billion"
+    assert build(Project.load(), tmp_path / "prev", include_drafts=True) == []
+    page = (tmp_path / "prev/evidence/bf_tracker_2026_net_direction/index.html").read_text(
+        encoding="utf-8"
+    )
+    for field in ("3,003 respondents", "2026-03-19 to 2026-03-30", "Number Cruncher Politics",
+                  "not reported", "Reuse"):  # fmt: skip
+        assert field in page
+    fig = (tmp_path / "prev/evidence/home_office_asylum_support_2025_26/index.html").read_text(
+        encoding="utf-8"
+    )
+    assert "£4.18 billion" in fig and "4,181,193 (GBP thousand)" in fig and "not the total" in fig
+
+
+def test_survey_record_rejects_missing_fields(fixture_root):
+    from ukdash import evidence
+
+    (fixture_root / "evidence").mkdir()
+    (fixture_root / "evidence" / "x.yml").write_text(
+        "id: x\nkind: survey\ntitle: t\nsource: s\nsource_url: u\nchecked: c\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="missing"):
+        evidence.load_all(fixture_root)

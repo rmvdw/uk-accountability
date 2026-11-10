@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{# One evidence record (decision 20): every field, so a reader can judge it. #}
+{% block title %}{{ r.title }} · UK Dashboard{% endblock %}
+{% block main %}
+<p class="draft-tag">{{ "Survey result" if r.kind == "survey" else "Cited figure" }}</p>
+<h1>{{ r.title }}</h1>
+{% if r.kind == "survey" %}
+<p class="lede">What people said in a survey at the time. It records opinion, not fact.</p>
+<p><strong>Question:</strong> "{{ r.question }}"</p>
+<table>
+  <thead><tr><th>Answer</th><th class="num">Share of respondents</th></tr></thead>
+  <tbody>{% for x in r.results %}<tr><td>{{ x.answer }}</td><td class="num">{% if x.percent is not none %}{{ x.percent }}%{% else %}not reported{% endif %}</td></tr>{% if x.get('note') %}<tr><td colspan="2" class="meta">{{ x.note }}</td></tr>{% endif %}{% endfor %}</tbody>
+</table>
+<table>
+  <tbody>
+    <tr><th>Who was asked</th><td>{{ r.population }}</td></tr>
+    <tr><th>Sample and base</th><td>{{ "{:,}".format(r.sample_size) }} respondents; base: {{ r.question_base }}</td></tr>
+    <tr><th>Fieldwork</th><td>{{ r.fieldwork_start }} to {{ r.fieldwork_end }} ({{ r.mode }})</td></tr>
+    <tr><th>Pollster</th><td>{{ r.pollster }}</td></tr>
+    <tr><th>Commissioned by</th><td>{{ r.commissioner }}{% if r.get('partners') %}; {{ r.partners }}{% endif %}</td></tr>
+    <tr><th>Published</th><td>{{ r.published }}</td></tr>
+    <tr><th>Weighting</th><td>{{ r.weighting }}</td></tr>
+    <tr><th>Statistic</th><td>{{ r.statistic }}</td></tr>
+    <tr><th>"Don't know"</th><td>{{ r.dont_know }}</td></tr>
+    {% if r.get('context') %}<tr><th>Context</th><td>{{ r.context }}</td></tr>{% endif %}
+    <tr><th>Source</th><td><a href="{{ r.source_url }}">{{ r.source }}</a>, {{ r.pages }}</td></tr>
+    <tr><th>Reuse</th><td>{{ r.reuse }}</td></tr>
+    <tr><th>Checked</th><td>{{ r.checked }}</td></tr>
+  </tbody>
+</table>
+{% else %}
+<p class="headline">{{ r.display }}</p>
+<table>
+  <tbody>
+    <tr><th>Period</th><td>{{ r.period }}</td></tr>
+    <tr><th>What it covers</th><td>{{ r.scope }}</td></tr>
+    <tr><th>Status</th><td>{{ r.status }}</td></tr>
+    <tr><th>Exact value</th><td>{{ "{:,}".format(r.value) }} ({{ r.unit }})</td></tr>
+    <tr><th>Source</th><td><a href="{{ r.source_url }}">{{ r.source }}</a>, {{ r.location }}</td></tr>
+    <tr><th>Licence</th><td>{{ r.licence }}</td></tr>
+    <tr><th>Checked</th><td>{{ r.checked }}</td></tr>
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

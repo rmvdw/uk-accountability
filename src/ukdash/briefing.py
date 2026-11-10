@@ -131,6 +131,12 @@ def latest_entries(project: Project) -> dict:
     return out
 
 
+def _month_year(d) -> str:
+    months = ("January February March April May June July August September October "
+              "November December").split()  # fmt: skip
+    return f"{months[d.month - 1]} {d.year}"
+
+
 def _pub_order(label: str) -> tuple[int, int]:
     """ONS edition labels such as 'Nov 25' in date order."""
     mon, yy = label.split()
@@ -390,6 +396,53 @@ class Facts:
             "revised": revised,
         }
 
+    # --- evidence records (decision 20) ------------------------------------------
+
+    def _evidence(self, rid: str, kind: str) -> dict:
+        from . import evidence
+
+        if not hasattr(self, "_ev"):
+            self._ev = evidence.load_all(self.p.root)
+        rec = self._ev.get(rid)
+        if rec is None or rec["kind"] != kind:
+            raise ValueError(f"no {kind} evidence record {rid!r}")
+        return rec
+
+    def survey(self, rid: str, answer: str) -> dict:
+        """One answer from a survey record: what people said, when, and who was asked."""
+        rec = self._evidence(rid, "survey")
+        r = next((r for r in rec["results"] if r["answer"] == answer), None)
+        if r is None or r["percent"] is None:
+            raise ValueError(f"{rid}: no reported percentage for {answer!r}")
+        self.used[f"evidence.{rid}.{answer}"] = {
+            "indicator": f"evidence:{rid}", "breakdown": answer,
+            "period": f"{rec['fieldwork_start']}/{rec['fieldwork_end']}",
+            "value": r["percent"], "status": "survey",
+            "geography": rec["population"], "unit": "% of respondents",
+            "publisher": rec["pollster"] + " for " + rec["commissioner"],
+        }  # fmt: skip
+        return {
+            "pct": f"{r['percent']}%",
+            "when": _month_year(rec["fieldwork_end"]),
+            "who": rec["population"],
+            "by": f"{rec['pollster']} for {rec['commissioner']}",
+            "url": f"/evidence/{rid}/",
+        }
+
+    def cited(self, rid: str) -> dict:
+        """A single figure from a document, with its exact scope."""
+        from .evidence import money
+
+        rec = self._evidence(rid, "cited_figure")
+        self.used[f"evidence.{rid}"] = {
+            "indicator": f"evidence:{rid}", "breakdown": TOTAL, "period": rec["period"],
+            "value": rec["value"], "status": rec["status"], "geography": UK,
+            "unit": rec["unit"], "publisher": rec["source"],
+        }  # fmt: skip
+        return {"value": money(rec["value"], rec["unit"]), "period": rec["period"],
+                "period_short": rec.get("period_short") or rec["period"],
+                "url": f"/evidence/{rid}/"}  # fmt: skip
+
     def peers(self, ind: str) -> dict:
         """The indicator's peer group at the latest year every member has (never mixed
         years): a bar chart with the UK highlighted, the UK value and its position."""
@@ -520,12 +573,17 @@ def render_candidate(project: Project, b: Briefing, period_label, extra: dict | 
         "peers": facts.peers,
         "revisions": facts.revisions,
         "release_changes": facts.release_changes,
+        "survey": facts.survey,
+        "cited": facts.cited,
         "largest_revision": facts.largest_revision,
         **(extra or {}),
     }
     text = env.from_string(b.body).render(**ctx)
     html = md.markdown(text, extensions=["tables", "md_in_html"])
     for fact in facts.used.values():  # frozen with the edition, so downloads match it
+        if fact["indicator"].startswith("evidence:"):
+            fact.setdefault("indicator_title", fact["indicator"])
+            continue
         d = project.indicators.get(fact["indicator"])
         if d:
             fact.setdefault("geography", UK)
@@ -575,9 +633,22 @@ def slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
-ANSWER = re.compile(r'<div class="answer">.*?</div>', re.S)
 H2 = re.compile(r"<h2>(.*?)</h2>", re.S)
 CHART_BLOCK = re.compile(r'<div class="chart-block">.*?</svg>\s*</div>', re.S)
+
+
+def _balanced_div(html: str, opening: str) -> str:
+    """The whole <div> starting with `opening`, including nested divs (answer cards)."""
+    start = html.find(opening)
+    if start < 0:
+        return ""
+    depth, i = 0, start
+    for m in re.finditer(r"<div\b|</div>", html[start:]):
+        depth += 1 if m.group(0) == "<div" else -1
+        if depth == 0:
+            i = start + m.end()
+            return html[start:i]
+    raise ValueError(f"unclosed {opening}")
 
 
 def split_blocks(html: str) -> dict:
@@ -585,8 +656,7 @@ def split_blocks(html: str) -> dict:
     differently without copying any wording or numbers:
     answer (the short-answer box), sections [{id, title, html}] split at each <h2>,
     and lead (the first section with a chart, for the visual-led layout)."""
-    m = ANSWER.search(html)
-    answer = m.group(0) if m else ""
+    answer = _balanced_div(html, '<div class="answer')
     rest = html.replace(answer, "", 1) if answer else html
     parts = H2.split(rest)
     sections = []

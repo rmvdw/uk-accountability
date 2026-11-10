@@ -272,6 +272,14 @@ def build(project: Project, out: Path, include_drafts: bool = False) -> list[str
         cards.append(ctx)
 
     briefing_cards = build_briefings(project, out, env, common, include_drafts)
+    from . import evidence
+
+    for rid, rec in evidence.load_all(project.root).items():
+        r = {**rec}
+        if rec["kind"] == "cited_figure":
+            r["display"] = evidence.money(rec["value"], rec["unit"])
+        _write(out / "evidence" / rid / "index.html",
+               env.get_template("evidence.html").render(**common, r=r))  # fmt: skip
     (out / "index.html").write_text(
         env.get_template("index.html").render(**common, cards=cards, briefings=briefing_cards),
         encoding="utf-8",
