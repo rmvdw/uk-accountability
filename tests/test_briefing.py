@@ -272,6 +272,12 @@ def test_question_led_layout_keeps_every_block(tmp_path):
     assert page.index('class="answer') < page.index('class="chart-block"')
     assert page.count('class="qcard"') == 5 and page.count('class="limit"') == 5
     assert 'class="hook"' in page
+    # GPT's layout (10 Nov): first answer, then the chart, then the other cards.
+    assert page.index('class="chart-block"') < page.index('class="cards more"')
+    assert page.index('class="hook"') < page.index('class="chart-block"')
+    # Evidence records are listed with the sources, and the survey is dated up front.
+    assert 'href="evidence/bf_tracker_2026_net_direction/">record</a>' in page
+    assert "In a March 2026 survey" in page
     assert 'href="evidence/bf_tracker_2026_net_direction/"' in page  # relative: stays with page
     assert blocks["answer"] in page
     for s in blocks["sections"]:
@@ -631,3 +637,15 @@ def test_edition_keeps_the_evidence_record_it_was_published_with(fixture_root, t
             encoding="utf-8"
         )
         assert "(Online)" in page and "corrected later" not in page
+
+
+def test_gdp_share_derivation_is_on_the_evidence_page(tmp_path):
+    assert build(Project.load(), tmp_path / "prev", include_drafts=True) == []
+    page = (
+        tmp_path
+        / "prev/briefings/immigration/evidence/home_office_asylum_support_2025_26/index.html"
+    ).read_text(encoding="utf-8")
+    assert "As a share of GDP (our calculation)" in page
+    for q in ("2025-Q2", "2025-Q3", "2025-Q4", "2026-Q1"):
+        assert q in page
+    assert "release of 30 September 2026" in page and "No missing quarter is imputed" in page

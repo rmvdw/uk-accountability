@@ -84,7 +84,7 @@ ul.caveats li { margin-bottom: 6px; }
 .questions { list-style: none; padding: 0; }
 .questions li { margin: 0 0 12px; }
 .lead-visual h2 { margin-top: 20px; }
-.cards { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+.cards { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   background: none; border: 0; padding: 0; margin: 12px 0 8px; }
 .cards .hook { grid-column: 1 / -1; font-size: 1.15rem; font-weight: 600; line-height: 1.4;
   margin: 0 0 4px; }
@@ -110,7 +110,7 @@ footer { color: var(--muted); font-size: 0.85rem; padding: 40px 16px; }
 {% block main %}{% endblock %}
 </main>
 <footer>
-  Built from official public data. Site built <time datetime="{{ built_at }}">{{ built_at[:10] }}</time>.
+  Built from official statistics, with labelled survey evidence where shown. Site built <time datetime="{{ built_at }}">{{ built_at[:10] }}</time>.
   <a href="https://github.com/rmvdw/uk-accountability">Source code and data</a>.
 </footer>
 <script>

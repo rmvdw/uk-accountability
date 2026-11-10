@@ -25,9 +25,7 @@ results:
     percent: null
     note: The report says "one in five" without an exact figure.
 statistic: Weighted percentage of all respondents
-dont_know: >-
-  Not reported in the report text. The reported answers sum to about 85%, so the
-  remainder is probably "don't know", but the report does not say so.
+dont_know: Not reported in the accessible report.
 weighting: Weighted by age, gender, region and educational attainment
 context: >-
   Fieldwork took place before ONS published its first estimate of net migration for

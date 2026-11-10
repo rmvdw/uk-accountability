@@ -23,6 +23,18 @@ URL = "https://www.ons.gov.uk/economy/grossdomesticproductgdp/timeseries/{cdid}/
 UK = "iso:GBR"
 
 
+def release_label(stamp: str | None) -> str | None:
+    """ONS gives the release time in UTC ('2026-09-29T23:00:00.000Z' is midnight on
+    30 September in London). Label it with the publisher's calendar date."""
+    if not stamp:
+        return None
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    t = datetime.fromisoformat(stamp.replace("Z", "+00:00")).astimezone(ZoneInfo("Europe/London"))
+    return f"release of {t.day} {t:%B} {t.year}"
+
+
 @register
 class OnsTimeseriesAdapter(Adapter):
     name = "ons_timeseries"
@@ -33,7 +45,7 @@ class OnsTimeseriesAdapter(Adapter):
         raw = http.get(url)
         meta = json.loads(raw.decode("utf-8")).get("description", {})
         return Fetched(raw=raw, filename="series.json", request=url,
-                       vintage=meta.get("releaseDate", "")[:10] or None)  # fmt: skip
+                       vintage=release_label(meta.get("releaseDate")))  # fmt: skip
 
     def parse(
         self, d: IndicatorDefinition, raw: bytes, geographies: dict[str, Geography]

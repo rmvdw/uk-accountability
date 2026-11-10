@@ -58,7 +58,8 @@ def main():
     now = datetime.now(UTC).replace(microsecond=0)
     with tempfile.TemporaryDirectory(prefix="ukdash-rehearsal-") as tmp:
         root = Path(tmp)
-        for folder in ("data", "indicators", "config", "briefings"):
+        # Everything a build reads: briefings cite evidence records (surveys, accounts).
+        for folder in ("data", "indicators", "config", "briefings", "evidence", "corrections"):
             source = REPO_ROOT / folder
             if source.exists():
                 shutil.copytree(source, root / folder)
@@ -89,8 +90,10 @@ def main():
             assert record.last_attempt_result == "failed"
         recovered = refresh(root, adapters=adapters, only=ids, now=now + timedelta(seconds=4))
         assert recovered.ok and release_bytes(root) == before
-        assert not build(Project.load(root), root / "site")
-        assert not build(Project.load(root), root / "preview", include_drafts=True)
+        errors = build(Project.load(root), root / "site")
+        assert not errors, f"production build failed: {errors}"
+        errors = build(Project.load(root), root / "preview", include_drafts=True)
+        assert not errors, f"preview build failed: {errors}"
         info = json.loads((root / "site/build-info.json").read_text(encoding="utf-8"))
         assert info["preview_with_drafts"] is False
         assert info["indicators"] == [d.id for d in Project.load(root).published()]

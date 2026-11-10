@@ -41,5 +41,15 @@
     <tr><th>Checked</th><td>{{ r.checked }}</td></tr>
   </tbody>
 </table>
+{% if r.get("share_of_gdp") %}{% set g = r.share_of_gdp %}
+<h2>As a share of GDP (our calculation)</h2>
+<p><strong>{{ g.shown }}</strong> = £{{ "{:,.1f}".format(g.numerator_m) }} million ÷ £{{ "{:,.0f}".format(g.gdp_total_m) }} million, × 100.</p>
+<table>
+  <thead><tr><th>GDP quarter</th><th class="num">£ million</th></tr></thead>
+  <tbody>{% for q in g.quarters %}<tr><td>{{ q.period }}</td><td class="num">{{ "{:,.0f}".format(q.value) }}</td></tr>{% endfor %}
+  <tr><th>Total ({{ g.aggregation }})</th><th class="num">{{ "{:,.0f}".format(g.gdp_total_m) }}</th></tr></tbody>
+</table>
+<p class="meta">Denominator: <a href="{{ g.denominator_url }}">{{ g.denominator }}</a>{% if g.release %}, {{ g.release }}{% endif %}. ONS GDP is nominal and seasonally adjusted. It is an estimate and is revised, so the share can change slightly in later releases. No missing quarter is imputed.</p>
+{% endif %}
 {% endif %}
 {% endblock %}

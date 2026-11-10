@@ -157,8 +157,30 @@ def _finish_page(briefing, page: dict) -> dict:
         for name in s["publisher"].split(" and "):
             if name not in pubs:
                 pubs.append(name)
+    # Evidence records the page cites (surveys, accounts), from its own facts, so a
+    # frozen edition lists the records it was published with.
+    ev = {f["record"]["id"]: f["record"] for f in (page.get("facts") or {}).values()
+          if f.get("record")}  # fmt: skip
+    page["evidence_sources"] = list(ev.values())
+    for r in ev.values():
+        name = (
+            r["commissioner"] + " (survey)"
+            if r["kind"] == "survey"
+            else r["source"].split(" annual")[0]
+        )
+        if name not in pubs:
+            pubs.append(name)
     page["publishers"] = pubs
-    page["attribution_lines"] = briefing.attribution_lines(page["sources"])
+    lines = briefing.attribution_lines(page["sources"])
+    for r in ev.values():
+        if r["kind"] == "survey":
+            terms = r["reuse"].split(".")[0]
+            lines.append(
+                f"Survey: {r['pollster']} for {r['commissioner']}, {r['source']} ({terms})"
+            )
+        else:
+            lines.append(f"{r['source']} ({r['licence']})")
+    page["attribution_lines"] = lines
     page["blocks"] = briefing.split_blocks(page["body_html"])
     return page
 
@@ -231,6 +253,7 @@ def build_briefings(project: Project, out: Path, env, common: dict, include_draf
                 changes = briefing.diff_facts(published["facts"], facts)
             page = {
                 "id": b.id, "title": b.title, "standfirst": b.standfirst, "body_html": html,
+                "facts": facts,
                 "sources": sources, "edition": None, "frozen_at": None, "candidate": True,
                 "status": b.status, "changes": changes, "edition_url": None,
                 "download": "candidate-figures.csv", "superseded_by": None,

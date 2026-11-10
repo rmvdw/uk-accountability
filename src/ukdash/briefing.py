@@ -476,7 +476,9 @@ class Facts:
         from the cited record (nominal pounds, its financial year); denominator ONS GDP
         at current market prices (YBHA, seasonally adjusted, nominal), summed over the
         four quarters April to March of that year, from the saved release. All four
-        quarters must be present; nothing is estimated or carried forward.
+        quarters must be present: no missing quarter is imputed. (ONS GDP is itself an
+        estimate and is revised; the derivation, inputs and release are frozen with the
+        edition and shown on the evidence page.)
         """
         from .evidence import money
 
@@ -487,8 +489,24 @@ class Facts:
         scale = {"GBP thousand": 1e-3, "GBP million": 1.0}
         if rec["unit"] not in scale:
             raise ValueError(f"{rid}: cannot express {rec['unit']} as a share of GDP")
-        share = 100 * rec["value"] * scale[rec["unit"]] / gdp_m
+        numerator_m = rec["value"] * scale[rec["unit"]]
+        share = 100 * numerator_m / gdp_m
         self.cited(rid)  # record the numerator too
+        entry = latest_entries(self.p).get(gdp)
+        d = self.p.indicators[gdp]
+        # The derivation travels with the cited record, so the evidence page (and every
+        # frozen edition) shows the denominator, aggregation, formula and caveat.
+        self.used[f"evidence.{rid}"]["record"]["share_of_gdp"] = {
+            "quarters": [{"period": q, "value": self.obs(gdp, q).value} for q in quarters],
+            "gdp_total_m": gdp_m,
+            "numerator_m": numerator_m,
+            "share_pct": share,
+            "shown": f"{share:.2f}%" if share < 1 else f"{share:.1f}%",
+            "denominator": d.source.dataset,
+            "denominator_url": d.source.url,
+            "release": entry.vintage if entry else None,
+            "aggregation": f"Sum of the four quarters April {fy} to March {fy + 1}",
+        }  # fmt: skip
         return {
             "pct": f"{share:.2f}%" if share < 1 else f"{share:.1f}%",
             "amount": money(rec["value"], rec["unit"]),

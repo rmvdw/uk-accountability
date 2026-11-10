@@ -10,6 +10,13 @@
       <td>{{ (s.retrieved or "")[:10] }}</td>
     </tr>
   {% endfor %}
+  {% for r in b.evidence_sources %}
+    <tr>
+      <td><a href="{{ r.source_url }}">{{ r.source }}</a>: {{ "survey by " ~ r.pollster ~ " for " ~ r.commissioner if r.kind == "survey" else r.location }} (<a href="evidence/{{ r.id }}/">record</a>)</td>
+      <td>{{ "fieldwork " ~ r.fieldwork_start ~ " to " ~ r.fieldwork_end if r.kind == "survey" else r.period }}</td>
+      <td></td>
+    </tr>
+  {% endfor %}
   </tbody>
 </table>
 <p class="meta">{{ b.attribution_lines|join("; ") }}.</p>

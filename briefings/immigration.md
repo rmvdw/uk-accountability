@@ -28,15 +28,19 @@ indicators:
 {% set vs = shares("visas_granted", {"study": "study", "work": "work", "family": "family"}) %}
 <div class="answer cards" markdown="1">
 
-<p class="hook">About half of adults in Great Britain ({{ sh.pct }}) thought net migration in 2025 was higher than in 2024, and {{ sl.pct }} thought it was lower. It was {{ yr.word }}: {{ yr.value }}, {{ "up" if yr.word == "higher" else "down" }} from {{ yr.from }}. <a href="{{ sh.url }}">Survey</a></p>
+<p class="hook">In a {{ sh.when }} survey, before the figures came out, about half of adults in Great Britain ({{ sh.pct }}) thought net migration in 2025 was higher than in 2024, and {{ sl.pct }} thought it was lower. It was {{ yr.word }}: {{ yr.value }}, {{ "up" if yr.word == "higher" else "down" }} from {{ yr.from }}. <a href="{{ sh.url }}">Survey</a></p>
 
 <div class="qcard" markdown="1">
 <p class="q">How has net migration changed?</p>
 
 **{{ "Up" if c.up else "Down" }} {{ c.pct }} in a year**: {{ num("net_migration") }} in the {{ when("net_migration") }}. Peak: {{ pk.value }} ({{ pk.when }}).
 
-<p class="limit">Provisional; revised by up to {{ largest_revision() }} recently. Survey taken {{ sh.when }}, before these figures.</p>
+<p class="limit">Provisional; revised by up to {{ largest_revision() }} recently.</p>
 </div>
+
+</div>
+
+<div class="cards more" markdown="1">
 
 <div class="qcard" markdown="1">
 <p class="q">Why do people come?</p>
