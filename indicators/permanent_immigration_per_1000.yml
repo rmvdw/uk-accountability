@@ -1,0 +1,58 @@
+# DRAFT for the immigration briefing's peer comparison (#21, #13). Definition, peers and
+# public wording need Ross's approval before publication.
+id: permanent_immigration_per_1000
+title: Permanent-type immigration (OECD) per 1,000 residents
+status: draft
+what_it_measures: >-
+  How many foreign nationals were granted residence expected to last (permanently,
+  or on permits that can be renewed indefinitely) in a year, for every 1,000 people
+  living in the country. It includes people already living there who move from a
+  temporary to a long-term status. The OECD standardises national figures so
+  countries can be compared.
+why_it_matters: >-
+  It shows how large immigration is relative to each country's size, using one
+  definition for every country.
+unit: per 1,000 residents
+decimals: 1
+frequency: A
+measure_type: rate
+direction: neutral
+coverage:
+  population: >-
+    Foreign nationals granted residence expected to be long term, by work, family,
+    accompanying family, humanitarian, free movement and other routes, including
+    changes from a temporary status. Excludes temporary migration such as most
+    students and seasonal workers.
+  seasonal_adjustment: Not seasonally adjusted; each figure covers a calendar year.
+  geography_note: >-
+    United Kingdom as a whole. Other countries are national totals. Population is the
+    World Bank's mid-year estimate for the same year.
+source:
+  publisher: OECD and World Bank
+  dataset: Standardised inflows of permanent-type migrants (OECD); Population, total (World Bank)
+  url: https://www.oecd.org/en/data/indicators/permanent-immigrant-inflows.html
+  licence: OECD Terms and Conditions; World Bank population CC BY 4.0
+  licence_url: https://www.oecd.org/en/about/terms-conditions.html
+  attribution: >-
+    Source: OECD, Standardised inflows of permanent-type migrants, OECD Data Explorer;
+    World Bank, Population, total (SP.POP.TOTL), CC BY 4.0
+  adapter: per_1000
+  query:
+    numerator: oecd_permanent
+    countries: [GBR, CAN, FRA, DEU, ITA, JPN, USA]
+    start_year: 2015
+peers:
+  group: g7
+  exclusions: {}
+caveats:
+  - >-
+    This is the OECD's harmonised measure, not the ONS long-term migration estimate.
+    The two differ in who is counted (foreign nationals only, including status
+    changes) and when (at the grant of long-term residence), so they should not be
+    compared directly.
+  - >-
+    Some recent figures are OECD estimates or provisional, and are revised later.
+  - >-
+    The latest year every country has is usually one or two years behind the UK's
+    own figures.
+check_cadence_days: 120

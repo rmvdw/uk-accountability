@@ -49,7 +49,12 @@ def test_real_immigration_briefing_renders_with_live_data():
     latest = max(o.period for o in p.read_observations("net_migration"))
     assert f"net_migration.total.{latest}" in facts
     assert "TO VERIFY" not in html  # fiscal cards verified on #13 (Codex, 2026-11-09)
-    assert {s["publisher"] for s in sources} == {"Office for National Statistics", "Home Office"}
+    assert {s["publisher"] for s in sources} == {
+        "Office for National Statistics",
+        "Home Office",
+        "OECD and World Bank",
+        "UNHCR and World Bank",
+    }
 
 
 def test_front_matter_rules(fixture_root):
@@ -301,3 +306,53 @@ def test_real_briefing_page_has_reader_elements(tmp_path):
     page = (tmp_path / "prev/briefings/immigration/index.html").read_text(encoding="utf-8")
     for el in READER_ELEMENTS:
         assert el in page
+
+
+def test_peers_use_one_common_year_and_record_every_country():
+    p = Project.load()
+    f = briefing.Facts(p, ["permanent_immigration_per_1000"], period_label)
+    pp = f.peers("permanent_immigration_per_1000")
+    years = {v["period"] for v in f.used.values()}
+    assert years == {"2024"} and pp["when"] == "2024"
+    assert len(f.used) == 7 and "iso:GBR" in "".join(f.used)
+    assert pp["position"].endswith("of the 7 G7 countries")
+
+
+def test_peer_facts_keep_source_status_and_skip_incomplete_years():
+    # Relative to whatever data/ holds, so a routine refresh can't break it.
+    p = Project.load()
+    ind = "asylum_applications_per_1000"
+    f = briefing.Facts(p, [ind, "permanent_immigration_per_1000"], period_label)
+    rows = p.read_observations(ind)
+    g7 = p.peer_groups["g7"].members
+    complete = [
+        y for y in {o.period for o in rows}
+        if all(any(o.geography_id == g and o.period == y and o.value is not None for o in rows)
+               for g in g7)
+    ]  # fmt: skip
+    assert f.peers(ind)["when"] == max(complete)
+    f.peers("permanent_immigration_per_1000")
+    for key, fact in f.used.items():
+        obs = next(
+            o for o in p.read_observations(fact["indicator"])
+            if o.geography_id == fact["geography"] and o.period == fact["period"]
+        )  # fmt: skip
+        assert fact["status"] == obs.status, key
+
+
+def test_edition_frozen_before_files_field_keeps_its_file_links(fixture_root, tmp_path):
+    import json as _json
+
+    p = write_brief(fixture_root)
+    b = briefing.load_all(fixture_root)["test_brief"]
+    path = briefing.freeze(fixture_root, p, b, period_label)
+    data = _json.loads(path.read_text(encoding="utf-8"))
+    for s in data["sources"]:
+        s.pop("files", None)  # the schema of editions frozen before "files" existed
+        s["file"] = "https://example.org/test-fixture/raw.csv?a=1&b=2"  # fixture URL
+    path.write_text(_json.dumps(data), encoding="utf-8")
+    p = write_brief(fixture_root, status="published", extra=f"published_edition: {path.stem}\n")
+    assert build(p, tmp_path / "prod") == []
+    page = (tmp_path / "prod/briefings/test_brief/index.html").read_text(encoding="utf-8")
+    raw = data["sources"][0]["file"]
+    assert f'<a href="{raw.replace("&", "&amp;")}">file</a>' in page

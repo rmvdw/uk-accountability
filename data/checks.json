@@ -1,4 +1,10 @@
 {
+  "asylum_applications_per_1000": {
+    "last_attempt_at": "2026-11-09T20:23:03Z",
+    "last_attempt_result": "ok",
+    "last_successful_check_at": "2026-11-09T20:23:03Z",
+    "last_error": null
+  },
   "asylum_awaiting_decision": {
     "last_attempt_at": "2026-11-09T17:27:23Z",
     "last_attempt_result": "unchanged",
@@ -33,6 +39,12 @@
     "last_attempt_at": "2026-11-09T17:27:23Z",
     "last_attempt_result": "unchanged",
     "last_successful_check_at": "2026-11-09T17:27:23Z",
+    "last_error": null
+  },
+  "permanent_immigration_per_1000": {
+    "last_attempt_at": "2026-11-09T20:23:03Z",
+    "last_attempt_result": "ok",
+    "last_successful_check_at": "2026-11-09T20:23:03Z",
     "last_error": null
   },
   "small_boat_arrivals": {
