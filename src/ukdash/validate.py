@@ -107,7 +107,9 @@ def validate_briefings(project: Project, render_candidates: bool = True) -> list
         if b.status == "published":
             try:
                 briefing.load_edition(project.root, b)
-            except ValueError as exc:
+                for ed in b.earlier_editions:
+                    briefing.read_edition(project.root, b.id, ed)
+            except (ValueError, FileNotFoundError) as exc:
                 errors.append(f"{where}: {exc}")
             drafts = [i for i in b.indicators if project.indicators[i].status != "published"]
             if drafts:

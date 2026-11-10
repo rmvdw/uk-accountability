@@ -431,7 +431,11 @@ def test_two_editions_older_one_stays_retrievable(fixture_root, tmp_path, monkey
     Clock.t = datetime(2026, 11, 26, 9, 45, tzinfo=UTC)
     p = Project.load(fixture_root)
     second = briefing.freeze(fixture_root, p, b, period_label).stem
-    p = write_brief(fixture_root, status="published", extra=f"published_edition: {second}\n")
+    p = write_brief(
+        fixture_root,
+        status="published",
+        extra=f"published_edition: {second}\nearlier_editions: [{first}]\n",
+    )
     out = tmp_path / "two"
     assert build(p, out) == []
 
@@ -453,3 +457,48 @@ def test_two_editions_older_one_stays_retrievable(fixture_root, tmp_path, monkey
     p = write_brief(fixture_root, status="published", extra=f"published_edition: {first}\n")
     assert build(p, tmp_path / "three") == []
     assert not (tmp_path / "three/briefings/test_brief/editions" / second).exists()
+
+
+def test_frozen_but_never_approved_edition_is_never_public(fixture_root, tmp_path, monkeypatch):
+    """Codex P1 on #31: an older frozen candidate that was rejected must not appear in
+    production just because a later edition was published."""
+    from datetime import UTC, datetime
+
+    class Clock(datetime):
+        t = datetime(2026, 5, 21, 9, 30, tzinfo=UTC)
+
+        @classmethod
+        def now(cls, tz=None):
+            return cls.t
+
+    monkeypatch.setattr(briefing, "datetime", Clock)
+    p = write_brief(fixture_root)
+    b = briefing.load_all(fixture_root)["test_brief"]
+    rejected = briefing.freeze(fixture_root, p, b, period_label).stem  # never approved
+    set_latest_value(fixture_root, "4.0")
+    Clock.t = datetime(2026, 5, 22, 9, 30, tzinfo=UTC)
+    approved = briefing.freeze(fixture_root, Project.load(fixture_root), b, period_label).stem
+    p = write_brief(fixture_root, status="published", extra=f"published_edition: {approved}\n")
+    out = tmp_path / "prod"
+    assert build(p, out) == []
+    site = out / "briefings/test_brief"
+    assert not (site / "editions" / rejected).exists()
+    assert rejected not in (site / "index.html").read_text(encoding="utf-8")
+    assert (site / "editions" / approved / "figures.csv").exists()
+    # In a preview the rejected file is visible for review, never labelled as published.
+    assert build(p, tmp_path / "prev", include_drafts=True) == []
+    prev = (tmp_path / "prev/briefings/test_brief/editions" / rejected / "index.html").read_text(
+        encoding="utf-8"
+    )
+    assert "not approved for publication" in prev and "reviewed before publication" not in prev
+    assert "This is an earlier edition" not in prev
+
+
+def test_earlier_editions_must_be_older_and_ordered(fixture_root):
+    write_brief(
+        fixture_root,
+        status="published",
+        extra="published_edition: 2026-05-21-0930\nearlier_editions: [2026-06-01-0000]\n",
+    )
+    with pytest.raises(ValueError, match="earlier_editions"):
+        briefing.load_all(fixture_root)

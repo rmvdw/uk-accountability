@@ -8,7 +8,8 @@ Editions keep data and wording together (strategy review 4c):
   previews show candidates.
 - `ukdash edition <id>` freezes a candidate into `briefings/editions/<id>/<edition>.json`:
   the rendered page, every fact used, and the source vintages. Publishing means setting
-  `status: published` and `published_edition: <edition>` in the front matter, which
+  `status: published` and `published_edition: <edition>` (plus `earlier_editions: [...]`,
+  every edition approved before it) in the front matter, which
   needs Ross (decision 18). Production renders only the frozen edition, so a data
   refresh never changes published wording; it produces a new candidate for review.
 """
@@ -47,7 +48,18 @@ class Briefing:
     body: str
     path: Path
     published_edition: str | None = None
+    # Editions Ross approved and published before the current one, oldest first. Only
+    # these, plus published_edition, are ever public: a frozen file proves nothing
+    # about approval (a candidate can be frozen and then rejected).
+    earlier_editions: list[str] = field(default_factory=list)
     front: dict = field(default_factory=dict)
+
+    @property
+    def public_editions(self) -> list[str]:
+        """Every edition approved for publication, oldest first; empty for drafts."""
+        if self.status != "published" or not self.published_edition:
+            return []
+        return [*self.earlier_editions, self.published_edition]
 
 
 def parse(path: Path) -> Briefing:
@@ -68,6 +80,14 @@ def parse(path: Path) -> Briefing:
         raise ValueError(f"{path.name}: id must match the file name")
     if front["status"] == "published" and not front.get("published_edition"):
         raise ValueError(f"{path.name}: published briefings need published_edition")
+    earlier = [str(e) for e in front.get("earlier_editions") or []]
+    current = str(front.get("published_edition") or "")
+    if earlier and (front["status"] != "published" or earlier != sorted(set(earlier))
+                    or any(e >= current for e in earlier)):  # fmt: skip
+        raise ValueError(
+            f"{path.name}: earlier_editions must be unique, oldest first, older than "
+            "published_edition, and only on a published briefing"
+        )
     return Briefing(
         id=front["id"],
         title=front["title"],
@@ -77,6 +97,7 @@ def parse(path: Path) -> Briefing:
         body=body,
         path=path,
         published_edition=front.get("published_edition"),
+        earlier_editions=earlier,
         front=front,
     )
 
