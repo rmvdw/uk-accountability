@@ -58,7 +58,7 @@ Question-led explainers in `briefings/<id>.md` (front matter plus Markdown). Num
 
 - Review previews (any non-`main` branch) show a **candidate** built from current data.
 - `uv run python -m ukdash edition <id>` freezes the candidate into `briefings/editions/<id>/<edition>.json`: page, facts and source vintages together. It refuses while any `[TO VERIFY` marker remains.
-- To publish, set `status: published` and `published_edition: <edition>` in a PR. That needs Ross (decision 18). When a later edition replaces it, move the old id into `earlier_editions: [...]` so its permanent page and download stay up. Production shows only editions listed there, never a frozen file that was not approved, so a data refresh never changes published wording.
+- To publish, set `status: published` and `published_edition: <edition>` in a PR. That needs Ross (decision 18). When a later edition replaces it, move the old id into `earlier_editions: [...]` so its permanent page and download stay up. Production shows only editions listed there, never a frozen file that was not approved, so a data refresh never changes published wording. (Migration: no edition had been published before this rule, so nothing needed listing. Any future published briefing without `earlier_editions` simply has no archive before its current edition.)
 - `uv run python -m ukdash briefing-diff <id>` lists what a new candidate would change.
 
 ## For agents

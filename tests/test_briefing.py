@@ -502,3 +502,45 @@ def test_earlier_editions_must_be_older_and_ordered(fixture_root):
     )
     with pytest.raises(ValueError, match="earlier_editions"):
         briefing.load_all(fixture_root)
+
+
+def test_archive_holds_exactly_the_approved_editions(fixture_root, tmp_path, monkeypatch):
+    """Codex on #31: approved A, rejected B, approved current C, newer unapproved D."""
+    from datetime import UTC, datetime
+
+    class Clock(datetime):
+        t = datetime(2026, 5, 1, 9, 0, tzinfo=UTC)
+
+        @classmethod
+        def now(cls, tz=None):
+            return cls.t
+
+    monkeypatch.setattr(briefing, "datetime", Clock)
+    write_brief(fixture_root)
+    b = briefing.load_all(fixture_root)["test_brief"]
+    ids = {}
+    for name, day, value in (("A", 1, "4.8"), ("B", 2, "4.5"), ("C", 3, "4.0"), ("D", 4, "3.9")):
+        set_latest_value(fixture_root, value)
+        Clock.t = datetime(2026, 5, day, 9, 0, tzinfo=UTC)
+        ids[name] = briefing.freeze(fixture_root, Project.load(fixture_root), b, period_label).stem
+    p = write_brief(
+        fixture_root,
+        status="published",
+        extra=f"published_edition: {ids['C']}\nearlier_editions: [{ids['A']}]\n",
+    )
+    out = tmp_path / "prod"
+    assert build(p, out) == []
+    site = out / "briefings/test_brief"
+    for name in "AC":
+        ed = ids[name]
+        rows = list(csv.DictReader((site / "editions" / ed / "figures.csv").open(encoding="utf-8")))
+        assert {r["key"] for r in rows} == set(
+            briefing.read_edition(fixture_root, "test_brief", ed)["facts"]
+        )
+    for name in "BD":
+        assert not (site / "editions" / ids[name]).exists()
+    pages = [f.read_text(encoding="utf-8") for f in site.rglob("*.html")]
+    for page in pages:
+        assert ids["B"] not in page and ids["D"] not in page
+    a = (site / "editions" / ids["A"] / "index.html").read_text(encoding="utf-8")
+    assert "This is an earlier edition" in a and f"/editions/{ids['C']}/" in a
