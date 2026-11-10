@@ -8,7 +8,8 @@ Editions keep data and wording together (strategy review 4c):
   previews show candidates.
 - `ukdash edition <id>` freezes a candidate into `briefings/editions/<id>/<edition>.json`:
   the rendered page, every fact used, and the source vintages. Publishing means setting
-  `status: published` and `published_edition: <edition>` in the front matter, which
+  `status: published` and `published_edition: <edition>` (plus `earlier_editions: [...]`,
+  every edition approved before it) in the front matter, which
   needs Ross (decision 18). Production renders only the frozen edition, so a data
   refresh never changes published wording; it produces a new candidate for review.
 """
@@ -47,7 +48,18 @@ class Briefing:
     body: str
     path: Path
     published_edition: str | None = None
+    # Editions Ross approved and published before the current one, oldest first. Only
+    # these, plus published_edition, are ever public: a frozen file proves nothing
+    # about approval (a candidate can be frozen and then rejected).
+    earlier_editions: list[str] = field(default_factory=list)
     front: dict = field(default_factory=dict)
+
+    @property
+    def public_editions(self) -> list[str]:
+        """Every edition approved for publication, oldest first; empty for drafts."""
+        if self.status != "published" or not self.published_edition:
+            return []
+        return [*self.earlier_editions, self.published_edition]
 
 
 def parse(path: Path) -> Briefing:
@@ -68,6 +80,14 @@ def parse(path: Path) -> Briefing:
         raise ValueError(f"{path.name}: id must match the file name")
     if front["status"] == "published" and not front.get("published_edition"):
         raise ValueError(f"{path.name}: published briefings need published_edition")
+    earlier = [str(e) for e in front.get("earlier_editions") or []]
+    current = str(front.get("published_edition") or "")
+    if earlier and (front["status"] != "published" or earlier != sorted(set(earlier))
+                    or any(e >= current for e in earlier)):  # fmt: skip
+        raise ValueError(
+            f"{path.name}: earlier_editions must be unique, oldest first, older than "
+            "published_edition, and only on a published briefing"
+        )
     return Briefing(
         id=front["id"],
         title=front["title"],
@@ -77,6 +97,7 @@ def parse(path: Path) -> Briefing:
         body=body,
         path=path,
         published_edition=front.get("published_edition"),
+        earlier_editions=earlier,
         front=front,
     )
 
@@ -108,6 +129,20 @@ def latest_entries(project: Project) -> dict:
         if e.indicator_id not in out or e.retrieved_at > out[e.indicator_id].retrieved_at:
             out[e.indicator_id] = e
     return out
+
+
+def _pub_order(label: str) -> tuple[int, int]:
+    """ONS edition labels such as 'Nov 25' in date order."""
+    mon, yy = label.split()
+    return 2000 + int(yy), "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split().index(mon)
+
+
+def _pub_long(label: str) -> str:
+    """'Nov 25' -> 'November 2025'."""
+    y, m = _pub_order(label)
+    months = ("January February March April May June July August September October "
+              "November December").split()  # fmt: skip
+    return f"{months[m]} {y}"
 
 
 class Facts:
@@ -284,6 +319,77 @@ class Facts:
         )
         return Markup(f'\n<div class="chart-block">{svg}</div>\n')
 
+    def release_changes(self, ind: str = "net_migration") -> dict:
+        """What the latest ONS edition added and revised, versus the edition before it.
+
+        From the saved workbook alone: Table 5 holds each re-estimated period's value in
+        every edition, so the previous edition's figures are its 'previous publication'
+        estimates. Verified against a genuine pair (Nov 2025 vs May 2026 workbooks: the
+        Table 5 'Nov 25' estimates equal the Nov 2025 Table 1). New periods are those later
+        than anything the previous edition published; revised periods are those whose
+        estimate changed. Annual change (versus a year earlier) is a different question.
+        """
+        from .sources.ons_ltim import parse_revisions
+
+        if ind not in self.allowed:
+            raise ValueError(f"indicator {ind!r} is not listed in the briefing's front matter")
+        entry = latest_entries(self.p).get(ind)
+        if entry is None:
+            raise ValueError(f"{ind}: no saved source file")
+        rows = parse_revisions((self.p.root / entry.path).read_bytes())
+        pubs = sorted({r["publication"] for r in rows}, key=_pub_order)
+        if len(pubs) < 2:
+            raise ValueError(f"{ind}: revision table has fewer than two editions")
+        current, previous = pubs[-1], pubs[-2]
+        before = {r["period"]: r for r in rows if r["publication"] == previous}
+        after = {r["period"]: r for r in rows if r["publication"] == current}
+        flows = [
+            ("immigration_long_term", "Immigration"),
+            ("emigration_long_term", "Emigration"),
+            ("net_migration", "Net migration"),
+        ]
+        last_previous = max(before)
+        latest = self.latest(ind)
+        new = []
+        for o in self._series(ind):
+            if period_ordinal(o.period, o.frequency) > period_ordinal(last_previous, "Y12"):
+                vals = {}
+                for fid, _label in flows:
+                    if fid in self.allowed:
+                        vals[fid] = self.num(fid, o.period)
+                new.append({"when": self.period_label(o.period, o.frequency), "figures": vals})
+        d = self.p.indicators[ind].decimals
+        revised = []
+        for period in sorted(before):
+            if period not in after:
+                continue
+            row = {"when": self.period_label(period, "Y12"), "figures": {}}
+            changed = False
+            for fid, label in flows:
+                a = before[period]["values"].get((label, TOTAL))
+                b = after[period]["values"].get((label, TOTAL))
+                if a is None or b is None:
+                    continue
+                changed |= a != b
+                row["figures"][fid] = {
+                    "before": _fmt(a, d), "after": _fmt(b, d),
+                    "change": ("+" if b > a else "") + _fmt(b - a, d) if a != b else "no change",
+                }  # fmt: skip
+                self.used[f"release.{fid}.{period}"] = {
+                    "indicator": fid, "breakdown": TOTAL, "period": period, "value": b,
+                    "status": f"{_pub_long(previous)} {a:.0f}, {_pub_long(current)} {b:.0f}",
+                }  # fmt: skip
+            if changed:
+                revised.append(row)
+        if latest.period != self._series(ind)[-1].period:
+            raise ValueError(f"{ind}: latest period has no value")
+        return {
+            "current": _pub_long(current),
+            "previous": _pub_long(previous),
+            "new": new,
+            "revised": revised,
+        }
+
     def peers(self, ind: str) -> dict:
         """The indicator's peer group at the latest year every member has (never mixed
         years): a bar chart with the UK highlighted, the UK value and its position."""
@@ -413,12 +519,55 @@ def render_candidate(project: Project, b: Briefing, period_label, extra: dict | 
         "bars": facts.bars,
         "peers": facts.peers,
         "revisions": facts.revisions,
+        "release_changes": facts.release_changes,
         "largest_revision": facts.largest_revision,
         **(extra or {}),
     }
     text = env.from_string(b.body).render(**ctx)
     html = md.markdown(text, extensions=["tables", "md_in_html"])
+    for fact in facts.used.values():  # frozen with the edition, so downloads match it
+        d = project.indicators.get(fact["indicator"])
+        if d:
+            fact.setdefault("geography", UK)
+            fact["indicator_title"] = d.title
+            fact["unit"] = d.unit
+            fact["publisher"] = d.source.publisher
     return html, facts.used, sources_for(project, b)
+
+
+CSV_COLUMNS = ["key", "indicator", "indicator_title", "geography", "breakdown", "period",
+               "value", "status", "unit", "publisher", "in_chart_only"]  # fmt: skip
+
+
+def facts_csv(facts: dict) -> str:
+    """Every figure an edition uses, exactly as frozen, for download."""
+    import csv
+    import io
+
+    buf = io.StringIO()
+    w = csv.writer(buf, lineterminator="\n")
+    w.writerow(CSV_COLUMNS)
+    for key, f in sorted(facts.items()):
+        w.writerow([key] + [
+            ("yes" if f.get("chart") else "no") if c == "in_chart_only"
+            else ("" if f.get(c) is None else f.get(c))
+            for c in CSV_COLUMNS[1:]
+        ])  # fmt: skip
+    return buf.getvalue()
+
+
+def editions(root: Path, briefing_id: str) -> list[str]:
+    """All frozen edition ids for a briefing, oldest first."""
+    d = root / "briefings" / "editions" / briefing_id
+    return sorted(p.stem for p in d.glob("*.json")) if d.exists() else []
+
+
+def read_edition(root: Path, briefing_id: str, edition: str) -> dict:
+    path = edition_path(root, briefing_id, edition)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if data.get("briefing") != briefing_id or data.get("edition") != edition:
+        raise ValueError(f"{path.name}: edition file does not match its name")
+    return data
 
 
 def slug(text: str) -> str:

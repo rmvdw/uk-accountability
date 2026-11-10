@@ -13,8 +13,14 @@
   </tbody>
 </table>
 <p class="meta">{{ b.attribution_lines|join("; ") }}.</p>
+{% if b.download %}
+<p><a href="{{ b.download }}" download>Download every figure on this page (CSV)</a>{% if b.candidate %}: candidate figures, not yet reviewed{% else %}, exactly as in this edition{% endif %}.</p>
+{% endif %}
+{% if b.editions and b.editions|length > 1 %}
+<p class="meta">All editions: {% for e in b.editions|reverse %}<a href="/briefings/{{ b.id }}/editions/{{ e }}/">{{ e }}</a>{{ ", " if not loop.last }}{% endfor %}.</p>
+{% endif %}
 
 <h2>Cite this</h2>
-<p class="cite">UK Dashboard, "{{ b.title }}", {% if b.candidate %}candidate edition (not published){% else %}edition {{ b.edition }}{% endif %}. Data: {{ b.source_lines|join("; ") }}.</p>
+<p class="cite">UK Dashboard, "{{ b.title }}", {% if b.candidate %}candidate edition (not published){% else %}edition {{ b.edition }}, {{ b.edition_url }}{% endif %}. Data: {{ b.source_lines|join("; ") }}.</p>
 
 <p class="meta">Spotted a mistake? <a href="https://github.com/rmvdw/uk-accountability/issues/new?template=bug.yml">Tell us</a>. Corrections are logged publicly.</p>

@@ -1,6 +1,7 @@
 """Briefings: candidates, frozen editions and the publication rules (strategy 4c, #13)."""
 
 import csv
+from pathlib import Path
 
 import pytest
 
@@ -356,3 +357,190 @@ def test_edition_frozen_before_files_field_keeps_its_file_links(fixture_root, tm
     page = (tmp_path / "prod/briefings/test_brief/index.html").read_text(encoding="utf-8")
     raw = data["sources"][0]["file"]
     assert f'<a href="{raw.replace("&", "&amp;")}">file</a>' in page
+
+
+ONS_FIX = Path(__file__).parent / "fixtures" / "ons"
+FLOWS = {"immigration_long_term": "Immigration", "emigration_long_term": "Emigration",
+         "net_migration": "Net migration"}  # fmt: skip
+
+
+def _project_on_may26_fixture():
+    """The real project, with the three ONS flows read from the May 2026 fixture."""
+    from ukdash.sources import ADAPTERS
+
+    p = Project.load()
+    raw = (ONS_FIX / "ltim_ye_dec2025.xlsx").read_bytes()
+    obs = {i: ADAPTERS["ons_ltim"].parse(p.indicators[i], raw, p.geographies) for i in FLOWS}
+    real_read, real_manifest = p.read_observations, p.read_manifest
+    p.read_observations = lambda i: obs[i] if i in obs else real_read(i)
+    p.read_manifest = lambda: [
+        e.model_copy(update={"path": "tests/fixtures/ons/ltim_ye_dec2025.xlsx"})
+        if e.indicator_id in FLOWS else e
+        for e in real_manifest()
+    ]  # fmt: skip
+    return p
+
+
+def test_release_changes_match_a_genuine_pair_of_ons_releases():
+    from ukdash.sources.ons_ltim import parse_table
+
+    p = _project_on_may26_fixture()
+    f = briefing.Facts(p, list(FLOWS), period_label)
+    rc = f.release_changes()
+    assert (rc["previous"], rc["current"]) == ("November 2025", "May 2026")
+
+    old = parse_table((ONS_FIX / "ltim_ye_jun2025.xlsx").read_bytes())
+    new = parse_table((ONS_FIX / "ltim_ye_dec2025.xlsx").read_bytes())
+    old_net = {k[2]: v[0] for k, v in old.items() if k[:2] == ("Net migration", "total")}
+    new_net = {k[2]: v[0] for k, v in new.items() if k[:2] == ("Net migration", "total")}
+    # New = periods the November 2025 release did not have.
+    assert [r["when"] for r in rc["new"]] == [
+        period_label(q, "Y12") for q in sorted(set(new_net) - set(old_net))
+    ]
+    # Revised = periods whose estimate differs between the two releases, with the
+    # November 2025 workbook's own figure as "was".
+    revised = {
+        q for q in old_net for flow in FLOWS.values()
+        if old.get((flow, "total", q), (None,))[0] != new.get((flow, "total", q), (None,))[0]
+    }  # fmt: skip
+    assert [r["when"] for r in rc["revised"]] == [period_label(q, "Y12") for q in sorted(revised)]
+    for r in rc["revised"]:
+        q = next(q for q in revised if period_label(q, "Y12") == r["when"])
+        assert r["figures"]["net_migration"]["before"] == f"{old_net[q]:,.0f}"
+        assert r["figures"]["net_migration"]["after"] == f"{new_net[q]:,.0f}"
+
+
+def test_two_editions_older_one_stays_retrievable(fixture_root, tmp_path, monkeypatch):
+    from datetime import UTC, datetime
+
+    class Clock(datetime):
+        t = datetime(2026, 5, 21, 9, 30, tzinfo=UTC)
+
+        @classmethod
+        def now(cls, tz=None):
+            return cls.t
+
+    monkeypatch.setattr(briefing, "datetime", Clock)
+    p = write_brief(fixture_root)
+    b = briefing.load_all(fixture_root)["test_brief"]
+    first = briefing.freeze(fixture_root, p, b, period_label).stem
+    p = write_brief(fixture_root, status="published", extra=f"published_edition: {first}\n")
+    assert build(p, tmp_path / "one") == []
+
+    set_latest_value(fixture_root, "4.0")  # the next release
+    Clock.t = datetime(2026, 11, 26, 9, 45, tzinfo=UTC)
+    p = Project.load(fixture_root)
+    second = briefing.freeze(fixture_root, p, b, period_label).stem
+    p = write_brief(
+        fixture_root,
+        status="published",
+        extra=f"published_edition: {second}\nearlier_editions: [{first}]\n",
+    )
+    out = tmp_path / "two"
+    assert build(p, out) == []
+
+    site = out / "briefings/test_brief"
+    old = (site / "editions" / first / "index.html").read_text(encoding="utf-8")
+    cur = (site / "index.html").read_text(encoding="utf-8")
+    assert "<strong>4.8%</strong>" in old and "This is an earlier edition" in old
+    assert f"editions/{first}/" in old and f"/briefings/test_brief/editions/{second}/" in old
+    assert "<strong>4.0%</strong>" in cur and "earlier edition" not in cur
+    assert f"editions/{second}/figures.csv" in cur  # current download link
+    # Each edition's download holds exactly its frozen figures.
+    for ed, value in ((first, "4.8"), (second, "4.0")):
+        rows = list(csv.DictReader((site / "editions" / ed / "figures.csv").open(encoding="utf-8")))
+        latest = next(r for r in rows if r["period"] == "2025-06" and r["geography"] == "iso:GBR")
+        assert float(latest["value"]) == float(value)
+        frozen = briefing.read_edition(fixture_root, "test_brief", ed)["facts"]
+        assert {r["key"] for r in rows} == set(frozen)
+    # An edition newer than the published one (awaiting approval) is not public.
+    p = write_brief(fixture_root, status="published", extra=f"published_edition: {first}\n")
+    assert build(p, tmp_path / "three") == []
+    assert not (tmp_path / "three/briefings/test_brief/editions" / second).exists()
+
+
+def test_frozen_but_never_approved_edition_is_never_public(fixture_root, tmp_path, monkeypatch):
+    """Codex P1 on #31: an older frozen candidate that was rejected must not appear in
+    production just because a later edition was published."""
+    from datetime import UTC, datetime
+
+    class Clock(datetime):
+        t = datetime(2026, 5, 21, 9, 30, tzinfo=UTC)
+
+        @classmethod
+        def now(cls, tz=None):
+            return cls.t
+
+    monkeypatch.setattr(briefing, "datetime", Clock)
+    p = write_brief(fixture_root)
+    b = briefing.load_all(fixture_root)["test_brief"]
+    rejected = briefing.freeze(fixture_root, p, b, period_label).stem  # never approved
+    set_latest_value(fixture_root, "4.0")
+    Clock.t = datetime(2026, 5, 22, 9, 30, tzinfo=UTC)
+    approved = briefing.freeze(fixture_root, Project.load(fixture_root), b, period_label).stem
+    p = write_brief(fixture_root, status="published", extra=f"published_edition: {approved}\n")
+    out = tmp_path / "prod"
+    assert build(p, out) == []
+    site = out / "briefings/test_brief"
+    assert not (site / "editions" / rejected).exists()
+    assert rejected not in (site / "index.html").read_text(encoding="utf-8")
+    assert (site / "editions" / approved / "figures.csv").exists()
+    # In a preview the rejected file is visible for review, never labelled as published.
+    assert build(p, tmp_path / "prev", include_drafts=True) == []
+    prev = (tmp_path / "prev/briefings/test_brief/editions" / rejected / "index.html").read_text(
+        encoding="utf-8"
+    )
+    assert "not approved for publication" in prev and "reviewed before publication" not in prev
+    assert "This is an earlier edition" not in prev
+
+
+def test_earlier_editions_must_be_older_and_ordered(fixture_root):
+    write_brief(
+        fixture_root,
+        status="published",
+        extra="published_edition: 2026-05-21-0930\nearlier_editions: [2026-06-01-0000]\n",
+    )
+    with pytest.raises(ValueError, match="earlier_editions"):
+        briefing.load_all(fixture_root)
+
+
+def test_archive_holds_exactly_the_approved_editions(fixture_root, tmp_path, monkeypatch):
+    """Codex on #31: approved A, rejected B, approved current C, newer unapproved D."""
+    from datetime import UTC, datetime
+
+    class Clock(datetime):
+        t = datetime(2026, 5, 1, 9, 0, tzinfo=UTC)
+
+        @classmethod
+        def now(cls, tz=None):
+            return cls.t
+
+    monkeypatch.setattr(briefing, "datetime", Clock)
+    write_brief(fixture_root)
+    b = briefing.load_all(fixture_root)["test_brief"]
+    ids = {}
+    for name, day, value in (("A", 1, "4.8"), ("B", 2, "4.5"), ("C", 3, "4.0"), ("D", 4, "3.9")):
+        set_latest_value(fixture_root, value)
+        Clock.t = datetime(2026, 5, day, 9, 0, tzinfo=UTC)
+        ids[name] = briefing.freeze(fixture_root, Project.load(fixture_root), b, period_label).stem
+    p = write_brief(
+        fixture_root,
+        status="published",
+        extra=f"published_edition: {ids['C']}\nearlier_editions: [{ids['A']}]\n",
+    )
+    out = tmp_path / "prod"
+    assert build(p, out) == []
+    site = out / "briefings/test_brief"
+    for name in "AC":
+        ed = ids[name]
+        rows = list(csv.DictReader((site / "editions" / ed / "figures.csv").open(encoding="utf-8")))
+        assert {r["key"] for r in rows} == set(
+            briefing.read_edition(fixture_root, "test_brief", ed)["facts"]
+        )
+    for name in "BD":
+        assert not (site / "editions" / ids[name]).exists()
+    pages = [f.read_text(encoding="utf-8") for f in site.rglob("*.html")]
+    for page in pages:
+        assert ids["B"] not in page and ids["D"] not in page
+    a = (site / "editions" / ids["A"] / "index.html").read_text(encoding="utf-8")
+    assert "This is an earlier edition" in a and f"/editions/{ids['C']}/" in a

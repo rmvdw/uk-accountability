@@ -60,12 +60,31 @@ Comparing countries needs one definition and one year for all of them, so these 
 
 </details>
 
-## How much the figures change between editions
+## What changed since the previous release
 
-ONS revises each estimate as more travel data arrive, by up to {{ largest_revision() }} for recent periods. The next edition is due on 26 November 2026.
+{% set rc = release_changes() %}
+ONS published these figures in {{ rc.current }}. Compared with its previous release ({{ rc.previous }}), they add {{ rc.new|length }} new {{ "period" if rc.new|length == 1 else "periods" }} and revise {{ rc.revised|length }} that were already published. A revision is ONS re-estimating the same 12 months with more travel data. It is not a change in migration.
+
+**New in this release**
+
+| Period | Immigration | Emigration | Net |
+| --- | --- | --- | --- |
+{% for r in rc.new %}| {{ r.when }} | {{ r.figures.immigration_long_term }} | {{ r.figures.emigration_long_term }} | {{ r.figures.net_migration }} |
+{% endfor %}
+
+ONS rounds each figure to the nearest 1,000 separately, so immigration minus emigration can differ from net migration by 1,000.
+
+**Revised net migration**
+
+| Period | Was ({{ rc.previous }}) | Now | Revision |
+| --- | --- | --- | --- |
+{% for r in rc.revised %}| {{ r.when }} | {{ r.figures.net_migration.before }} | {{ r.figures.net_migration.after }} | {{ r.figures.net_migration.change }} |
+{% endfor %}
 
 <details markdown="1">
-<summary>First published and latest estimates</summary>
+<summary>Each period as first published and as it stands now</summary>
+
+Estimates usually move most in their first year, by up to {{ largest_revision() }} recently. The next ONS release is due on 26 November 2026.
 
 | Period | First published | Latest estimate | Change |
 | --- | --- | --- | --- |

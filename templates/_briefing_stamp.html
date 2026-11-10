@@ -1,6 +1,9 @@
 {# Edition stamp and, in previews, what a new edition would change. #}
+{% if b.superseded_by %}
+<p class="card preview"><strong>This is an earlier edition.</strong> Its figures and wording are kept as they were published so citations still work. <a href="{{ b.superseded_by }}">Read the current edition</a>.</p>
+{% endif %}
 <p class="stamp">
-  {% if b.candidate %}Candidate built {{ built_at[:10] }}, not yet reviewed{% else %}Edition {{ b.edition }}, published {{ b.frozen_at[:10] }}{% endif %}.
+  {% if b.candidate %}Candidate built {{ built_at[:10] }}, not yet reviewed{% elif b.approved %}<a href="{{ b.edition_url }}">Edition {{ b.edition }}</a>, reviewed before publication{% else %}Frozen edition {{ b.edition }}, not approved for publication (review preview only){% endif %}.
   Data: {{ b.source_lines|join("; ") }}.
 </p>
 {% if b.changes is not none %}
