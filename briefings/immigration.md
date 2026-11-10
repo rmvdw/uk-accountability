@@ -2,7 +2,7 @@
 id: immigration
 title: "Immigration: what the figures show"
 status: draft
-standfirst: "Four common questions, answered with the latest official figures, then the detail."
+standfirst: "Five common questions, answered with the latest official figures, then the detail."
 indicators:
   - net_migration
   - immigration_long_term
@@ -19,24 +19,35 @@ indicators:
 {% set pk = peak("net_migration") %}
 {% set sh = survey("bf_tracker_2026_net_direction", "Higher") %}
 {% set sl = survey("bf_tracker_2026_net_direction", "Lower") %}
+{% set yr = between("net_migration", "2025-12", "2024-12") %}
 {% set cb = change("small_boat_arrivals") %}
 {% set hs = cited("home_office_asylum_support_2025_26") %}
 {% set pp = peers("permanent_immigration_per_1000") %}
+{% set vs = shares("visas_granted", {"study": "study", "work": "work", "family": "family"}) %}
 <div class="answer cards" markdown="1">
+
+<p class="hook">About half of adults in Great Britain ({{ sh.pct }}) thought net migration in 2025 was higher than in 2024, and {{ sl.pct }} thought it was lower. It was {{ yr.word }}: {{ yr.value }}, {{ "up" if yr.word == "higher" else "down" }} from {{ yr.from }}. <a href="{{ sh.url }}">Survey</a></p>
 
 <div class="qcard" markdown="1">
 <p class="q">How has net migration changed?</p>
 
-**It {{ c.verb }} by {{ c.pct }}** to {{ num("net_migration") }} in the {{ when("net_migration") }}, from {{ c.from }}. Peak: {{ pk.value }} ({{ pk.when }}).
+**{{ "Up" if c.up else "Down" }} {{ c.pct }} in a year.** {{ num("net_migration") }} in the {{ when("net_migration") }}, from {{ c.from }}. Peak: {{ pk.value }} ({{ pk.when }}).
 
-<p class="belief">Before these figures came out, about half of adults in Great Britain ({{ sh.pct }}) thought it had risen; {{ sl.pct }} thought it had fallen ({{ sh.when }}). <a href="{{ sh.url }}">Survey</a></p>
-<p class="limit">Provisional; recent figures revised by up to {{ largest_revision() }}.</p>
+<p class="limit">Provisional; recent figures revised by up to {{ largest_revision() }}. The survey ran in {{ sh.when }}, before these figures were published.</p>
+</div>
+
+<div class="qcard" markdown="1">
+<p class="q">Why do people come?</p>
+
+**{{ "Mostly" if vs[0].share + vs[1].share > 50 else "Largely" }} to {{ vs[0].label }} ({{ vs[0].pct }}) or {{ vs[1].label }} ({{ vs[1].pct }})**, of {{ num("visas_granted") }} visas granted to people abroad in the {{ when("visas_granted") }}. Separately, {{ num("asylum_claims") }} people claimed asylum.
+
+<p class="limit">Visas count permissions, not arrivals, and exclude visitors. Asylum claims are counted separately. Neither is a breakdown of the ONS figure.</p>
 </div>
 
 <div class="qcard" markdown="1">
 <p class="q">How many people arrived by small boat?</p>
 
-**{{ num("small_boat_arrivals") }}** detected in the {{ when("small_boat_arrivals") }}, {{ cb.pct }} {{ "more" if cb.up else "fewer" }} than a year earlier.
+**{{ "More" if cb.up else "Fewer" }} than a year earlier.** {{ num("small_boat_arrivals") }} detected in the {{ when("small_boat_arrivals") }}, {{ cb.pct }} {{ "more" if cb.up else "fewer" }}.
 
 <p class="limit">For scale, ONS estimates {{ num("immigration_long_term") }} people moved to the UK for a year or more in the {{ when("immigration_long_term") }}. Different measures: the first is not a share of the second.</p>
 </div>
@@ -44,7 +55,7 @@ indicators:
 <div class="qcard" markdown="1">
 <p class="q">How much does the Home Office spend on asylum support?</p>
 
-**{{ hs.value }}** in {{ hs.period_short }} on asylum support, resettlement and accommodation.
+**{{ hs.value }} in {{ hs.period_short }}** on asylum support, resettlement and accommodation.
 
 <p class="limit">One department's spending in one year, including resettlement. Not the total cost of asylum or of immigration. <a href="{{ hs.url }}">What it covers</a></p>
 </div>
@@ -52,7 +63,7 @@ indicators:
 <div class="qcard" markdown="1">
 <p class="q">How does the UK compare?</p>
 
-**{{ pp.uk }} per 1,000 residents** in {{ pp.when }}: {{ pp.position }} for permanent-type immigration.
+**{{ pp.position[0]|upper }}{{ pp.position[1:] }}** for permanent-type immigration in {{ pp.when }}: {{ pp.uk }} per 1,000 residents.
 
 <p class="limit">OECD measure, not the ONS one; {{ pp.when }} is the latest year all seven report. <a href="#how-does-the-uk-compare-with-other-g7-countries">Comparison</a></p>
 </div>
@@ -71,7 +82,7 @@ By nationality, net migration was {{ num("net_migration", breakdown="non_eu_plus
 
 | Question asked | What people said | What the official figures show |
 | --- | --- | --- |
-| Was net migration in 2025 higher or lower than in 2024? | Higher: {{ sh.pct }}<br>Lower: {{ sl.pct }}<br><span class="meta">{{ sh.who }}, {{ sh.when }}</span> | {{ c.verb|capitalize }}: {{ num("net_migration") }} in the {{ when("net_migration") }}, from {{ c.from }} a year earlier (ONS, provisional) |
+| Was net migration in 2025 higher or lower than in 2024? | Higher: {{ sh.pct }}<br>Lower: {{ sl.pct }}<br><span class="meta">{{ sh.who }}, {{ sh.when }}</span> | {{ yr.word|capitalize }}: {{ yr.value }} in the {{ yr.when }}, from {{ yr.from }} in the {{ yr.from_when }} (ONS, provisional) |
 
 Survey results record what people said at a date, not facts; see the [full survey record]({{ sh.url }}). We add a row only where a survey question can be matched exactly to an official figure, whichever way the answer points.
 

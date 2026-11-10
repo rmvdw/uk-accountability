@@ -270,8 +270,9 @@ def test_question_led_layout_keeps_every_block(tmp_path):
     # nothing is dropped. Each card has a question, an answer and a limitation.
     assert page.index('class="stamp"') < page.index('class="answer')
     assert page.index('class="answer') < page.index('class="chart-block"')
-    assert page.count('class="qcard"') == 4 and page.count('class="limit"') == 4
-    assert 'href="/evidence/bf_tracker_2026_net_direction/"' in page
+    assert page.count('class="qcard"') == 5 and page.count('class="limit"') == 5
+    assert 'class="hook"' in page
+    assert 'href="evidence/bf_tracker_2026_net_direction/"' in page  # relative: stays with page
     assert blocks["answer"] in page
     for s in blocks["sections"]:
         assert f'id="{s["id"]}"' in page
@@ -558,15 +559,12 @@ def test_evidence_records_are_complete_and_rendered(tmp_path):
     assert {r["answer"]: r["percent"] for r in s["results"]}["Higher"] == 49
     assert evidence.money(4181193, "GBP thousand") == "£4.18 billion"
     assert build(Project.load(), tmp_path / "prev", include_drafts=True) == []
-    page = (tmp_path / "prev/evidence/bf_tracker_2026_net_direction/index.html").read_text(
-        encoding="utf-8"
-    )
+    ev = tmp_path / "prev/briefings/immigration/evidence"
+    page = (ev / "bf_tracker_2026_net_direction/index.html").read_text(encoding="utf-8")
     for field in ("3,003 respondents", "2026-03-19 to 2026-03-30", "Number Cruncher Politics",
                   "not reported", "Reuse"):  # fmt: skip
         assert field in page
-    fig = (tmp_path / "prev/evidence/home_office_asylum_support_2025_26/index.html").read_text(
-        encoding="utf-8"
-    )
+    fig = (ev / "home_office_asylum_support_2025_26/index.html").read_text(encoding="utf-8")
     assert "£4.18 billion" in fig and "4,181,193 (GBP thousand)" in fig and "not the total" in fig
 
 
@@ -580,3 +578,56 @@ def test_survey_record_rejects_missing_fields(fixture_root):
     )
     with pytest.raises(ValueError, match="missing"):
         evidence.load_all(fixture_root)
+
+
+def test_survey_row_stays_on_the_years_asked_about():
+    """Codex P2 on #33: a later net-migration period must not change the comparison
+    with what respondents were asked (2025 vs 2024)."""
+    p = Project.load()
+    real = p.read_observations
+    flows = ("net_migration", "immigration_long_term", "emigration_long_term")
+
+    def read(i):
+        rows = real(i)
+        if i not in flows:
+            return rows
+        later = [o.model_copy(update={"period": "2026-03", "value": 999_000.0})
+                 for o in rows if o.period == "2025-12"]  # fmt: skip
+        return rows + later
+
+    p.read_observations = read
+    b = briefing.load_all(p.root)["immigration"]
+    html, _, _ = briefing.render_candidate(p, b, period_label)
+    row = html[html.index("Was net migration in 2025 higher or lower") :]
+    row = row[: row.index("</tr>")]
+    assert "year ending December 2025" in row and "year ending December 2024" in row
+    assert "999,000" not in row
+    hook = html[html.index('class="hook"') :]
+    assert "999,000" not in hook[: hook.index("</p>")]
+
+
+def test_edition_keeps_the_evidence_record_it_was_published_with(fixture_root, tmp_path):
+    """Codex P2 on #33: correcting a record later must not change an archived edition."""
+    import shutil
+
+    shutil.copytree(Path(__file__).parents[1] / "evidence", fixture_root / "evidence")
+    p = write_brief(
+        fixture_root,
+        body='{{ survey("bf_tracker_2026_net_direction", "Higher").pct }} '
+        '[s]({{ survey("bf_tracker_2026_net_direction", "Higher").url }})',
+    )
+    b = briefing.load_all(fixture_root)["test_brief"]
+    ed = briefing.freeze(fixture_root, p, b, period_label).stem
+    rec = fixture_root / "evidence" / "bf_tracker_2026_net_direction.yml"
+    rec.write_text(
+        rec.read_text(encoding="utf-8").replace("Online", "Telephone (corrected later)"),
+        encoding="utf-8",
+    )
+    p = write_brief(fixture_root, status="published", extra=f"published_edition: {ed}\n")
+    out = tmp_path / "prod"
+    assert build(p, out) == []
+    for page_dir in (out / "briefings/test_brief", out / "briefings/test_brief/editions" / ed):
+        page = (page_dir / "evidence/bf_tracker_2026_net_direction/index.html").read_text(
+            encoding="utf-8"
+        )
+        assert "(Online)" in page and "corrected later" not in page

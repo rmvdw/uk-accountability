@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import markdown as md
@@ -246,6 +246,32 @@ class Facts:
             "up": diff > 0,
         }
 
+    def shares(self, ind: str, labels: dict[str, str]) -> list[dict]:
+        """Each named breakdown's share of the total at the latest period, largest
+        first. Shares use the published total, so unlisted breakdowns stay counted."""
+        total = self.obs(ind).value
+        out = []
+        for bd, label in labels.items():
+            o = self.obs(ind, "latest", bd)
+            share = 100 * o.value / total
+            out.append({"label": label, "share": share, "pct": f"{share:.0f}%",
+                        "value": _fmt(o.value, 0)})  # fmt: skip
+        return sorted(out, key=lambda r: r["share"], reverse=True)
+
+    def between(self, ind: str, period: str, base: str, breakdown: str = TOTAL) -> dict:
+        """A change between two named periods, independent of what is latest: for
+        comparisons pinned to what a survey asked about."""
+        new, old = self.obs(ind, period, breakdown), self.obs(ind, base, breakdown)
+        d = self.p.indicators[ind].decimals
+        diff = new.value - old.value
+        return {
+            "verb": "rose" if diff > 0 else "fell" if diff < 0 else "was unchanged",
+            "word": "higher" if diff > 0 else "lower" if diff < 0 else "the same",
+            "value": _fmt(new.value, d), "from": _fmt(old.value, d),
+            "when": self.period_label(new.period, new.frequency),
+            "from_when": self.period_label(old.period, old.frequency),
+        }  # fmt: skip
+
     def peak(self, ind, breakdown=TOTAL) -> dict:
         s = self._series(ind, breakdown)
         o = max(s, key=lambda x: x.value)
@@ -406,7 +432,7 @@ class Facts:
         rec = self._ev.get(rid)
         if rec is None or rec["kind"] != kind:
             raise ValueError(f"no {kind} evidence record {rid!r}")
-        return rec
+        return json.loads(json.dumps(rec, default=str))  # dates as text, freezable
 
     def survey(self, rid: str, answer: str) -> dict:
         """One answer from a survey record: what people said, when, and who was asked."""
@@ -419,14 +445,14 @@ class Facts:
             "period": f"{rec['fieldwork_start']}/{rec['fieldwork_end']}",
             "value": r["percent"], "status": "survey",
             "geography": rec["population"], "unit": "% of respondents",
-            "publisher": rec["pollster"] + " for " + rec["commissioner"],
+            "publisher": rec["pollster"] + " for " + rec["commissioner"], "record": rec,
         }  # fmt: skip
         return {
             "pct": f"{r['percent']}%",
-            "when": _month_year(rec["fieldwork_end"]),
+            "when": _month_year(date.fromisoformat(rec["fieldwork_end"])),
             "who": rec["population"],
             "by": f"{rec['pollster']} for {rec['commissioner']}",
-            "url": f"/evidence/{rid}/",
+            "url": f"evidence/{rid}/",
         }
 
     def cited(self, rid: str) -> dict:
@@ -437,11 +463,11 @@ class Facts:
         self.used[f"evidence.{rid}"] = {
             "indicator": f"evidence:{rid}", "breakdown": TOTAL, "period": rec["period"],
             "value": rec["value"], "status": rec["status"], "geography": UK,
-            "unit": rec["unit"], "publisher": rec["source"],
+            "unit": rec["unit"], "publisher": rec["source"], "record": rec,
         }  # fmt: skip
         return {"value": money(rec["value"], rec["unit"]), "period": rec["period"],
                 "period_short": rec.get("period_short") or rec["period"],
-                "url": f"/evidence/{rid}/"}  # fmt: skip
+                "url": f"evidence/{rid}/"}  # fmt: skip
 
     def peers(self, ind: str) -> dict:
         """The indicator's peer group at the latest year every member has (never mixed
@@ -574,6 +600,8 @@ def render_candidate(project: Project, b: Briefing, period_label, extra: dict | 
         "revisions": facts.revisions,
         "release_changes": facts.release_changes,
         "survey": facts.survey,
+        "between": facts.between,
+        "shares": facts.shares,
         "cited": facts.cited,
         "largest_revision": facts.largest_revision,
         **(extra or {}),

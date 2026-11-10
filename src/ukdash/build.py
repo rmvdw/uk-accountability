@@ -161,6 +161,23 @@ def _write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def _write_evidence(page_dir: Path, facts: dict, env, common: dict) -> None:
+    """Evidence records beside the page that cites them, from that page's own facts.
+    An edition freezes each record it used, so an archived edition keeps the exact
+    question wording, scope and terms it was published with, even if the record in
+    evidence/ is later corrected (Codex P2 on #33). Links in the page are relative
+    ('evidence/<id>/'), so they resolve beside whichever page is shown."""
+    from . import evidence
+
+    records = {f["record"]["id"]: f["record"] for f in facts.values() if f.get("record")}
+    for rid, rec in records.items():
+        r = {**rec}
+        if rec["kind"] == "cited_figure":
+            r["display"] = evidence.money(rec["value"], rec["unit"])
+        _write(page_dir / "evidence" / rid / "index.html",
+               env.get_template("evidence.html").render(**common, r=r))  # fmt: skip
+
+
 def build_briefings(project: Project, out: Path, env, common: dict, include_drafts: bool):
     """Production renders only frozen, published editions. Previews render candidates.
 
@@ -192,6 +209,7 @@ def build_briefings(project: Project, out: Path, env, common: dict, include_draf
                 "editions": b.public_editions,
             })  # fmt: skip
             _write(base / "editions" / ed_id / "figures.csv", briefing.facts_csv(ed["facts"]))
+            _write_evidence(base / "editions" / ed_id, ed["facts"], env, common)
             _write(
                 base / "editions" / ed_id / "index.html",
                 env.get_template("briefing.html").render(**common, b=page),
@@ -212,6 +230,7 @@ def build_briefings(project: Project, out: Path, env, common: dict, include_draf
                 "editions": b.public_editions, "approved": False,
             }  # fmt: skip
             _write(base / "candidate-figures.csv", briefing.facts_csv(facts))
+            _write_evidence(base, facts, env, common)
         elif b.status == "published":
             ed = briefing.load_edition(project.root, b)
             page = {
@@ -220,6 +239,7 @@ def build_briefings(project: Project, out: Path, env, common: dict, include_draf
                 "download": f"editions/{b.published_edition}/figures.csv",
                 "superseded_by": None, "editions": b.public_editions, "approved": True,
             }  # fmt: skip
+            _write_evidence(base, ed["facts"], env, common)
         else:
             continue
         _finish_page(briefing, page)
@@ -272,14 +292,6 @@ def build(project: Project, out: Path, include_drafts: bool = False) -> list[str
         cards.append(ctx)
 
     briefing_cards = build_briefings(project, out, env, common, include_drafts)
-    from . import evidence
-
-    for rid, rec in evidence.load_all(project.root).items():
-        r = {**rec}
-        if rec["kind"] == "cited_figure":
-            r["display"] = evidence.money(rec["value"], rec["unit"])
-        _write(out / "evidence" / rid / "index.html",
-               env.get_template("evidence.html").render(**common, r=r))  # fmt: skip
     (out / "index.html").write_text(
         env.get_template("index.html").render(**common, cards=cards, briefings=briefing_cards),
         encoding="utf-8",
