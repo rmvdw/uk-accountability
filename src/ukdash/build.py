@@ -326,6 +326,18 @@ def build(project: Project, out: Path, include_drafts: bool = False) -> list[str
         env.get_template("index.html").render(**common, cards=cards, briefings=briefing_cards),
         encoding="utf-8",
     )
+    # #35 mock-up: review previews only, never production; test projects have no mockups/.
+    if include_drafts and (project.root / "mockups" / "gm-transport").is_dir():
+        from . import mockup
+
+        page = out / "mayors" / "greater-manchester" / "transport" / "index.html"
+        page.parent.mkdir(parents=True)
+        page.write_text(
+            env.get_template("mockup_gm_transport.html").render(
+                **common, **mockup.context(project.root, period_label)
+            ),
+            encoding="utf-8",
+        )
     (out / "about").mkdir()
     (out / "about" / "index.html").write_text(
         env.get_template("about.html").render(**common), encoding="utf-8"

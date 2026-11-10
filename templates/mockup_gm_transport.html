@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{# DRAFT MOCK-UP for #35 (preview builds only). Static page: figures come from the frozen
+   DfT workbooks in mockups/gm-transport/ via ukdash.mockup; money and dates are quoted from
+   the GMCA documents linked beside them. #}
+{% block title %}Greater Manchester: buses and transport (draft) · UK Dashboard{% endblock %}
+{% block main %}
+{% set j = gm.latest %}
+<p class="draft-tag">Draft mock-up for feedback · not published</p>
+<h1>Greater Manchester: buses and transport</h1>
+<p class="stamp">What the mayor is responsible for, with what money, and what has happened, compared with the other {{ n - 1 }} areas in England with an elected regional mayor. Bus figures: Department for Transport, year to March {{ latest }} (revised March 2026). Next figures due {{ src.next_release }}.</p>
+
+<div class="cards">
+<div class="qcard">
+<p class="q">What does the mayor run?</p>
+<p><strong>The buses, taken over from 2023 to 2025.</strong> The Mayor and the Combined Authority set transport strategy and the transport budget. Transport for Greater Manchester manages the Bee Network of buses and Metrolink trams.</p>
+<p class="limit">Buses moved into public control in three stages, from September 2023 to 5 January 2025: {{ public_share[latest - 1]|round|int }}% of bus kilometres in the year to March {{ latest - 1 }}, {{ public_share[latest]|round|int }}% in the year to March {{ latest }}. Most rail services, motorways and local roads are run by others.</p>
+</div>
+<div class="qcard">
+<p class="q">With what money?</p>
+<p><strong>£481.7m for day-to-day transport in 2026/27.</strong> £226.4m of it is the cost of running the franchised buses, after fares.</p>
+<p class="limit">A budget, not spending. Building projects are budgeted separately. <a href="#money">Where it comes from</a></p>
+</div>
+<div class="qcard">
+<p class="q">How much are buses used?</p>
+<p><strong>{{ j.jph|round|int }} bus journeys a resident a year</strong>, {{ ordinal(pos_j) }} highest of {{ n }} mayoral areas. London: {{ london.latest.jph|round|int }}.</p>
+<p class="limit">Year to March {{ latest }}.</p>
+</div>
+<div class="qcard">
+<p class="q">Back to pre-pandemic levels?</p>
+<p><strong>Not yet: {{ (-gm.j_change)|round|int }}% fewer journeys</strong> than in the year to March {{ base }}. {{ larger_falls }} of the other {{ n - 1 }} mayoral areas had larger falls.</p>
+</div>
+<div class="qcard">
+<p class="q">How much bus service is run?</p>
+<p><strong>Buses ran {{ j.kmph|round|int }} km per resident</strong>, {{ ordinal(pos_k) }} highest of {{ n }} mayoral areas.</p>
+<p class="limit">Distance driven by buses in service, year to March {{ latest }}.</p>
+</div>
+<div class="qcard">
+<p class="q">What these figures cannot show</p>
+<p>Whether the mayor caused them. Bus use also depends on jobs, where people live, national fare caps and recovery from the pandemic. The first full year with every bus franchised is the year to March 2026, due {{ src.next_release }}.</p>
+</div>
+</div>
+
+<section class="lead-visual">
+<h2>Bus journeys per resident each year</h2>
+<div class="chart-block">{{ journeys_chart|safe }}</div>
+<details class="chart-notes">
+<summary>What this chart counts</summary>
+<p>Journeys on local buses in the year to March, divided by the population DfT uses. "Other mayoral areas" adds up journeys and residents in the 12 combined authorities with an elected mayor; London is left out because its far higher figure would dominate. Journeys by visitors count, but only residents are in the population. Figures from the year to March 2022 onwards are provisional and may be revised. The fall in the year to March 2021 is the pandemic.</p>
+</details>
+</section>
+
+<details>
+<summary>All {{ n }} mayoral areas</summary>
+{{ bars|safe }}
+<table>
+<thead><tr><th>Area</th><th class="num">Journeys a resident, {{ latest }}</th><th class="num">Change in journeys since {{ base }}</th><th class="num">Bus km a resident, {{ latest }}</th></tr></thead>
+<tbody>
+{% for a in areas %}<tr{% if a.id == gm.id %} style="font-weight:600"{% endif %}><td>{{ a.name }}</td><td class="num">{{ "%.0f"|format(a.latest.jph) }}</td><td class="num">{{ "%+.0f"|format(a.j_change) }}%</td><td class="num">{{ "%.0f"|format(a.latest.kmph) }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+<p class="meta">Years to March. Each area is built from DfT's council-level rows for today's constituent councils, adding journeys, distance and residents before dividing. London's buses have been under public control for decades, so it is in the table but not the bar chart.</p>
+</details>
+
+<details id="money">
+<summary>The money in detail</summary>
+<p>Greater Manchester's transport revenue budget for 2026/27 is £481.7m. Day-to-day running costs only; figures are net of fares.</p>
+<table>
+<thead><tr><th>Where it comes from</th><th class="num">£m</th></tr></thead>
+<tbody>
+<tr><td>Mayoral transport budget (statutory charge on councils, Bus Service Operators Grant, mayoral precept)</td><td class="num">148.3</td></tr>
+<tr><td>Levy on the ten councils</td><td class="num">129.9</td></tr>
+<tr><td>Government grants</td><td class="num">143.6</td></tr>
+<tr><td>Reserves</td><td class="num">35.0</td></tr>
+<tr><td>Capital funding used for running costs</td><td class="num">25.0</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>What it pays for</th><th class="num">£m</th></tr></thead>
+<tbody>
+<tr><td>Franchised buses, net of fares</td><td class="num">226.4</td></tr>
+<tr><td>Metrolink, net of fares</td><td class="num">54.4</td></tr>
+<tr><td>Other Transport for Greater Manchester costs (network improvements, scheme development, staff, contingency and more)</td><td class="num">134.0</td></tr>
+<tr><td>Kept by the Combined Authority, mainly to repay borrowing for past projects</td><td class="num">66.9</td></tr>
+</tbody>
+</table>
+<p class="meta">Funding lines are rounded, so they add to £481.8m. Source: <a href="https://www.civico.net/gmca/documents/74236143/download">GMCA Transport Revenue Budget 2026/27</a> (paper to the Overview and Scrutiny Committee, February 2026; the Combined Authority decided the budget on 13 February 2026: <a href="https://democracy.greatermanchester-ca.gov.uk/ieDecisionDetails.aspx?Id=3795">decision record</a>).</p>
+</details>
+
+<details>
+<summary>Sources and dates</summary>
+<ul>
+<li>Bus journeys, distance and the population behind the rates: <a href="{{ src.release_url }}">{{ src.publisher }}, {{ src.release }}</a>. Tables BUS01e, BUS01f and BUS02d_km (<a href="{{ src.files['bus01.ods'].url }}">bus01.ods</a>, <a href="{{ src.files['bus02_km.ods'].url }}">bus02_km.ods</a>), saved as downloaded. Accredited official statistics.</li>
+<li>Bus franchising dates: <a href="https://democracy.greatermanchester-ca.gov.uk/documents/s34383/15 GMCA 20241025 Delivering the Bee Network.pdf">GMCA, Delivering the Bee Network, 25 October 2024</a>.</li>
+<li>Which areas have an elected regional mayor, and their councils: <a href="https://www.electoralcommission.org.uk/voting-and-elections/how-elections-work/types-elections/voting-mayoral-elections">Electoral Commission</a>; <a href="https://www.gov.uk/government/publications/english-devolution-area-factsheets/english-devolution-area-factsheets">MHCLG area factsheets</a>.</li>
+</ul>
+</details>
+{% endblock %}

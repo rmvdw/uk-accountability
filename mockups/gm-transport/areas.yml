@@ -1,0 +1,37 @@
+# DRAFT MOCK-UP (#35). Not a published indicator.
+# The 14 areas with an elected regional mayor (Electoral Commission register, via
+# Codex's research pack on #35), built from DfT's local-authority rows. Each list
+# holds the DfT table row codes whose areas together make up today's mayoral area.
+# Counts are summed and divided by the summed population DfT uses, never averaged.
+source:
+  publisher: Department for Transport
+  release: "Annual bus statistics, year ending March 2025 (revised 24 March 2026)"
+  release_url: https://www.gov.uk/government/statistics/annual-bus-statistics-year-ending-march-2025/annual-bus-statistics-year-ending-march-2025
+  next_release: "24 November 2026 (provisional date)"
+  next_release_url: https://www.gov.uk/government/statistics/announcements/annual-bus-statistics-year-ending-march-2026
+  provisional_from: 2022   # year ending March 2022 to 2025 are provisional (cover sheets)
+  files:
+    bus01.ods:
+      url: https://assets.publishing.service.gov.uk/media/69c11f97cfa346b9d4704a50/bus01.ods
+      sha256: 51b5aa5e5e2113c9376ed63071891e144421ed205c60cb94e1eb0d723ac0f9c8
+      tables: {journeys: BUS01e, per_head: BUS01f}
+    bus02_km.ods:
+      url: https://assets.publishing.service.gov.uk/media/69c11f9713101e9908704a42/bus02_km.ods
+      sha256: 5c168a354993f9179878eaba37883c24b69ad3f51c786a44d326fbb7f1ddbda8
+      tables: {vehicle_km: BUS02d_km}
+focus: greater_manchester
+areas:
+  greater_manchester: {name: Greater Manchester, rows: [E11000001]}
+  west_midlands: {name: West Midlands, rows: [E11000005]}
+  liverpool_city_region: {name: Liverpool City Region, rows: [E11000002, E06000006]}
+  south_yorkshire: {name: South Yorkshire, rows: [E11000003]}
+  west_yorkshire: {name: West Yorkshire, rows: [E11000006]}
+  north_east: {name: North East, rows: [E11000007, E06000047, E06000057]}
+  tees_valley: {name: Tees Valley, rows: [E06000005, E06000001, E06000002, E06000003, E06000004]}
+  west_of_england: {name: West of England, rows: [E06000022, E06000023, E06000025]}
+  cambridgeshire_peterborough: {name: Cambridgeshire & Peterborough, rows: [E10000003, E06000031]}
+  east_midlands: {name: East Midlands, rows: [E06000015, E10000007, E06000018, E10000024]}
+  greater_lincolnshire: {name: Greater Lincolnshire, rows: [E10000019, E06000013, E06000012]}
+  hull_east_yorkshire: {name: Hull & East Yorkshire, rows: [E06000010, E06000011]}
+  york_north_yorkshire: {name: York & North Yorkshire, rows: [E06000014, E10000023]}
+  london: {name: London, rows: [E12000007]}
