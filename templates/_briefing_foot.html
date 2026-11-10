@@ -31,6 +31,6 @@
 {% endif %}
 
 <h2>Cite this</h2>
-<p class="cite">UK Dashboard, "{{ b.title }}", {% if b.candidate %}candidate edition (not published){% else %}edition {{ b.edition }}, {{ b.edition_url }}{% endif %}. Data: {{ b.source_lines|join("; ") }}.</p>
+<p class="cite">{{ site.name }}, "{{ b.title }}", {% if b.candidate %}candidate edition (not published){% else %}edition {{ b.edition }}, {{ b.edition_url }}{% endif %}. Data: {{ b.source_lines|join("; ") }}.</p>
 
-<p class="meta">Spotted a mistake? <a href="https://github.com/rmvdw/uk-accountability/issues/new?template=bug.yml">Tell us</a>. Corrections are logged publicly.</p>
+<p class="meta">Spotted a mistake? {% if site.email_route %}Email <a href="{{ site.report_url }}">{{ site.report_label }}</a>{% else %}<a href="{{ site.report_url }}">Tell us on GitHub</a>{% endif %}. Corrections are <a href="/corrections/">listed publicly</a>.</p>

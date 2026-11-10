@@ -1,4 +1,4 @@
-# UK Dashboard
+# UK Insights
 
 A free, public reference for how the UK is doing compared with similar countries, built only from official public data. Maintained by one owner (Ross) and AI agents.
 

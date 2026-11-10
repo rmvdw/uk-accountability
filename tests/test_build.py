@@ -169,3 +169,47 @@ def test_undeclared_breakdown_is_rejected(fixture_root):
     lines.append(lines[1].replace(",total,", ",british,"))
     csv.write_text("\n".join(lines) + "\n", encoding="utf-8")
     assert any("undeclared breakdown" in e for e in validate(Project.load(fixture_root)))
+
+
+def test_site_needs_a_contact_address_and_lists_corrections(fixture_root, tmp_path):
+    import yaml
+
+    from ukdash.build import build as build_site
+    from ukdash.project import Project as P
+
+    cfg = fixture_root / "config" / "site.yml"
+    site = yaml.safe_load(cfg.read_text(encoding="utf-8"))
+    site["contact_email"] = "not-an-address"
+    cfg.write_text(yaml.safe_dump(site), encoding="utf-8")
+    assert any("contact_email" in e for e in build_site(P.load(fixture_root), tmp_path / "a"))
+
+    # Until Ross supplies an address, readers are sent to GitHub, never to a placeholder.
+    site["contact_email"] = ""
+    cfg.write_text(yaml.safe_dump(site), encoding="utf-8")
+    assert build_site(P.load(fixture_root), tmp_path / "gh") == []
+    about = (tmp_path / "gh/about/index.html").read_text(encoding="utf-8")
+    assert "issues/new" in about and "mailto:" not in about
+    assert "UK Insights" in (tmp_path / "gh/index.html").read_text(encoding="utf-8")
+
+    site["contact_email"] = "errors@example.org"  # test address only
+    cfg.write_text(yaml.safe_dump(site), encoding="utf-8")
+    (fixture_root / "corrections").mkdir(exist_ok=True)
+    (fixture_root / "corrections" / "log.yml").write_text(
+        "entries:\n"
+        "  - date: 2026-12-01\n"
+        "    page: /briefings/immigration/\n"
+        "    edition: 2026-11-26-0945\n"
+        "    corrected_in: 2026-12-01-1010\n"
+        "    summary: Test fixture correction.\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "b"
+    assert build_site(P.load(fixture_root), out) == []
+    about = (out / "about/index.html").read_text(encoding="utf-8")
+    assert "mailto:errors@example.org" in about and site["owner"] in about
+    assert "It is independent." in about and "within" not in about  # no reply promise
+    log = (out / "corrections/index.html").read_text(encoding="utf-8")
+    assert "Test fixture correction." in log
+    assert "/briefings/immigration/editions/2026-11-26-0945/" in log
+    home = (out / "index.html").read_text(encoding="utf-8")
+    assert 'href="/corrections/"' in home and "mailto:errors@example.org" in home

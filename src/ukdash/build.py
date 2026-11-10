@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 from datetime import UTC, datetime
 from pathlib import Path
@@ -143,6 +144,42 @@ def _comparison_basis_note(project: Project, d, comp) -> str | None:
         "; ".join(parts)
         + ". Other countries' figures are monthly estimates, so the windows differ slightly."
     )
+
+
+GITHUB_REPORT = "https://github.com/rmvdw/uk-accountability/issues/new?template=bug.yml"
+EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+CORRECTION_KEYS = {"date", "page", "edition", "corrected_in", "summary"}
+
+
+def load_site(root: Path) -> tuple[dict, list[dict], list[str]]:
+    """Site facts (config/site.yml) and the public corrections log (#28). Readers report
+    errors by email once contact_email is set, and on GitHub until then; a malformed
+    address fails the build."""
+    import yaml
+
+    problems = []
+    site = yaml.safe_load((root / "config" / "site.yml").read_text(encoding="utf-8")) or {}
+    for key in ("name", "owner"):
+        if not site.get(key):
+            problems.append(f"config/site.yml: {key} is required")
+    email = str(site.get("contact_email") or "").strip()
+    if email and not EMAIL.match(email):
+        problems.append("config/site.yml: contact_email is not a valid email address")
+    # Until Ross supplies the dedicated address (#28), errors are reported on GitHub.
+    # No placeholder address is ever shown.
+    site["email_route"] = bool(email)
+    site["report_url"] = f"mailto:{email}" if email else GITHUB_REPORT
+    site["report_label"] = email or "open an issue on GitHub (free account needed)"
+    log_path = root / "corrections" / "log.yml"
+    log = yaml.safe_load(log_path.read_text(encoding="utf-8")) if log_path.exists() else {}
+    entries = (log or {}).get("entries") or []
+    for i, c in enumerate(entries):
+        missing = CORRECTION_KEYS - set(c or {})
+        if missing:
+            problems.append(f"corrections/log.yml entry {i + 1}: missing {sorted(missing)}")
+        elif not str(c["page"]).startswith("/") or not str(c["page"]).endswith("/"):
+            problems.append(f"corrections/log.yml entry {i + 1}: page must look like /path/")
+    return site, entries, problems
 
 
 # Public address used in citations. Update when the site is named (#1).
@@ -304,7 +341,12 @@ def build(project: Project, out: Path, include_drafts: bool = False) -> list[str
     out.mkdir(parents=True)
     env = _env()
     built_at = datetime.now(UTC).replace(microsecond=0)
-    common = {"built_at": built_at.isoformat(), "preview": include_drafts}
+    # Site facts and the corrections log are configuration, like peer groups: a staged
+    # release or a fixture project reads them from the config root.
+    site, corrections, problems = load_site(project.config_root or project.root)
+    if problems:
+        return problems
+    common = {"built_at": built_at.isoformat(), "preview": include_drafts, "site": site}
 
     published = [
         d for d in project.indicators.values() if d.status == "published" or include_drafts
@@ -329,6 +371,11 @@ def build(project: Project, out: Path, include_drafts: bool = False) -> list[str
     (out / "about").mkdir()
     (out / "about" / "index.html").write_text(
         env.get_template("about.html").render(**common), encoding="utf-8"
+    )
+    (out / "corrections").mkdir()
+    (out / "corrections" / "index.html").write_text(
+        env.get_template("corrections.html").render(**common, corrections=corrections),
+        encoding="utf-8",
     )
     (out / "build-info.json").write_text(
         json.dumps(

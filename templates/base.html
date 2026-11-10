@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}UK Dashboard{% endblock %}</title>
+<title>{% block title %}{{ site.name }}{% endblock %}</title>
 <meta name="description" content="How the UK is doing, compared with similar countries, using official public data.">
 <style>
 :root {
@@ -103,7 +103,7 @@ footer { color: var(--muted); font-size: 0.85rem; padding: 40px 16px; }
 </head>
 <body>
 <header>
-  <a class="brand" href="/">UK Dashboard</a>
+  <a class="brand" href="/">{{ site.name }}</a>
   <nav><a href="/">Indicators</a><a href="/about/">About</a></nav>
 </header>
 <main>
@@ -112,6 +112,8 @@ footer { color: var(--muted); font-size: 0.85rem; padding: 40px 16px; }
 </main>
 <footer>
   Built from official statistics, with labelled survey evidence where shown. Site built <time datetime="{{ built_at }}">{{ built_at[:10] }}</time>.
+  Run independently by {{ site.owner }}. <a href="/about/">About</a> ·
+  <a href="/corrections/">Corrections</a> · Report an error: <a href="{{ site.report_url }}">{{ site.report_label }}</a> ·
   <a href="https://github.com/rmvdw/uk-accountability">Source code and data</a>.
 </footer>
 <script>

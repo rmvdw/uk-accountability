@@ -2,7 +2,7 @@
 {# Question-led layout (Ross, #13, 10 Nov: "the so what more obvious"): title and stamp,
    compact answer cards, then the main chart, then the other sections. The chart stays
    on the first phone screen or close to it, as Codex's review asked. #}
-{% block title %}{{ b.title }} · UK Dashboard{% endblock %}
+{% block title %}{{ b.title }} · {{ site.name }}{% endblock %}
 {% block main %}
 {% set lead = b.blocks.lead %}
 {% include "_briefing_title.html" %}

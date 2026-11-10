@@ -1,0 +1,9 @@
+# Public corrections log (#28). One entry per correction to a published page, newest
+# first. Earlier editions stay available, so each entry names the edition corrected.
+#
+# - date: 2026-12-01
+#   page: /briefings/immigration/
+#   edition: 2026-11-26-0945          # edition that contained the error
+#   corrected_in: 2026-12-01-1010     # edition that fixes it
+#   summary: What was wrong and what it now says, in one or two plain sentences.
+entries: []
