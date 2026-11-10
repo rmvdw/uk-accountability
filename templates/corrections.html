@@ -13,7 +13,7 @@
       <td>{{ c.date }}</td>
       <td><a href="{{ c.page }}">{{ c.page }}</a></td>
       <td>{{ c.summary }}</td>
-      <td><a href="{{ c.page }}editions/{{ c.edition }}/">{{ c.edition }}</a> → <a href="{{ c.page }}editions/{{ c.corrected_in }}/">{{ c.corrected_in }}</a></td>
+      <td>{% if c.get("edition") %}<a href="{{ c.page }}editions/{{ c.edition }}/">{{ c.edition }}</a> → <a href="{{ c.page }}editions/{{ c.corrected_in }}/">{{ c.corrected_in }}</a>{% else %}<span class="meta">Page corrected in place; it has no edition archive.</span>{% endif %}</td>
     </tr>
   {% endfor %}
   </tbody>

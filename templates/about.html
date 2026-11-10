@@ -8,23 +8,24 @@
 <p>It is built and run by {{ site.owner }}, in a personal capacity. It is independent.</p>
 
 <h2>How it is made</h2>
-<p>AI assistants (Claude, made by Anthropic, and ChatGPT and Codex, made by OpenAI) write the code and draft the pages. Every change is checked by a second assistant, and nothing is published until {{ site.owner.split()[0] }} approves it. Figures are updated by ordinary code that downloads the official data; no AI is involved in updating numbers.</p>
+<p>AI assistants (Claude, made by Anthropic, and ChatGPT and Codex, made by OpenAI) write the code and draft the pages. Changes to code, definitions and wording are reviewed by a second assistant, and new indicators, published briefings and their wording need {{ site.owner.split()[0] }}'s approval. Assistant review is not independent expert or human fact-checking.</p>
+<p>Routine updates to figures for already-approved indicators are made by ordinary code that downloads the official data and checks it automatically before anything changes; no AI is involved in updating numbers.</p>
 
 <h2>What we try to do</h2>
 <ul>
   <li>Say plainly what the data show, and explain rather than argue for any policy.</li>
   <li>Describe what happened, without claiming what caused it. The figures alone do not show how much credit or blame belongs to any government.</li>
-  <li>Where estimates are contested, show the credible range and why it differs.</li>
+  <li>Where estimates are contested, show the credible range and why it differs. Studies of different people, periods or outcomes are not ends of one range.</li>
   <li>Compare countries only on the same definition and the same year, and say when that isn't possible.</li>
   <li>Keep the UK, Great Britain, England, Wales, Scotland and Northern Ireland distinct. Great Britain excludes Northern Ireland, and some official figures cover only Great Britain or only England; each page says what it covers.</li>
 </ul>
 
 <h2>Uncertainty and revisions</h2>
-<p>Many official figures are provisional and are revised later. Pages label provisional and estimated figures and say what changed since the previous release. Each approved version of a page (an "edition") keeps its own permanent address and downloadable figures, so a citation still works after later updates. Each page also shows when its source was last checked, and says so if a check is late.</p>
+<p>Many official figures are provisional and are revised later. Pages label provisional and estimated figures. Briefings also say what changed since the previous release, and each published version of a briefing (an "edition") keeps its own permanent address and downloadable figures, so a citation still works after later updates. Indicator pages show the latest figures and when their source was last checked, and say so if a check is late.</p>
 
 <h2 id="corrections">Corrections</h2>
-<p>If you think something is wrong, {% if site.email_route %}email <a href="{{ site.report_url }}">{{ site.report_label }}</a>. You don't need an account anywhere.{% else %}<a href="{{ site.report_url }}">open an issue on GitHub</a> (a free account is needed; an email address is coming).{% endif %} Every correction to a published page is listed on the <a href="/corrections/">corrections page</a>, with the date, what changed and which edition it affects. The earlier edition stays available.</p>
+<p>If you think something is wrong, {% if site.email_route %}email <a href="{{ site.report_url }}">{{ site.report_label }}</a>. You don't need an account anywhere.{% else %}<a href="{{ site.report_url }}">open an issue on GitHub</a> (a free account is needed; an email address is coming).{% endif %} Every correction to a published page is listed on the <a href="/corrections/">corrections page</a>, with the date and what changed. For briefings it also names the edition corrected, and that earlier edition stays available.</p>
 
 <h2>Data, licences and code</h2>
-<p>Figures remain under their publishers' licences, which each page credits. The site's code, definitions and saved source data are open source (MIT) on <a href="https://github.com/rmvdw/uk-accountability">GitHub</a>.</p>
+<p>The site's code is open source under the MIT licence. Indicator definitions and the saved source files are available in the <a href="https://github.com/rmvdw/uk-accountability">repository</a>. Source data and third-party evidence (such as surveys) keep their own licences and reuse terms, which each page credits; the MIT licence does not cover them.</p>
 {% endblock %}
