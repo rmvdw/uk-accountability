@@ -1,4 +1,4 @@
-# TEMPORARY (Claude, #13): seed the draft GDP denominator with a live ONS fetch on a
+# TEMPORARY (Claude, #13), run 2: seed the draft GDP denominator with a live ONS fetch on a
 # runner (this sandbox can't reach ONS), commit data/ back. Removed after use.
 name: Seed GDP
 on:
