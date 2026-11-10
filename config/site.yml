@@ -1,0 +1,7 @@
+# Site facts shown on the About page and in every page footer. Ross approves changes
+# (decisions on #28, 10 Nov 2026).
+name: UK Insights          # approved by Ross, 10 Nov 2026 (#1)
+owner: Ross van der Watt
+# Dedicated address Ross created for corrections and questions (#28, option a).
+# Empty until Ross supplies it: readers are sent to GitHub meanwhile. No placeholder.
+contact_email:

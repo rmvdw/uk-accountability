@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ d.title }} · UK Dashboard{% endblock %}
+{% block title %}{{ d.title }} · {{ site.name }}{% endblock %}
 {% block main %}
 {% if d.status == "draft" %}<span class="draft-tag">Draft: awaiting approval</span>{% endif %}
 <h1>{{ d.title }}</h1>

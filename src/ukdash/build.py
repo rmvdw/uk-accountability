@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 from datetime import UTC, datetime
 from pathlib import Path
@@ -143,6 +144,73 @@ def _comparison_basis_note(project: Project, d, comp) -> str | None:
         "; ".join(parts)
         + ". Other countries' figures are monthly estimates, so the windows differ slightly."
     )
+
+
+GITHUB_REPORT = "https://github.com/rmvdw/uk-accountability/issues/new?template=bug.yml"
+EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+CORRECTION_KEYS = {"date", "page", "summary"}  # edition fields: briefings only
+
+
+def load_site(root: Path) -> tuple[dict, list[dict], list[str]]:
+    """Site facts (config/site.yml) and the public corrections log (#28). Readers report
+    errors by email once contact_email is set, and on GitHub until then; a malformed
+    address fails the build."""
+    import yaml
+
+    problems = []
+    site = yaml.safe_load((root / "config" / "site.yml").read_text(encoding="utf-8")) or {}
+    for key in ("name", "owner"):
+        if not site.get(key):
+            problems.append(f"config/site.yml: {key} is required")
+    email = str(site.get("contact_email") or "").strip()
+    if email and not EMAIL.match(email):
+        problems.append("config/site.yml: contact_email is not a valid email address")
+    # Until Ross supplies the dedicated address (#28), errors are reported on GitHub.
+    # No placeholder address is ever shown.
+    site["email_route"] = bool(email)
+    site["report_url"] = f"mailto:{email}" if email else GITHUB_REPORT
+    site["report_label"] = email or "open an issue on GitHub (free account needed)"
+    log_path = root / "corrections" / "log.yml"
+    log = yaml.safe_load(log_path.read_text(encoding="utf-8")) if log_path.exists() else {}
+    entries = (log or {}).get("entries") or []
+    for i, c in enumerate(entries):
+        missing = sorted(k for k in CORRECTION_KEYS if not str((c or {}).get(k) or "").strip())
+        if missing:
+            problems.append(f"corrections/log.yml entry {i + 1}: missing {missing}")
+        elif not str(c["page"]).startswith("/") or not str(c["page"]).endswith("/"):
+            problems.append(f"corrections/log.yml entry {i + 1}: page must look like /path/")
+    return site, entries, problems
+
+
+def check_corrections(project: Project, entries: list[dict], out: Path) -> list[str]:
+    """Every correction must point at pages readers can open (#34 review).
+
+    Briefing corrections name the approved public edition that contained the error and
+    the one that fixes it; both must be in that briefing's published editions, never a
+    frozen draft. Other pages (indicators) have no edition archive, so a correction is
+    a dated record against the page itself and must not name editions.
+    """
+    from . import briefing
+
+    briefings = briefing.load_all(project.root)
+    problems = []
+    for i, c in enumerate(entries):
+        where = f"corrections/log.yml entry {i + 1}"
+        page = str(c["page"])
+        if not (out / page.strip("/") / "index.html").exists():
+            problems.append(f"{where}: page {page} is not on the site")
+            continue
+        parts = page.strip("/").split("/")
+        eds = [c.get("edition"), c.get("corrected_in")]
+        if len(parts) == 2 and parts[0] == "briefings" and parts[1] in briefings:
+            public = briefings[parts[1]].public_editions
+            if not all(eds):
+                problems.append(f"{where}: briefing corrections need edition and corrected_in")
+            elif not all(e in public for e in eds):
+                problems.append(f"{where}: editions must be published editions of {page}")
+        elif any(eds):
+            problems.append(f"{where}: {page} has no edition archive; omit edition fields")
+    return problems
 
 
 # Public address used in citations. Update when the site is named (#1).
@@ -304,7 +372,12 @@ def build(project: Project, out: Path, include_drafts: bool = False) -> list[str
     out.mkdir(parents=True)
     env = _env()
     built_at = datetime.now(UTC).replace(microsecond=0)
-    common = {"built_at": built_at.isoformat(), "preview": include_drafts}
+    # Site facts and the corrections log are configuration, like peer groups: a staged
+    # release or a fixture project reads them from the config root.
+    site, corrections, problems = load_site(project.config_root or project.root)
+    if problems:
+        return problems
+    common = {"built_at": built_at.isoformat(), "preview": include_drafts, "site": site}
 
     published = [
         d for d in project.indicators.values() if d.status == "published" or include_drafts
@@ -329,6 +402,14 @@ def build(project: Project, out: Path, include_drafts: bool = False) -> list[str
     (out / "about").mkdir()
     (out / "about" / "index.html").write_text(
         env.get_template("about.html").render(**common), encoding="utf-8"
+    )
+    problems = check_corrections(project, corrections, out)
+    if problems:
+        return problems  # the site is incomplete; callers never publish on errors
+    (out / "corrections").mkdir()
+    (out / "corrections" / "index.html").write_text(
+        env.get_template("corrections.html").render(**common, corrections=corrections),
+        encoding="utf-8",
     )
     (out / "build-info.json").write_text(
         json.dumps(

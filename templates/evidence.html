@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {# One evidence record (decision 20). Decision 23: the answer and what a reader needs to
    judge it are visible; the full record and any calculation are folded. #}
-{% block title %}{{ r.title }} · UK Dashboard{% endblock %}
+{% block title %}{{ r.title }} · {{ site.name }}{% endblock %}
 {% block main %}
 <p class="draft-tag">{{ "Survey result" if r.kind == "survey" else "Cited figure" }}</p>
 <h1>{{ r.title }}</h1>

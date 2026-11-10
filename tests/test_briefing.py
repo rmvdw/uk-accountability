@@ -290,7 +290,7 @@ READER_ELEMENTS = [
     "Open Government Licence v3.0",
     "<h2>Cite this</h2>",
     'class="cite"',
-    "Corrections are logged publicly",
+    'Corrections are <a href="/corrections/">listed publicly</a>',
 ]
 
 

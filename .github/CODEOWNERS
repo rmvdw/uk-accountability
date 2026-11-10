@@ -10,3 +10,5 @@
 /.github/workflows/editorial-gate.yml @rmvdw
 /.github/scripts/editorial_gate.py   @rmvdw
 /evidence/               @rmvdw
+/config/site.yml        @rmvdw
+/corrections/           @rmvdw

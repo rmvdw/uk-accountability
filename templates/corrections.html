@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Corrections · {{ site.name }}{% endblock %}
+{% block main %}
+<h1>Corrections</h1>
+<p class="lede">Every correction to a published page, newest first. The edition that contained the error stays available at its own address.</p>
+<p>To report a possible error, {% if site.email_route %}email{% else %}use{% endif %} <a href="{{ site.report_url }}">{{ site.report_label }}</a>.</p>
+{% if corrections %}
+<div class="prose"><table>
+  <thead><tr><th>Date</th><th>Page</th><th>What changed</th><th>Editions</th></tr></thead>
+  <tbody>
+  {% for c in corrections %}
+    <tr>
+      <td>{{ c.date }}</td>
+      <td><a href="{{ c.page }}">{{ c.page }}</a></td>
+      <td>{{ c.summary }}</td>
+      <td>{% if c.get("edition") %}<a href="{{ c.page }}editions/{{ c.edition }}/">{{ c.edition }}</a> → <a href="{{ c.page }}editions/{{ c.corrected_in }}/">{{ c.corrected_in }}</a>{% else %}<span class="meta">Page corrected in place; it has no edition archive.</span>{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+<p class="meta">No corrections yet.</p>
+{% endif %}
+{% endblock %}
