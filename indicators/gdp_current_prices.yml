@@ -30,7 +30,7 @@ source:
   query:
     cdid: YBHA
     dataset: qna
-    expect: {pre_unit: "£", unit: "m", seasonal_adjustment: "SA"}
+    expect: {pre_unit: "£", unit: "m", title_contains: "Current price: Seasonally adjusted"}
 caveats:
   - >-
     Recent quarters are revised as more data arrive, so a share of GDP can change

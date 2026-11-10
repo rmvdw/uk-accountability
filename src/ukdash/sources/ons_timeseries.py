@@ -8,7 +8,7 @@ changed series fails instead of publishing.
     query:
       cdid: YBHA
       dataset: qna
-      expect: {pre_unit: "£", unit: "m", seasonal_adjustment: "SA"}
+      expect: {pre_unit: "£", unit: "m", title_contains: "Current price: Seasonally adjusted"}
 """
 
 from __future__ import annotations
@@ -46,8 +46,13 @@ class OnsTimeseriesAdapter(Adapter):
         if str(desc.get("cdid", "")).upper() != q["cdid"].upper():
             raise ValueError(f"{d.id}: response is series {desc.get('cdid')!r}, not {q['cdid']}")
         for key, want in (q.get("expect") or {}).items():
-            field = {"unit": "unit", "pre_unit": "preUnit",
-                     "seasonal_adjustment": "seasonalAdjustment"}[key]  # fmt: skip
+            if key == "title_contains":
+                if str(want) not in str(desc.get("title", "")):
+                    raise ValueError(
+                        f"{d.id}: title {desc.get('title')!r} lacks {want!r} (drift?)"
+                    )
+                continue
+            field = {"unit": "unit", "pre_unit": "preUnit"}[key]
             if str(desc.get(field, "")) != str(want):
                 raise ValueError(
                     f"{d.id}: {field} is {desc.get(field)!r}, expected {want!r} (drift?)"
