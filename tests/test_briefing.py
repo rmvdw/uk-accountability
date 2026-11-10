@@ -567,7 +567,7 @@ def test_evidence_records_are_complete_and_rendered(tmp_path):
     assert build(Project.load(), tmp_path / "prev", include_drafts=True) == []
     ev = tmp_path / "prev/briefings/immigration/evidence"
     page = (ev / "bf_tracker_2026_net_direction/index.html").read_text(encoding="utf-8")
-    for field in ("3,003 respondents", "2026-03-19 to 2026-03-30", "Number Cruncher Politics",
+    for field in ("3,003 adults aged 18", "2026-03-19 to 2026-03-30", "Number Cruncher Politics",
                   "not reported", "Reuse"):  # fmt: skip
         assert field in page
     fig = (ev / "home_office_asylum_support_2025_26/index.html").read_text(encoding="utf-8")
@@ -636,7 +636,7 @@ def test_edition_keeps_the_evidence_record_it_was_published_with(fixture_root, t
         page = (page_dir / "evidence/bf_tracker_2026_net_direction/index.html").read_text(
             encoding="utf-8"
         )
-        assert "(Online)" in page and "corrected later" not in page
+        assert "<td>Online</td>" in page and "corrected later" not in page
 
 
 def test_gdp_share_derivation_is_on_the_evidence_page(tmp_path):
@@ -645,7 +645,8 @@ def test_gdp_share_derivation_is_on_the_evidence_page(tmp_path):
         tmp_path
         / "prev/briefings/immigration/evidence/home_office_asylum_support_2025_26/index.html"
     ).read_text(encoding="utf-8")
-    assert "As a share of GDP (our calculation)" in page
+    assert "<summary>How the share of GDP is calculated</summary>" in page
+    assert "(our calculation)" in page
     for q in ("2025-Q2", "2025-Q3", "2025-Q4", "2026-Q1"):
         assert q in page
     assert "release of 30 September 2026" in page and "No missing quarter is imputed" in page

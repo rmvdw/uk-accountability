@@ -1,5 +1,7 @@
 {# Shared bottom of every briefing: sources, attribution, citation, corrections. #}
 <h2 id="sources">Sources</h2>
+<details>
+<summary>All sources, editions and files</summary>
 <table>
   <thead><tr><th>Source</th><th>Edition</th><th>Retrieved</th></tr></thead>
   <tbody>
@@ -19,6 +21,7 @@
   {% endfor %}
   </tbody>
 </table>
+</details>
 <p class="meta">{{ b.attribution_lines|join("; ") }}.</p>
 {% if b.download %}
 <p><a href="{{ b.download }}" download>Download every figure on this page (CSV)</a>{% if b.candidate %}: candidate figures, not yet reviewed{% else %}, exactly as in this edition{% endif %}.</p>

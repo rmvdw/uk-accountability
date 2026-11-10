@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{# One evidence record (decision 20): every field, so a reader can judge it. #}
+{# One evidence record (decision 20). Decision 23: the answer and what a reader needs to
+   judge it are visible; the full record and any calculation are folded. #}
 {% block title %}{{ r.title }} · UK Dashboard{% endblock %}
 {% block main %}
 <p class="draft-tag">{{ "Survey result" if r.kind == "survey" else "Cited figure" }}</p>
@@ -9,47 +10,57 @@
 <p><strong>Question:</strong> "{{ r.question }}"</p>
 <table>
   <thead><tr><th>Answer</th><th class="num">Share of respondents</th></tr></thead>
-  <tbody>{% for x in r.results %}<tr><td>{{ x.answer }}</td><td class="num">{% if x.percent is not none %}{{ x.percent }}%{% else %}not reported{% endif %}</td></tr>{% if x.get('note') %}<tr><td colspan="2" class="meta">{{ x.note }}</td></tr>{% endif %}{% endfor %}</tbody>
+  <tbody>{% for x in r.results %}<tr><td>{{ x.answer }}</td><td class="num">{% if x.percent is not none %}{{ x.percent }}%{% else %}not reported{% endif %}</td></tr>{% endfor %}</tbody>
 </table>
+<p class="meta">{{ "{:,}".format(r.sample_size) }} {{ r.population[0]|lower }}{{ r.population[1:] }}, {{ r.fieldwork_start }} to {{ r.fieldwork_end }}. {{ r.pollster }} for {{ r.commissioner }}. <a href="{{ r.source_url }}">Source</a>.</p>
+<details>
+<summary>How the survey was done</summary>
 <table>
   <tbody>
-    <tr><th>Who was asked</th><td>{{ r.population }}</td></tr>
-    <tr><th>Sample and base</th><td>{{ "{:,}".format(r.sample_size) }} respondents; base: {{ r.question_base }}</td></tr>
-    <tr><th>Fieldwork</th><td>{{ r.fieldwork_start }} to {{ r.fieldwork_end }} ({{ r.mode }})</td></tr>
-    <tr><th>Pollster</th><td>{{ r.pollster }}</td></tr>
+    <tr><th>Base</th><td>{{ r.question_base }}</td></tr>
+    <tr><th>Mode</th><td>{{ r.mode }}</td></tr>
     <tr><th>Commissioned by</th><td>{{ r.commissioner }}{% if r.get('partners') %}; {{ r.partners }}{% endif %}</td></tr>
     <tr><th>Published</th><td>{{ r.published }}</td></tr>
     <tr><th>Weighting</th><td>{{ r.weighting }}</td></tr>
     <tr><th>Statistic</th><td>{{ r.statistic }}</td></tr>
     <tr><th>"Don't know"</th><td>{{ r.dont_know }}</td></tr>
+    {% for x in r.results if x.get('note') %}<tr><th>{{ x.answer }}</th><td>{{ x.note }}</td></tr>{% endfor %}
     {% if r.get('context') %}<tr><th>Context</th><td>{{ r.context }}</td></tr>{% endif %}
     <tr><th>Source</th><td><a href="{{ r.source_url }}">{{ r.source }}</a>, {{ r.pages }}</td></tr>
     <tr><th>Reuse</th><td>{{ r.reuse }}</td></tr>
     <tr><th>Checked</th><td>{{ r.checked }}</td></tr>
   </tbody>
 </table>
+</details>
 {% else %}
-<p class="headline">{{ r.display }}</p>
-<table>
-  <tbody>
-    <tr><th>Period</th><td>{{ r.period }}</td></tr>
-    <tr><th>What it covers</th><td>{{ r.scope }}</td></tr>
-    <tr><th>Status</th><td>{{ r.status }}</td></tr>
-    <tr><th>Exact value</th><td>{{ "{:,}".format(r.value) }} ({{ r.unit }})</td></tr>
-    <tr><th>Source</th><td><a href="{{ r.source_url }}">{{ r.source }}</a>, {{ r.location }}</td></tr>
-    <tr><th>Licence</th><td>{{ r.licence }}</td></tr>
-    <tr><th>Checked</th><td>{{ r.checked }}</td></tr>
-  </tbody>
-</table>
+{% if r.get("share_of_gdp") %}<p class="headline">{{ r.share_of_gdp.shown }} of GDP <small>({{ r.display }})</small></p>
+{% else %}<p class="headline">{{ r.display }}</p>{% endif %}
+<p>{{ r.get("summary") or r.scope }}</p>
+<p class="meta">{{ r.period }}. <a href="{{ r.source_url }}">{{ r.source }}</a>.</p>
 {% if r.get("share_of_gdp") %}{% set g = r.share_of_gdp %}
-<h2>As a share of GDP (our calculation)</h2>
-<p><strong>{{ g.shown }}</strong> = £{{ "{:,.1f}".format(g.numerator_m) }} million ÷ £{{ "{:,.0f}".format(g.gdp_total_m) }} million, × 100.</p>
+<details>
+<summary>How the share of GDP is calculated</summary>
+<p>{{ g.shown }} = £{{ "{:,.1f}".format(g.numerator_m) }} million ÷ £{{ "{:,.0f}".format(g.gdp_total_m) }} million, × 100 (our calculation).</p>
 <table>
   <thead><tr><th>GDP quarter</th><th class="num">£ million</th></tr></thead>
   <tbody>{% for q in g.quarters %}<tr><td>{{ q.period }}</td><td class="num">{{ "{:,.0f}".format(q.value) }}</td></tr>{% endfor %}
   <tr><th>Total ({{ g.aggregation }})</th><th class="num">{{ "{:,.0f}".format(g.gdp_total_m) }}</th></tr></tbody>
 </table>
 <p class="meta">Denominator: <a href="{{ g.denominator_url }}">{{ g.denominator }}</a>{% if g.release %}, {{ g.release }}{% endif %}. ONS GDP is nominal and seasonally adjusted. It is an estimate and is revised, so the share can change slightly in later releases. No missing quarter is imputed.</p>
+</details>
 {% endif %}
+<details>
+<summary>Full record</summary>
+<table>
+  <tbody>
+    <tr><th>What it covers</th><td>{{ r.scope }}</td></tr>
+    <tr><th>Exact value</th><td>{{ "{:,}".format(r.value) }} ({{ r.unit }})</td></tr>
+    <tr><th>Status</th><td>{{ r.status }}</td></tr>
+    <tr><th>Where</th><td>{{ r.location }}</td></tr>
+    <tr><th>Licence</th><td>{{ r.licence }}</td></tr>
+    <tr><th>Checked</th><td>{{ r.checked }}</td></tr>
+  </tbody>
+</table>
+</details>
 {% endif %}
 {% endblock %}
