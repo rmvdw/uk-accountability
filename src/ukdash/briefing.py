@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import markdown as md
@@ -131,6 +131,12 @@ def latest_entries(project: Project) -> dict:
     return out
 
 
+def _month_year(d) -> str:
+    months = ("January February March April May June July August September October "
+              "November December").split()  # fmt: skip
+    return f"{months[d.month - 1]} {d.year}"
+
+
 def _pub_order(label: str) -> tuple[int, int]:
     """ONS edition labels such as 'Nov 25' in date order."""
     mon, yy = label.split()
@@ -239,6 +245,32 @@ class Facts:
             "pct": f"{abs(pct):.0f}%" if pct is not None else "n/a",
             "up": diff > 0,
         }
+
+    def shares(self, ind: str, labels: dict[str, str]) -> list[dict]:
+        """Each named breakdown's share of the total at the latest period, largest
+        first. Shares use the published total, so unlisted breakdowns stay counted."""
+        total = self.obs(ind).value
+        out = []
+        for bd, label in labels.items():
+            o = self.obs(ind, "latest", bd)
+            share = 100 * o.value / total
+            out.append({"label": label, "share": share, "pct": f"{share:.0f}%",
+                        "value": _fmt(o.value, 0)})  # fmt: skip
+        return sorted(out, key=lambda r: r["share"], reverse=True)
+
+    def between(self, ind: str, period: str, base: str, breakdown: str = TOTAL) -> dict:
+        """A change between two named periods, independent of what is latest: for
+        comparisons pinned to what a survey asked about."""
+        new, old = self.obs(ind, period, breakdown), self.obs(ind, base, breakdown)
+        d = self.p.indicators[ind].decimals
+        diff = new.value - old.value
+        return {
+            "verb": "rose" if diff > 0 else "fell" if diff < 0 else "was unchanged",
+            "word": "higher" if diff > 0 else "lower" if diff < 0 else "the same",
+            "value": _fmt(new.value, d), "from": _fmt(old.value, d),
+            "when": self.period_label(new.period, new.frequency),
+            "from_when": self.period_label(old.period, old.frequency),
+        }  # fmt: skip
 
     def peak(self, ind, breakdown=TOTAL) -> dict:
         s = self._series(ind, breakdown)
@@ -390,6 +422,98 @@ class Facts:
             "revised": revised,
         }
 
+    # --- evidence records (decision 20) ------------------------------------------
+
+    def _evidence(self, rid: str, kind: str) -> dict:
+        from . import evidence
+
+        if not hasattr(self, "_ev"):
+            self._ev = evidence.load_all(self.p.root)
+        rec = self._ev.get(rid)
+        if rec is None or rec["kind"] != kind:
+            raise ValueError(f"no {kind} evidence record {rid!r}")
+        return json.loads(json.dumps(rec, default=str))  # dates as text, freezable
+
+    def survey(self, rid: str, answer: str) -> dict:
+        """One answer from a survey record: what people said, when, and who was asked."""
+        rec = self._evidence(rid, "survey")
+        r = next((r for r in rec["results"] if r["answer"] == answer), None)
+        if r is None or r["percent"] is None:
+            raise ValueError(f"{rid}: no reported percentage for {answer!r}")
+        self.used[f"evidence.{rid}.{answer}"] = {
+            "indicator": f"evidence:{rid}", "breakdown": answer,
+            "period": f"{rec['fieldwork_start']}/{rec['fieldwork_end']}",
+            "value": r["percent"], "status": "survey",
+            "geography": rec["population"], "unit": "% of respondents",
+            "publisher": rec["pollster"] + " for " + rec["commissioner"], "record": rec,
+        }  # fmt: skip
+        return {
+            "pct": f"{r['percent']}%",
+            "when": _month_year(date.fromisoformat(rec["fieldwork_end"])),
+            "who": rec["population"],
+            "by": f"{rec['pollster']} for {rec['commissioner']}",
+            "url": f"evidence/{rid}/",
+        }
+
+    def cited(self, rid: str) -> dict:
+        """A single figure from a document, with its exact scope."""
+        from .evidence import money
+
+        rec = self._evidence(rid, "cited_figure")
+        self.used[f"evidence.{rid}"] = {
+            "indicator": f"evidence:{rid}", "breakdown": TOTAL, "period": rec["period"],
+            "value": rec["value"], "status": rec["status"], "geography": UK,
+            "unit": rec["unit"], "publisher": rec["source"], "record": rec,
+        }  # fmt: skip
+        return {"value": money(rec["value"], rec["unit"]), "period": rec["period"],
+                "period_short": rec.get("period_short") or rec["period"],
+                "url": f"evidence/{rid}/"}  # fmt: skip
+
+    def gdp_share(self, rid: str, gdp: str = "gdp_current_prices") -> dict:
+        """A cited spending figure as a share of GDP for the same financial year.
+
+        Contract (Ross, 10 Nov: amounts should be shown as a share of GDP): numerator
+        from the cited record (nominal pounds, its financial year); denominator ONS GDP
+        at current market prices (YBHA, seasonally adjusted, nominal), summed over the
+        four quarters April to March of that year, from the saved release. All four
+        quarters must be present: no missing quarter is imputed. (ONS GDP is itself an
+        estimate and is revised; the derivation, inputs and release are frozen with the
+        edition and shown on the evidence page.)
+        """
+        from .evidence import money
+
+        rec = self._evidence(rid, "cited_figure")
+        fy = int(rec["financial_year_start"])
+        quarters = [f"{fy}-Q2", f"{fy}-Q3", f"{fy}-Q4", f"{fy + 1}-Q1"]
+        gdp_m = sum(self.obs(gdp, q).value for q in quarters)  # obs records each quarter
+        scale = {"GBP thousand": 1e-3, "GBP million": 1.0}
+        if rec["unit"] not in scale:
+            raise ValueError(f"{rid}: cannot express {rec['unit']} as a share of GDP")
+        numerator_m = rec["value"] * scale[rec["unit"]]
+        share = 100 * numerator_m / gdp_m
+        self.cited(rid)  # record the numerator too
+        entry = latest_entries(self.p).get(gdp)
+        d = self.p.indicators[gdp]
+        # The derivation travels with the cited record, so the evidence page (and every
+        # frozen edition) shows the denominator, aggregation, formula and caveat.
+        self.used[f"evidence.{rid}"]["record"]["share_of_gdp"] = {
+            "quarters": [{"period": q, "value": self.obs(gdp, q).value} for q in quarters],
+            "gdp_total_m": gdp_m,
+            "numerator_m": numerator_m,
+            "share_pct": share,
+            "shown": f"{share:.2f}%" if share < 1 else f"{share:.1f}%",
+            "denominator": d.source.dataset,
+            "denominator_url": d.source.url,
+            "release": entry.vintage if entry else None,
+            "aggregation": f"Sum of the four quarters April {fy} to March {fy + 1}",
+        }  # fmt: skip
+        return {
+            "pct": f"{share:.2f}%" if share < 1 else f"{share:.1f}%",
+            "amount": money(rec["value"], rec["unit"]),
+            "gdp": f"£{gdp_m / 1e6:.2f} trillion",
+            "period": rec.get("period_short") or rec["period"],
+        }
+
     def peers(self, ind: str) -> dict:
         """The indicator's peer group at the latest year every member has (never mixed
         years): a bar chart with the UK highlighted, the UK value and its position."""
@@ -520,12 +644,20 @@ def render_candidate(project: Project, b: Briefing, period_label, extra: dict | 
         "peers": facts.peers,
         "revisions": facts.revisions,
         "release_changes": facts.release_changes,
+        "survey": facts.survey,
+        "between": facts.between,
+        "shares": facts.shares,
+        "gdp_share": facts.gdp_share,
+        "cited": facts.cited,
         "largest_revision": facts.largest_revision,
         **(extra or {}),
     }
     text = env.from_string(b.body).render(**ctx)
     html = md.markdown(text, extensions=["tables", "md_in_html"])
     for fact in facts.used.values():  # frozen with the edition, so downloads match it
+        if fact["indicator"].startswith("evidence:"):
+            fact.setdefault("indicator_title", fact["indicator"])
+            continue
         d = project.indicators.get(fact["indicator"])
         if d:
             fact.setdefault("geography", UK)
@@ -575,9 +707,22 @@ def slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
-ANSWER = re.compile(r'<div class="answer">.*?</div>', re.S)
 H2 = re.compile(r"<h2>(.*?)</h2>", re.S)
 CHART_BLOCK = re.compile(r'<div class="chart-block">.*?</svg>\s*</div>', re.S)
+
+
+def _balanced_div(html: str, opening: str) -> str:
+    """The whole <div> starting with `opening`, including nested divs (answer cards)."""
+    start = html.find(opening)
+    if start < 0:
+        return ""
+    depth, i = 0, start
+    for m in re.finditer(r"<div\b|</div>", html[start:]):
+        depth += 1 if m.group(0) == "<div" else -1
+        if depth == 0:
+            i = start + m.end()
+            return html[start:i]
+    raise ValueError(f"unclosed {opening}")
 
 
 def split_blocks(html: str) -> dict:
@@ -585,8 +730,7 @@ def split_blocks(html: str) -> dict:
     differently without copying any wording or numbers:
     answer (the short-answer box), sections [{id, title, html}] split at each <h2>,
     and lead (the first section with a chart, for the visual-led layout)."""
-    m = ANSWER.search(html)
-    answer = m.group(0) if m else ""
+    answer = _balanced_div(html, '<div class="answer')
     rest = html.replace(answer, "", 1) if answer else html
     parts = H2.split(rest)
     sections = []

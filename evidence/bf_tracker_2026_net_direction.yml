@@ -1,0 +1,39 @@
+# Survey evidence record (decision 20). Attitude data only, shown as what people said at
+# the time, never as fact. Fields follow Codex's minimum record (#13, 10 Nov 2026).
+id: bf_tracker_2026_net_direction
+kind: survey
+title: Whether people thought net migration in 2025 was higher or lower than in 2024
+pollster: Number Cruncher Politics
+commissioner: British Future
+partners: Policy Institute at King's College London (in association)
+fieldwork_start: 2026-03-19
+fieldwork_end: 2026-03-30
+published: 2026-05-21
+population: Adults aged 18 and over in Great Britain (not the UK)
+mode: Online
+sample_size: 3003
+question_base: All respondents (n=3,003), as shown under Figure 3.2
+question: >-
+  Do you think the figure for net migration in 2025 was higher, lower, or about the
+  same, than it was in 2024?
+results:
+  - answer: Higher
+    percent: 49
+  - answer: Lower
+    percent: 16
+  - answer: About the same
+    percent: null
+    note: The report says "one in five" without an exact figure.
+statistic: Weighted percentage of all respondents
+dont_know: Not reported in the accessible report.
+weighting: Weighted by age, gender, region and educational attainment
+context: >-
+  Fieldwork took place before ONS published its first estimate of net migration for
+  2025, so respondents had not seen that figure.
+source: British Future, Immigration Attitudes Tracker 2026
+source_url: https://www.britishfuture.org/wp-content/uploads/2026/05/Tracker-report-2026.Final_-1.pdf
+pages: pp. 7 (method), 9 (text), 12 (Figure 3.2)
+reuse: >-
+  © British Future 2026, no reuse licence. Short results quoted with attribution;
+  the authors' interpretation is not reproduced.
+checked: Read from the published report by Claude and Codex, 10 November 2026 (#13).

@@ -1,11 +1,14 @@
 {% extends "base.html" %}
-{# Chart-first layout (Ross, #13, 9 Nov): the briefing's first chart leads, straight
-   under the title, then the edition stamp, the short answer and the other sections. #}
+{# Question-led layout (Ross, #13, 10 Nov: "the so what more obvious"): title and stamp,
+   compact answer cards, then the main chart, then the other sections. The chart stays
+   on the first phone screen or close to it, as Codex's review asked. #}
 {% block title %}{{ b.title }} · UK Dashboard{% endblock %}
 {% block main %}
 {% set lead = b.blocks.lead %}
 {% include "_briefing_title.html" %}
+{% include "_briefing_stamp.html" %}
 <div class="prose">
+{{ b.blocks.answer|safe }}
 {% if lead %}<section id="{{ lead.id }}" class="lead-visual">
 <h2>{{ lead.title|safe }}</h2>
 {{ lead.chart|safe }}
@@ -14,10 +17,6 @@
 {{ lead.text|safe }}
 </details>{% endif %}
 </section>{% endif %}
-</div>
-{% include "_briefing_stamp.html" %}
-<div class="prose">
-{{ b.blocks.answer|safe }}
 {{ b.blocks.intro|safe }}
 {% for s in b.blocks.sections if not lead or s.id != lead.id %}
 <section id="{{ s.id }}"><h2>{{ s.title|safe }}</h2>

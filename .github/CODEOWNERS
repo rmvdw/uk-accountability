@@ -9,3 +9,4 @@
 /.github/CODEOWNERS     @rmvdw
 /.github/workflows/editorial-gate.yml @rmvdw
 /.github/scripts/editorial_gate.py   @rmvdw
+/evidence/               @rmvdw

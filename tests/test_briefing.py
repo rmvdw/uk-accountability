@@ -254,21 +254,31 @@ def test_missing_year_earlier_value_is_never_replaced():
         f.change("asylum_claims")
 
 
-def test_chart_first_layout_keeps_every_block(tmp_path):
+def test_question_led_layout_keeps_every_block(tmp_path):
     p = Project.load()
     b = briefing.load_all(p.root)["immigration"]
     html, _, _ = briefing.render_candidate(p, b, period_label)
     blocks = briefing.split_blocks(html)
-    assert 'class="answer"' in blocks["answer"]
+    assert blocks["answer"].startswith('<div class="answer')
     ids = [s["id"] for s in blocks["sections"]]
     assert "what-these-figures-cant-tell-you" in ids and len(ids) == len(set(ids))
     assert blocks["lead"]["chart"].startswith('<div class="chart-block">')
 
     assert build(p, tmp_path / "prev", include_drafts=True) == []
     page = (tmp_path / "prev/briefings/immigration/index.html").read_text(encoding="utf-8")
-    # The lead chart comes before the stamp and the short answer, and nothing is dropped.
-    assert page.index('class="chart-block"') < page.index('class="stamp"')
-    assert page.index('class="stamp"') < page.index('class="answer"')
+    # Question-led (10 Nov): stamp, then the answer cards, then the lead chart, and
+    # nothing is dropped. Each card has a question, an answer and a limitation.
+    assert page.index('class="stamp"') < page.index('class="answer')
+    assert page.index('class="answer') < page.index('class="chart-block"')
+    assert page.count('class="qcard"') == 5 and page.count('class="limit"') == 5
+    assert 'class="hook"' in page
+    # GPT's layout (10 Nov): first answer, then the chart, then the other cards.
+    assert page.index('class="chart-block"') < page.index('class="cards more"')
+    assert page.index('class="hook"') < page.index('class="chart-block"')
+    # Evidence records are listed with the sources, and the survey is dated up front.
+    assert 'href="evidence/bf_tracker_2026_net_direction/">record</a>' in page
+    assert "In a March 2026 survey" in page
+    assert 'href="evidence/bf_tracker_2026_net_direction/"' in page  # relative: stays with page
     assert blocks["answer"] in page
     for s in blocks["sections"]:
         assert f'id="{s["id"]}"' in page
@@ -276,7 +286,7 @@ def test_chart_first_layout_keeps_every_block(tmp_path):
 
 
 READER_ELEMENTS = [
-    "<h2>Sources</h2>",
+    '<h2 id="sources">Sources</h2>',
     "Open Government Licence v3.0",
     "<h2>Cite this</h2>",
     'class="cite"',
@@ -544,3 +554,99 @@ def test_archive_holds_exactly_the_approved_editions(fixture_root, tmp_path, mon
         assert ids["B"] not in page and ids["D"] not in page
     a = (site / "editions" / ids["A"] / "index.html").read_text(encoding="utf-8")
     assert "This is an earlier edition" in a and f"/editions/{ids['C']}/" in a
+
+
+def test_evidence_records_are_complete_and_rendered(tmp_path):
+    from ukdash import evidence
+
+    recs = evidence.load_all(Project.load().root)
+    s = recs["bf_tracker_2026_net_direction"]
+    assert s["population"].startswith("Adults aged 18 and over in Great Britain")
+    assert {r["answer"]: r["percent"] for r in s["results"]}["Higher"] == 49
+    assert evidence.money(4181193, "GBP thousand") == "£4.18 billion"
+    assert build(Project.load(), tmp_path / "prev", include_drafts=True) == []
+    ev = tmp_path / "prev/briefings/immigration/evidence"
+    page = (ev / "bf_tracker_2026_net_direction/index.html").read_text(encoding="utf-8")
+    for field in ("3,003 adults aged 18", "2026-03-19 to 2026-03-30", "Number Cruncher Politics",
+                  "not reported", "Reuse"):  # fmt: skip
+        assert field in page
+    fig = (ev / "home_office_asylum_support_2025_26/index.html").read_text(encoding="utf-8")
+    assert "£4.18 billion" in fig and "4,181,193 (GBP thousand)" in fig and "not the total" in fig
+
+
+def test_survey_record_rejects_missing_fields(fixture_root):
+    from ukdash import evidence
+
+    (fixture_root / "evidence").mkdir()
+    (fixture_root / "evidence" / "x.yml").write_text(
+        "id: x\nkind: survey\ntitle: t\nsource: s\nsource_url: u\nchecked: c\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="missing"):
+        evidence.load_all(fixture_root)
+
+
+def test_survey_row_stays_on_the_years_asked_about():
+    """Codex P2 on #33: a later net-migration period must not change the comparison
+    with what respondents were asked (2025 vs 2024)."""
+    p = Project.load()
+    real = p.read_observations
+    flows = ("net_migration", "immigration_long_term", "emigration_long_term")
+
+    def read(i):
+        rows = real(i)
+        if i not in flows:
+            return rows
+        later = [o.model_copy(update={"period": "2026-03", "value": 999_000.0})
+                 for o in rows if o.period == "2025-12"]  # fmt: skip
+        return rows + later
+
+    p.read_observations = read
+    b = briefing.load_all(p.root)["immigration"]
+    html, _, _ = briefing.render_candidate(p, b, period_label)
+    row = html[html.index("Was net migration in 2025 higher or lower") :]
+    row = row[: row.index("</tr>")]
+    assert "year ending December 2025" in row and "year ending December 2024" in row
+    assert "999,000" not in row
+    hook = html[html.index('class="hook"') :]
+    assert "999,000" not in hook[: hook.index("</p>")]
+
+
+def test_edition_keeps_the_evidence_record_it_was_published_with(fixture_root, tmp_path):
+    """Codex P2 on #33: correcting a record later must not change an archived edition."""
+    import shutil
+
+    shutil.copytree(Path(__file__).parents[1] / "evidence", fixture_root / "evidence")
+    p = write_brief(
+        fixture_root,
+        body='{{ survey("bf_tracker_2026_net_direction", "Higher").pct }} '
+        '[s]({{ survey("bf_tracker_2026_net_direction", "Higher").url }})',
+    )
+    b = briefing.load_all(fixture_root)["test_brief"]
+    ed = briefing.freeze(fixture_root, p, b, period_label).stem
+    rec = fixture_root / "evidence" / "bf_tracker_2026_net_direction.yml"
+    rec.write_text(
+        rec.read_text(encoding="utf-8").replace("Online", "Telephone (corrected later)"),
+        encoding="utf-8",
+    )
+    p = write_brief(fixture_root, status="published", extra=f"published_edition: {ed}\n")
+    out = tmp_path / "prod"
+    assert build(p, out) == []
+    for page_dir in (out / "briefings/test_brief", out / "briefings/test_brief/editions" / ed):
+        page = (page_dir / "evidence/bf_tracker_2026_net_direction/index.html").read_text(
+            encoding="utf-8"
+        )
+        assert "<td>Online</td>" in page and "corrected later" not in page
+
+
+def test_gdp_share_derivation_is_on_the_evidence_page(tmp_path):
+    assert build(Project.load(), tmp_path / "prev", include_drafts=True) == []
+    page = (
+        tmp_path
+        / "prev/briefings/immigration/evidence/home_office_asylum_support_2025_26/index.html"
+    ).read_text(encoding="utf-8")
+    assert "<summary>How the share of GDP is calculated</summary>" in page
+    assert "(our calculation)" in page
+    for q in ("2025-Q2", "2025-Q3", "2025-Q4", "2026-Q1"):
+        assert q in page
+    assert "release of 30 September 2026" in page and "No missing quarter is imputed" in page

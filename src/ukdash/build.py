@@ -151,7 +151,36 @@ SITE_URL = "https://uk-accountability.pages.dev"
 
 def _finish_page(briefing, page: dict) -> dict:
     page["source_lines"] = briefing.source_summary(page["sources"])
-    page["attribution_lines"] = briefing.attribution_lines(page["sources"])
+    # Short line under the title: each publisher once; periods are in the Sources table.
+    pubs: list[str] = []
+    for s in page["sources"]:
+        for name in s["publisher"].split(" and "):
+            if name not in pubs:
+                pubs.append(name)
+    # Evidence records the page cites (surveys, accounts), from its own facts, so a
+    # frozen edition lists the records it was published with.
+    ev = {f["record"]["id"]: f["record"] for f in (page.get("facts") or {}).values()
+          if f.get("record")}  # fmt: skip
+    page["evidence_sources"] = list(ev.values())
+    for r in ev.values():
+        name = (
+            r["commissioner"] + " (survey)"
+            if r["kind"] == "survey"
+            else r["source"].split(" annual")[0]
+        )
+        if name not in pubs:
+            pubs.append(name)
+    page["publishers"] = pubs
+    lines = briefing.attribution_lines(page["sources"])
+    for r in ev.values():
+        if r["kind"] == "survey":
+            terms = r["reuse"].split(".")[0]
+            lines.append(
+                f"Survey: {r['pollster']} for {r['commissioner']}, {r['source']} ({terms})"
+            )
+        else:
+            lines.append(f"{r['source']} ({r['licence']})")
+    page["attribution_lines"] = lines
     page["blocks"] = briefing.split_blocks(page["body_html"])
     return page
 
@@ -159,6 +188,23 @@ def _finish_page(briefing, page: dict) -> dict:
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
+
+
+def _write_evidence(page_dir: Path, facts: dict, env, common: dict) -> None:
+    """Evidence records beside the page that cites them, from that page's own facts.
+    An edition freezes each record it used, so an archived edition keeps the exact
+    question wording, scope and terms it was published with, even if the record in
+    evidence/ is later corrected (Codex P2 on #33). Links in the page are relative
+    ('evidence/<id>/'), so they resolve beside whichever page is shown."""
+    from . import evidence
+
+    records = {f["record"]["id"]: f["record"] for f in facts.values() if f.get("record")}
+    for rid, rec in records.items():
+        r = {**rec}
+        if rec["kind"] == "cited_figure":
+            r["display"] = evidence.money(rec["value"], rec["unit"])
+        _write(page_dir / "evidence" / rid / "index.html",
+               env.get_template("evidence.html").render(**common, r=r))  # fmt: skip
 
 
 def build_briefings(project: Project, out: Path, env, common: dict, include_drafts: bool):
@@ -192,6 +238,7 @@ def build_briefings(project: Project, out: Path, env, common: dict, include_draf
                 "editions": b.public_editions,
             })  # fmt: skip
             _write(base / "editions" / ed_id / "figures.csv", briefing.facts_csv(ed["facts"]))
+            _write_evidence(base / "editions" / ed_id, ed["facts"], env, common)
             _write(
                 base / "editions" / ed_id / "index.html",
                 env.get_template("briefing.html").render(**common, b=page),
@@ -206,12 +253,14 @@ def build_briefings(project: Project, out: Path, env, common: dict, include_draf
                 changes = briefing.diff_facts(published["facts"], facts)
             page = {
                 "id": b.id, "title": b.title, "standfirst": b.standfirst, "body_html": html,
+                "facts": facts,
                 "sources": sources, "edition": None, "frozen_at": None, "candidate": True,
                 "status": b.status, "changes": changes, "edition_url": None,
                 "download": "candidate-figures.csv", "superseded_by": None,
                 "editions": b.public_editions, "approved": False,
             }  # fmt: skip
             _write(base / "candidate-figures.csv", briefing.facts_csv(facts))
+            _write_evidence(base, facts, env, common)
         elif b.status == "published":
             ed = briefing.load_edition(project.root, b)
             page = {
@@ -220,6 +269,7 @@ def build_briefings(project: Project, out: Path, env, common: dict, include_draf
                 "download": f"editions/{b.published_edition}/figures.csv",
                 "superseded_by": None, "editions": b.public_editions, "approved": True,
             }  # fmt: skip
+            _write_evidence(base, ed["facts"], env, common)
         else:
             continue
         _finish_page(briefing, page)

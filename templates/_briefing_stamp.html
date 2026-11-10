@@ -4,7 +4,7 @@
 {% endif %}
 <p class="stamp">
   {% if b.candidate %}Candidate built {{ built_at[:10] }}, not yet reviewed{% elif b.approved %}<a href="{{ b.edition_url }}">Edition {{ b.edition }}</a>, reviewed before publication{% else %}Frozen edition {{ b.edition }}, not approved for publication (review preview only){% endif %}.
-  Data: {{ b.source_lines|join("; ") }}.
+  Data: {{ b.publishers|join(", ") }} (<a href="#sources">sources</a>).
 </p>
 {% if b.changes is not none %}
 <div class="card">

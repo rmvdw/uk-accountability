@@ -1,0 +1,38 @@
+# DRAFT denominator for expressing spending as a share of GDP in briefings (#13; Ross,
+# 10 Nov: "if quoting GDP numbers it is important to % them"). Not shown as a page of
+# its own; definition and wording need Ross's approval before publication.
+id: gdp_current_prices
+title: Gross domestic product at current prices
+status: draft
+what_it_measures: >-
+  The total value of goods and services produced in the UK in a quarter, in pounds at
+  the prices of the time (not adjusted for inflation).
+why_it_matters: >-
+  It is the standard yardstick for the size of the economy, so spending can be shown
+  as a share of it.
+unit: "£ million"
+decimals: 0
+frequency: Q
+measure_type: flow
+direction: neutral
+coverage:
+  population: Whole UK economy, gross domestic product at current market prices.
+  seasonal_adjustment: Seasonally adjusted.
+  geography_note: United Kingdom.
+source:
+  publisher: Office for National Statistics
+  dataset: "Gross Domestic Product at market prices: Current price: Seasonally adjusted £m (YBHA), Quarterly National Accounts"
+  url: https://www.ons.gov.uk/economy/grossdomesticproductgdp/timeseries/ybha/qna
+  licence: Open Government Licence v3.0
+  licence_url: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+  attribution: "Source: Office for National Statistics, GDP at current market prices (YBHA)"
+  adapter: ons_timeseries
+  query:
+    cdid: YBHA
+    dataset: qna
+    expect: {pre_unit: "£", unit: "m", title_contains: "Current price: Seasonally adjusted"}
+caveats:
+  - >-
+    Recent quarters are revised as more data arrive, so a share of GDP can change
+    slightly between releases.
+check_cadence_days: 100

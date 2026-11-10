@@ -29,6 +29,12 @@
     "last_successful_check_at": "2026-11-09T17:27:23Z",
     "last_error": null
   },
+  "gdp_current_prices": {
+    "last_attempt_at": "2026-11-10T13:01:00Z",
+    "last_attempt_result": "ok",
+    "last_successful_check_at": "2026-11-10T13:01:00Z",
+    "last_error": null
+  },
   "immigration_long_term": {
     "last_attempt_at": "2026-11-09T17:27:23Z",
     "last_attempt_result": "unchanged",

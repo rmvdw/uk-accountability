@@ -1,5 +1,7 @@
 {# Shared bottom of every briefing: sources, attribution, citation, corrections. #}
-<h2>Sources</h2>
+<h2 id="sources">Sources</h2>
+<details>
+<summary>All sources, editions and files</summary>
 <table>
   <thead><tr><th>Source</th><th>Edition</th><th>Retrieved</th></tr></thead>
   <tbody>
@@ -10,8 +12,16 @@
       <td>{{ (s.retrieved or "")[:10] }}</td>
     </tr>
   {% endfor %}
+  {% for r in b.evidence_sources %}
+    <tr>
+      <td><a href="{{ r.source_url }}">{{ r.source }}</a>: {{ "survey by " ~ r.pollster ~ " for " ~ r.commissioner if r.kind == "survey" else r.location }} (<a href="evidence/{{ r.id }}/">record</a>)</td>
+      <td>{{ "fieldwork " ~ r.fieldwork_start ~ " to " ~ r.fieldwork_end if r.kind == "survey" else r.period }}</td>
+      <td></td>
+    </tr>
+  {% endfor %}
   </tbody>
 </table>
+</details>
 <p class="meta">{{ b.attribution_lines|join("; ") }}.</p>
 {% if b.download %}
 <p><a href="{{ b.download }}" download>Download every figure on this page (CSV)</a>{% if b.candidate %}: candidate figures, not yet reviewed{% else %}, exactly as in this edition{% endif %}.</p>

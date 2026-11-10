@@ -98,6 +98,12 @@ def validate_briefings(project: Project, render_candidates: bool = True) -> list
         briefings = briefing.load_all(project.root)
     except ValueError as exc:
         return [f"briefing: {exc}"]
+    from . import evidence
+
+    try:
+        evidence.load_all(project.root)
+    except ValueError as exc:
+        errors.append(f"evidence: {exc}")
     for b in briefings.values():
         where = f"briefing {b.id}"
         unknown = [i for i in b.indicators if i not in project.indicators]

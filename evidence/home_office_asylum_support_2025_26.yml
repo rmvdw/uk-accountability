@@ -1,0 +1,26 @@
+# Cited figure (decision 20 record format). One departmental spending line, not the
+# cost of asylum or immigration. Extracted and checked by Codex on #13, 10 Nov 2026.
+id: home_office_asylum_support_2025_26
+kind: cited_figure
+title: Home Office resource spending on asylum support, resettlement and accommodation
+value: 4181193
+unit: GBP thousand
+period: Financial year 2025–26 (1 April 2025 to 31 March 2026)
+period_short: 2025–26
+# First calendar year of the financial year, for shares of GDP (April 2025 to March 2026).
+financial_year_start: 2025
+summary: >-
+  What the Home Office spent in one year on supporting and housing people seeking
+  asylum, and on resettlement schemes. It is not the total cost of asylum or of
+  immigration.
+scope: >-
+  Resource outturn on the Statement of Outturn against Parliamentary Supply line
+  "Asylum support, resettlement and accommodation". It includes resettlement schemes.
+  It is one department's spending in one year: not the total cost of asylum, and not
+  the cost of immigration.
+status: Outturn reported in the department's annual report and accounts
+source: Home Office annual report and accounts 2025 to 2026
+source_url: https://assets.publishing.service.gov.uk/media/6a58e9953ae256c99b702f50/36.54_HO_ARA_25-26_WEB.pdf#page=212
+location: Statement of Outturn against Parliamentary Supply 1.1, line F (PDF page 212, printed page 207)
+licence: Open Government Licence v3.0
+checked: Extracted machine-readably (no OCR) by Codex, 10 November 2026 (#13).

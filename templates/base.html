@@ -74,7 +74,8 @@ ul.caveats li { margin-bottom: 6px; }
 .answer { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
   padding: 4px 18px; margin: 16px 0; }
 .prose table { font-size: 0.92rem; margin: 8px 0 16px; display: block; overflow-x: auto; }
-.evidence { border-top: 1px solid var(--line); padding: 10px 0; }
+.evidence { border-top: 1px solid var(--line); padding: 8px 0; }
+.prose details > summary, main details > summary { cursor: pointer; color: var(--accent); margin: 6px 0; }
 .evidence p { margin: 4px 0; }
 .prose h2 { margin-top: 36px; }
 .prose blockquote { margin: 12px 0; padding: 4px 14px; border-left: 3px solid var(--accent);
@@ -84,6 +85,19 @@ ul.caveats li { margin-bottom: 6px; }
 .questions { list-style: none; padding: 0; }
 .questions li { margin: 0 0 12px; }
 .lead-visual h2 { margin-top: 20px; }
+.cards { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  background: none; border: 0; padding: 0; margin: 12px 0 8px; }
+.cards .hook { grid-column: 1 / -1; font-size: 1.15rem; font-weight: 600; line-height: 1.4;
+  margin: 0 0 4px; }
+.cards .hook a { font-size: 0.85rem; font-weight: 400; }
+.qcard { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 14px; font-size: 0.95rem; }
+.qcard p { margin: 4px 0; }
+.qcard .q { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 2px; }
+.qcard strong { font-size: 1.05rem; }
+.qcard .belief { border-left: 3px solid var(--accent); padding-left: 8px; font-size: 0.88rem; }
+.qcard .limit { color: var(--muted); font-size: 0.82rem; }
 footer { color: var(--muted); font-size: 0.85rem; padding: 40px 16px; }
 </style>
 </head>
@@ -97,7 +111,7 @@ footer { color: var(--muted); font-size: 0.85rem; padding: 40px 16px; }
 {% block main %}{% endblock %}
 </main>
 <footer>
-  Built from official public data. Site built <time datetime="{{ built_at }}">{{ built_at[:10] }}</time>.
+  Built from official statistics, with labelled survey evidence where shown. Site built <time datetime="{{ built_at }}">{{ built_at[:10] }}</time>.
   <a href="https://github.com/rmvdw/uk-accountability">Source code and data</a>.
 </footer>
 <script>

@@ -61,6 +61,10 @@ Question-led explainers in `briefings/<id>.md` (front matter plus Markdown). Num
 - To publish, set `status: published` and `published_edition: <edition>` in a PR. That needs Ross (decision 18). When a later edition replaces it, move the old id into `earlier_editions: [...]` so its permanent page and download stay up. Production shows only editions listed there, never a frozen file that was not approved, so a data refresh never changes published wording. (Migration: no edition had been published before this rule, so nothing needed listing. Any future published briefing without `earlier_editions` simply has no archive before its current edition.)
 - `uv run python -m ukdash briefing-diff <id>` lists what a new candidate would change.
 
+### Evidence records
+
+Survey results and single cited figures (for example one line of a department's accounts) live in `evidence/<id>.yml`, not in briefing prose (decision 20). Briefings call `{{ survey("<id>", "<answer>") }}` or `{{ cited("<id>") }}`; each displayed value links to `/evidence/<id>/`, which shows every field. `make check` rejects a record missing any required field (see `src/ukdash/evidence.py`). Survey results are opinion at a date, never presented as fact.
+
 ## For agents
 
 Read [AGENTS.md](AGENTS.md) first. Work is tracked in GitHub Issues; changes come back as pull requests.
