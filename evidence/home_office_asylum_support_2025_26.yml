@@ -7,6 +7,8 @@ value: 4181193
 unit: GBP thousand
 period: Financial year 2025–26 (1 April 2025 to 31 March 2026)
 period_short: 2025–26
+# First calendar year of the financial year, for shares of GDP (April 2025 to March 2026).
+financial_year_start: 2025
 scope: >-
   Resource outturn on the Statement of Outturn against Parliamentary Supply line
   "Asylum support, resettlement and accommodation". It includes resettlement schemes.

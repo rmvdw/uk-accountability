@@ -48,9 +48,7 @@ class OnsTimeseriesAdapter(Adapter):
         for key, want in (q.get("expect") or {}).items():
             if key == "title_contains":
                 if str(want) not in str(desc.get("title", "")):
-                    raise ValueError(
-                        f"{d.id}: title {desc.get('title')!r} lacks {want!r} (drift?)"
-                    )
+                    raise ValueError(f"{d.id}: title {desc.get('title')!r} lacks {want!r} (drift?)")
                 continue
             field = {"unit": "unit", "pre_unit": "preUnit"}[key]
             if str(desc.get(field, "")) != str(want):

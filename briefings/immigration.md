@@ -2,7 +2,7 @@
 id: immigration
 title: "Immigration: what the figures show"
 status: draft
-standfirst: "Five common questions, answered with the latest official figures, then the detail."
+standfirst: "Five common questions, answered with official figures."
 indicators:
   - net_migration
   - immigration_long_term
@@ -14,6 +14,7 @@ indicators:
   - small_boat_arrivals
   - permanent_immigration_per_1000
   - asylum_applications_per_1000
+  - gdp_current_prices
 ---
 {% set c = change("net_migration") %}
 {% set pk = peak("net_migration") %}
@@ -22,6 +23,7 @@ indicators:
 {% set yr = between("net_migration", "2025-12", "2024-12") %}
 {% set cb = change("small_boat_arrivals") %}
 {% set hs = cited("home_office_asylum_support_2025_26") %}
+{% set hg = gdp_share("home_office_asylum_support_2025_26") %}
 {% set pp = peers("permanent_immigration_per_1000") %}
 {% set vs = shares("visas_granted", {"study": "study", "work": "work", "family": "family"}) %}
 <div class="answer cards" markdown="1">
@@ -31,41 +33,41 @@ indicators:
 <div class="qcard" markdown="1">
 <p class="q">How has net migration changed?</p>
 
-**{{ "Up" if c.up else "Down" }} {{ c.pct }} in a year.** {{ num("net_migration") }} in the {{ when("net_migration") }}, from {{ c.from }}. Peak: {{ pk.value }} ({{ pk.when }}).
+**{{ "Up" if c.up else "Down" }} {{ c.pct }} in a year**: {{ num("net_migration") }} in the {{ when("net_migration") }}. Peak: {{ pk.value }} ({{ pk.when }}).
 
-<p class="limit">Provisional; recent figures revised by up to {{ largest_revision() }}. The survey ran in {{ sh.when }}, before these figures were published.</p>
+<p class="limit">Provisional; revised by up to {{ largest_revision() }} recently. Survey taken {{ sh.when }}, before these figures.</p>
 </div>
 
 <div class="qcard" markdown="1">
 <p class="q">Why do people come?</p>
 
-**{{ "Mostly" if vs[0].share + vs[1].share > 50 else "Largely" }} to {{ vs[0].label }} ({{ vs[0].pct }}) or {{ vs[1].label }} ({{ vs[1].pct }})**, of {{ num("visas_granted") }} visas granted to people abroad in the {{ when("visas_granted") }}. Separately, {{ num("asylum_claims") }} people claimed asylum.
+**{{ "Mostly" if vs[0].share + vs[1].share > 50 else "Largely" }} to {{ vs[0].label }} ({{ vs[0].pct }}) or {{ vs[1].label }} ({{ vs[1].pct }})**: shares of {{ num("visas_granted") }} visas granted in the {{ when("visas_granted") }}. {{ num("asylum_claims") }} people claimed asylum.
 
-<p class="limit">Visas count permissions, not arrivals, and exclude visitors. Asylum claims are counted separately. Neither is a breakdown of the ONS figure.</p>
+<p class="limit">Visas count permissions, not arrivals. Neither figure splits the ONS total.</p>
 </div>
 
 <div class="qcard" markdown="1">
 <p class="q">How many people arrived by small boat?</p>
 
-**{{ "More" if cb.up else "Fewer" }} than a year earlier.** {{ num("small_boat_arrivals") }} detected in the {{ when("small_boat_arrivals") }}, {{ cb.pct }} {{ "more" if cb.up else "fewer" }}.
+**{{ cb.pct }} {{ "more" if cb.up else "fewer" }} than a year earlier**: {{ num("small_boat_arrivals") }} detected in the {{ when("small_boat_arrivals") }}.
 
-<p class="limit">For scale, ONS estimates {{ num("immigration_long_term") }} people moved to the UK for a year or more in the {{ when("immigration_long_term") }}. Different measures: the first is not a share of the second.</p>
+<p class="limit">For scale: {{ num("immigration_long_term") }} people moved here for a year or more (ONS, {{ when("immigration_long_term") }}). Different measures, so not a share.</p>
 </div>
 
 <div class="qcard" markdown="1">
 <p class="q">How much does the Home Office spend on asylum support?</p>
 
-**{{ hs.value }} in {{ hs.period_short }}** on asylum support, resettlement and accommodation.
+**{{ hg.pct }} of GDP** in {{ hg.period }} ({{ hg.amount }}), on asylum support, resettlement and accommodation.
 
-<p class="limit">One department's spending in one year, including resettlement. Not the total cost of asylum or of immigration. <a href="{{ hs.url }}">What it covers</a></p>
+<p class="limit">One department's spending, including resettlement; not the total cost of asylum or immigration. <a href="{{ hs.url }}">Details</a></p>
 </div>
 
 <div class="qcard" markdown="1">
 <p class="q">How does the UK compare?</p>
 
-**{{ pp.position[0]|upper }}{{ pp.position[1:] }}** for permanent-type immigration in {{ pp.when }}: {{ pp.uk }} per 1,000 residents.
+**{{ pp.position[0]|upper }}{{ pp.position[1:] }}** for permanent-type immigration in {{ pp.when }} ({{ pp.uk }} per 1,000 residents).
 
-<p class="limit">OECD measure, not the ONS one; {{ pp.when }} is the latest year all seven report. <a href="#how-does-the-uk-compare-with-other-g7-countries">Comparison</a></p>
+<p class="limit">OECD measure, not ONS; latest year all seven report. <a href="#how-does-the-uk-compare-with-other-g7-countries">Comparison</a></p>
 </div>
 
 </div>
@@ -90,7 +92,7 @@ Survey results record what people said at a date, not facts; see the [full surve
 
 {% set pp = peers("permanent_immigration_per_1000") %}
 {% set pa = peers("asylum_applications_per_1000") %}
-Comparing countries needs one definition and one year for all of them, so these figures come from international sources and cover earlier years than the UK figures above.
+Comparisons need one definition and one year for every country, so these use international sources and earlier years.
 
 **Permanent-type immigration (OECD).** In {{ pp.when }}, the UK granted permanent-type residence to {{ pp.uk }} foreign nationals per 1,000 residents: {{ pp.position }}.
 
@@ -112,7 +114,7 @@ Comparing countries needs one definition and one year for all of them, so these 
 ## What changed since the previous release
 
 {% set rc = release_changes() %}
-ONS published these figures in {{ rc.current }}. Compared with its previous release ({{ rc.previous }}), they add {{ rc.new|length }} new {{ "period" if rc.new|length == 1 else "periods" }} and revise {{ rc.revised|length }} that were already published. A revision is ONS re-estimating the same 12 months with more travel data. It is not a change in migration.
+Compared with the previous ONS release ({{ rc.previous }}), this one ({{ rc.current }}) adds {{ rc.new|length }} new {{ "period" if rc.new|length == 1 else "periods" }} and revises {{ rc.revised|length }}. Revisions re-estimate the same 12 months with more data; they are not changes in migration.
 
 **New in this release**
 

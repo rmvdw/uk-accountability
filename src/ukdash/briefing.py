@@ -469,6 +469,33 @@ class Facts:
                 "period_short": rec.get("period_short") or rec["period"],
                 "url": f"evidence/{rid}/"}  # fmt: skip
 
+    def gdp_share(self, rid: str, gdp: str = "gdp_current_prices") -> dict:
+        """A cited spending figure as a share of GDP for the same financial year.
+
+        Contract (Ross, 10 Nov: amounts should be shown as a share of GDP): numerator
+        from the cited record (nominal pounds, its financial year); denominator ONS GDP
+        at current market prices (YBHA, seasonally adjusted, nominal), summed over the
+        four quarters April to March of that year, from the saved release. All four
+        quarters must be present; nothing is estimated or carried forward.
+        """
+        from .evidence import money
+
+        rec = self._evidence(rid, "cited_figure")
+        fy = int(rec["financial_year_start"])
+        quarters = [f"{fy}-Q2", f"{fy}-Q3", f"{fy}-Q4", f"{fy + 1}-Q1"]
+        gdp_m = sum(self.obs(gdp, q).value for q in quarters)  # obs records each quarter
+        scale = {"GBP thousand": 1e-3, "GBP million": 1.0}
+        if rec["unit"] not in scale:
+            raise ValueError(f"{rid}: cannot express {rec['unit']} as a share of GDP")
+        share = 100 * rec["value"] * scale[rec["unit"]] / gdp_m
+        self.cited(rid)  # record the numerator too
+        return {
+            "pct": f"{share:.2f}%" if share < 1 else f"{share:.1f}%",
+            "amount": money(rec["value"], rec["unit"]),
+            "gdp": f"£{gdp_m / 1e6:.2f} trillion",
+            "period": rec.get("period_short") or rec["period"],
+        }
+
     def peers(self, ind: str) -> dict:
         """The indicator's peer group at the latest year every member has (never mixed
         years): a bar chart with the UK highlighted, the UK value and its position."""
@@ -602,6 +629,7 @@ def render_candidate(project: Project, b: Briefing, period_label, extra: dict | 
         "survey": facts.survey,
         "between": facts.between,
         "shares": facts.shares,
+        "gdp_share": facts.gdp_share,
         "cited": facts.cited,
         "largest_revision": facts.largest_revision,
         **(extra or {}),
