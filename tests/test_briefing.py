@@ -280,7 +280,7 @@ def test_question_led_layout_keeps_every_block(tmp_path):
 
 
 READER_ELEMENTS = [
-    "<h2>Sources</h2>",
+    '<h2 id="sources">Sources</h2>',
     "Open Government Licence v3.0",
     "<h2>Cite this</h2>",
     'class="cite"',

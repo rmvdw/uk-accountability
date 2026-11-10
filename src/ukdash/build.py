@@ -151,6 +151,13 @@ SITE_URL = "https://uk-accountability.pages.dev"
 
 def _finish_page(briefing, page: dict) -> dict:
     page["source_lines"] = briefing.source_summary(page["sources"])
+    # Short line under the title: each publisher once; periods are in the Sources table.
+    pubs: list[str] = []
+    for s in page["sources"]:
+        for name in s["publisher"].split(" and "):
+            if name not in pubs:
+                pubs.append(name)
+    page["publishers"] = pubs
     page["attribution_lines"] = briefing.attribution_lines(page["sources"])
     page["blocks"] = briefing.split_blocks(page["body_html"])
     return page
