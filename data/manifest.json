@@ -55,6 +55,17 @@
     "licence": "Open Government Licence v3.0"
   },
   {
+    "indicator_id": "gdp_current_prices",
+    "path": "data/raw/gdp_current_prices/series.json",
+    "sha256": "fee2c51cde8bc70c0f6365ad53291d9c32635c389627b7fc09bfb0573ebda714",
+    "request": "https://www.ons.gov.uk/economy/grossdomesticproductgdp/timeseries/ybha/qna/data",
+    "retrieval_method": "live",
+    "retrieved_at": "2026-11-10T13:01:00Z",
+    "publisher_release_date": null,
+    "vintage": "2026-09-29",
+    "licence": "Open Government Licence v3.0"
+  },
+  {
     "indicator_id": "immigration_long_term",
     "path": "data/raw/immigration_long_term/ltim.xlsx",
     "sha256": "254a57a0d1e30c40c42843290c6dcc8ccb935ad26ac9148ad2665846ff7e9147",
